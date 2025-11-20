@@ -1,0 +1,40 @@
+spring:
+  application:
+    name: zvit-backend
+
+  datasource:
+    url: jdbc:mysql://localhost:3307/zvit_db?useSSL=false&serverTimezone=UTC&allowPublicKeyRetrieval=true
+    username: zvituser
+    password: zvitpass123
+    driver-class-name: com.mysql.cj.jdbc.Driver
+
+  jpa:
+    hibernate:
+      ddl-auto: update
+    show-sql: true
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.MySQLDialect
+        format_sql: true
+    open-in-view: false
+
+  security:
+    user:
+      name: admin
+      password: admin
+
+server:
+  port: 8080
+  servlet:
+    context-path: /
+
+jwt:
+  secret: eW91ci1zZWNyZXQta2V5LWNoYW5nZS1pbi1wcm9kdWN0aW9uLW1pbi0yNTYtYml0cy1sb25nLWZvci1zZWN1cml0eQ==
+  expiration: 86400000
+
+logging:
+  level:
+    com.zvit: DEBUG
+    org.springframework.security: DEBUG
+    org.springframework.web: DEBUG
+    org.hibernate.SQL: DEBUG

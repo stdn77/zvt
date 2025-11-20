@@ -1,0 +1,429 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ZVIT - Швидкий доступ до Dashboard</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+
+        .container {
+            background: white;
+            border-radius: 20px;
+            padding: 40px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            max-width: 600px;
+            width: 100%;
+        }
+
+        h1 {
+            color: #333;
+            margin-bottom: 10px;
+            font-size: 28px;
+        }
+
+        .subtitle {
+            color: #666;
+            margin-bottom: 30px;
+            font-size: 14px;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        label {
+            display: block;
+            color: #333;
+            font-weight: bold;
+            margin-bottom: 8px;
+            font-size: 14px;
+        }
+
+        input, select {
+            width: 100%;
+            padding: 12px 15px;
+            border: 2px solid #e0e0e0;
+            border-radius: 10px;
+            font-size: 16px;
+            transition: all 0.3s;
+        }
+
+        input:focus, select:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+
+        .btn {
+            width: 100%;
+            padding: 15px;
+            border: none;
+            border-radius: 10px;
+            font-size: 18px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s;
+            margin-top: 10px;
+        }
+
+        .btn-primary {
+            background: #667eea;
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: #5568d3;
+            transform: translateY(-2px);
+            box-shadow: 0 5px 20px rgba(102, 126, 234, 0.4);
+        }
+
+        .btn-secondary {
+            background: #f5f5f5;
+            color: #333;
+        }
+
+        .btn-secondary:hover {
+            background: #e0e0e0;
+        }
+
+        .info-box {
+            background: #e8f4ff;
+            padding: 15px;
+            border-radius: 10px;
+            border-left: 4px solid #667eea;
+            margin-top: 20px;
+        }
+
+        .info-box h3 {
+            color: #667eea;
+            margin-bottom: 10px;
+            font-size: 16px;
+        }
+
+        .info-box p {
+            color: #555;
+            font-size: 14px;
+            line-height: 1.6;
+            margin: 5px 0;
+        }
+
+        .warning-box {
+            background: #fff3e0;
+            padding: 15px;
+            border-radius: 10px;
+            border-left: 4px solid #ff9800;
+            margin-bottom: 20px;
+        }
+
+        .warning-box p {
+            color: #f57c00;
+            font-size: 14px;
+            margin: 0;
+        }
+
+        .error {
+            background: #ffe8e8;
+            color: #d32f2f;
+            padding: 15px;
+            border-radius: 10px;
+            border-left: 4px solid #d32f2f;
+            margin-top: 20px;
+            display: none;
+        }
+
+        .success {
+            background: #e8f5e9;
+            color: #2e7d32;
+            padding: 15px;
+            border-radius: 10px;
+            border-left: 4px solid #4caf50;
+            margin-top: 20px;
+            display: none;
+        }
+
+        .loading {
+            display: none;
+            text-align: center;
+            padding: 20px;
+            color: #667eea;
+        }
+
+        .spinner {
+            display: inline-block;
+            width: 40px;
+            height: 40px;
+            border: 4px solid #e0e0e0;
+            border-top-color: #667eea;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        .quick-select {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            display: none;
+        }
+
+        .quick-select-title {
+            font-size: 14px;
+            color: #666;
+            margin-bottom: 10px;
+        }
+
+        .groups-list {
+            max-height: 200px;
+            overflow-y: auto;
+            margin-top: 10px;
+        }
+
+        .group-item {
+            padding: 10px;
+            background: white;
+            border-radius: 8px;
+            margin-bottom: 8px;
+            cursor: pointer;
+            transition: all 0.3s;
+            border: 2px solid transparent;
+        }
+
+        .group-item:hover {
+            border-color: #667eea;
+            transform: translateX(5px);
+        }
+
+        .group-name {
+            font-weight: bold;
+            color: #333;
+        }
+
+        .group-id {
+            font-size: 12px;
+            color: #999;
+            margin-top: 5px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🚀 Швидкий доступ до Dashboard</h1>
+        <p class="subtitle">Тимчасова сторінка для тестування (БЕЗ QR)</p>
+
+        <div class="warning-box">
+            <p>⚠️ Це тестова версія! В production використовуй QR-код.</p>
+        </div>
+
+        <div id="loginForm">
+            <div class="form-group">
+                <label for="groupId">🏢 ID Групи:</label>
+                <input type="text" id="groupId" placeholder="Введи ID групи" />
+            </div>
+
+            <div class="form-group">
+                <label for="jwtToken">🔐 JWT Токен:</label>
+                <input type="password" id="jwtToken" placeholder="Токен з localStorage або з логіну" />
+            </div>
+
+            <button class="btn btn-primary" onclick="generateDashboardLink()">
+                🎯 Згенерувати посилання на Dashboard
+            </button>
+
+            <button class="btn btn-secondary" onclick="loadMyGroups()">
+                📋 Завантажити мої групи
+            </button>
+        </div>
+
+        <div class="quick-select" id="groupsList">
+            <div class="quick-select-title">Твої групи:</div>
+            <div class="groups-list" id="groupsContainer"></div>
+        </div>
+
+        <div class="loading" id="loading">
+            <div class="spinner"></div>
+            <p>Генерація токену...</p>
+        </div>
+
+        <div class="success" id="success"></div>
+        <div class="error" id="error"></div>
+
+        <div class="info-box">
+            <h3>💡 Як використовувати:</h3>
+            <p><strong>Варіант 1 (Швидкий):</strong></p>
+            <p>1. Натисни "Завантажити мої групи"</p>
+            <p>2. Вибери групу зі списку</p>
+            <p>3. Автоматично відкриється Dashboard</p>
+            <br>
+            <p><strong>Варіант 2 (Ручний):</strong></p>
+            <p>1. Введи ID групи (з Postman або з бази)</p>
+            <p>2. Введи JWT токен (з localStorage або з /auth/login)</p>
+            <p>3. Натисни "Згенерувати посилання"</p>
+            <p>4. Посилання відкриється автоматично</p>
+        </div>
+    </div>
+
+    <script>
+        const savedToken = localStorage.getItem('jwt_token');
+        if (savedToken) {
+            document.getElementById('jwtToken').value = savedToken;
+            document.getElementById('jwtToken').type = 'text';
+        }
+
+        async function loadMyGroups() {
+            const token = document.getElementById('jwtToken').value;
+
+            if (!token) {
+                showError('Спочатку введи JWT токен!');
+                return;
+            }
+
+            showLoading(true);
+            hideMessages();
+
+            try {
+                const response = await fetch('/api/v1/groups', {
+                    headers: {
+                        'Authorization': `Bearer ${token}`
+                    }
+                });
+
+                if (!response.ok) {
+                    throw new Error('Не вдалося завантажити групи');
+                }
+
+                const result = await response.json();
+
+                if (!result.success || !result.data || result.data.length === 0) {
+                    throw new Error('У тебе немає груп');
+                }
+
+                renderGroups(result.data);
+                showLoading(false);
+
+            } catch (error) {
+                showLoading(false);
+                showError(error.message);
+            }
+        }
+
+        function renderGroups(groups) {
+            const container = document.getElementById('groupsContainer');
+            container.innerHTML = '';
+
+            groups.forEach(group => {
+                const item = document.createElement('div');
+                item.className = 'group-item';
+                item.onclick = () => selectGroup(group);
+
+                item.innerHTML = `
+                    <div class="group-name">${group.externalName}</div>
+                    <div class="group-id">ID: ${group.groupId}</div>
+                    <div class="group-id">Роль: ${group.userRole} | Учасників: ${group.currentMembers}/${group.maxMembers}</div>
+                `;
+
+                container.appendChild(item);
+            });
+
+            document.getElementById('groupsList').style.display = 'block';
+        }
+
+        function selectGroup(group) {
+            document.getElementById('groupId').value = group.groupId;
+            generateDashboardLink();
+        }
+
+        async function generateDashboardLink() {
+            const groupId = document.getElementById('groupId').value.trim();
+            const token = document.getElementById('jwtToken').value.trim();
+
+            if (!groupId) {
+                showError('Введи ID групи!');
+                return;
+            }
+
+            if (!token) {
+                showError('Введи JWT токен!');
+                return;
+            }
+
+            localStorage.setItem('jwt_token', token);
+
+            showLoading(true);
+            hideMessages();
+
+            try {
+                const response = await fetch(`/api/v1/admin/dashboard-token/${groupId}`, {
+                    headers: {
+                        'Authorization': `Bearer ${token}`
+                    }
+                });
+
+                if (!response.ok) {
+                    throw new Error('Не вдалося згенерувати токен. Перевір groupId та JWT токен.');
+                }
+
+                const result = await response.json();
+
+                if (!result.success) {
+                    throw new Error(result.message);
+                }
+
+                const dashboardToken = result.data;
+                const dashboardUrl = `/web/admin/dashboard.html?token=${dashboardToken}`;
+
+                showLoading(false);
+                showSuccess(`Dashboard токен згенеровано! Відкриваю Dashboard...`);
+
+                setTimeout(() => {
+                    window.location.href = dashboardUrl;
+                }, 1000);
+
+            } catch (error) {
+                showLoading(false);
+                showError(error.message);
+            }
+        }
+
+        function showLoading(show) {
+            document.getElementById('loading').style.display = show ? 'block' : 'none';
+            document.getElementById('loginForm').style.display = show ? 'none' : 'block';
+        }
+
+        function showError(message) {
+            const errorDiv = document.getElementById('error');
+            errorDiv.textContent = '❌ ' + message;
+            errorDiv.style.display = 'block';
+        }
+
+        function showSuccess(message) {
+            const successDiv = document.getElementById('success');
+            successDiv.textContent = '✅ ' + message;
+            successDiv.style.display = 'block';
+        }
+
+        function hideMessages() {
+            document.getElementById('error').style.display = 'none';
+            document.getElementById('success').style.display = 'none';
+        }
+    </script>
+</body>
+</html>

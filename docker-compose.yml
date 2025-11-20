@@ -1,0 +1,16 @@
+services:
+  mysql:
+    image: mysql:8.0
+    container_name: zvit-mysql
+    environment:
+      MYSQL_ROOT_PASSWORD: zvitpass123
+      MYSQL_DATABASE: zvit_db
+      MYSQL_USER: zvituser
+      MYSQL_PASSWORD: zvitpass123
+    ports:
+      - "3307:3306"  # ← Змінили 3306 на 3307
+    volumes:
+      - mysql-data:/var/lib/mysql
+
+volumes:
+  mysql-data:

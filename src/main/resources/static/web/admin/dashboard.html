@@ -1,0 +1,491 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ZVIT - Dashboard</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: #f3f4f6;
+            padding: 10px;
+        }
+
+        .header {
+            background: white;
+            padding: 15px 20px;
+            border-radius: 8px;
+            margin-bottom: 15px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        }
+
+        .header-top {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+
+        .header h1 {
+            font-size: 18px;
+            color: #1f2937;
+        }
+
+        .last-update {
+            font-size: 12px;
+            color: #6b7280;
+        }
+
+        .status-legend {
+            display: flex;
+            gap: 12px;
+            justify-content: center;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 11px;
+            color: #6b7280;
+        }
+
+        .legend-color {
+            min-width: 45px;
+            height: 24px;
+            border-radius: 4px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            font-size: 13px;
+            color: #1f2937;
+        }
+
+        .legend-separator {
+            color: #d1d5db;
+            font-size: 18px;
+            font-weight: bold;
+        }
+
+        .total-count {
+            font-weight: 600;
+            color: #1f2937;
+            font-size: 12px;
+        }
+
+        .dashboard-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
+            gap: 8px;
+            padding: 0;
+        }
+
+        .user-card {
+            background: white;
+            border-radius: 6px;
+            padding: 8px;
+            cursor: pointer;
+            transition: all 0.2s;
+            text-align: center;
+            border: 2px solid transparent;
+            min-height: 90px;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+        }
+
+        .user-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+            border-color: #667eea;
+        }
+
+        .user-card.status-green {
+            background: linear-gradient(135deg, #d1fae5 0%, #a7f3d0 100%);
+        }
+
+        .user-card.status-yellow {
+            background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%);
+        }
+
+        .user-card.status-red {
+            background: linear-gradient(135deg, #fee2e2 0%, #fecaca 100%);
+        }
+
+        .user-card.status-gray {
+            background: linear-gradient(135deg, #f3f4f6 0%, #e5e7eb 100%);
+        }
+
+        .user-name {
+            font-weight: bold;
+            font-size: 11px;
+            color: #1f2937;
+            margin-bottom: 4px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .user-role {
+            font-size: 9px;
+            color: #6b7280;
+            font-weight: 600;
+            text-transform: uppercase;
+            margin-bottom: 4px;
+        }
+
+        .user-response {
+            font-size: 10px;
+            color: #374151;
+            font-weight: 500;
+            margin-bottom: 2px;
+        }
+
+        .user-time {
+            font-size: 9px;
+            color: #6b7280;
+        }
+
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.5);
+            z-index: 1000;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .modal-content {
+            background: white;
+            border-radius: 12px;
+            padding: 25px;
+            max-width: 400px;
+            width: 90%;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .modal-title {
+            font-size: 18px;
+            font-weight: bold;
+            color: #1f2937;
+        }
+
+        .close-btn {
+            background: none;
+            border: none;
+            font-size: 24px;
+            cursor: pointer;
+            color: #9ca3af;
+        }
+
+        .close-btn:hover {
+            color: #ef4444;
+        }
+
+        .modal-body {
+            font-size: 14px;
+            color: #374151;
+            line-height: 1.8;
+        }
+
+        .detail-row {
+            display: flex;
+            justify-content: space-between;
+            padding: 8px 0;
+            border-bottom: 1px solid #e5e7eb;
+        }
+
+        .detail-label {
+            font-weight: 600;
+            color: #6b7280;
+        }
+
+        .detail-value {
+            color: #1f2937;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 40px;
+            color: #6b7280;
+        }
+
+        .spinner {
+            display: inline-block;
+            width: 40px;
+            height: 40px;
+            border: 4px solid #e5e7eb;
+            border-top-color: #667eea;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        .error {
+            background: #fee2e2;
+            color: #991b1b;
+            padding: 15px;
+            border-radius: 8px;
+            margin: 20px;
+            text-align: center;
+        }
+
+        @media (max-width: 768px) {
+            .dashboard-grid {
+                grid-template-columns: repeat(auto-fill, minmax(80px, 1fr));
+            }
+            
+            .user-card {
+                min-height: 80px;
+                padding: 6px;
+            }
+
+            .status-legend {
+                font-size: 10px;
+            }
+
+            .legend-color {
+                min-width: 35px;
+                height: 20px;
+                font-size: 11px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <div class="header-top">
+            <h1 id="groupName">📊 Dashboard</h1>
+            <div class="last-update" id="lastUpdate">Завантаження...</div>
+        </div>
+
+        <div class="status-legend">
+            <div class="legend-item">
+                <div class="legend-color" id="greenCount" style="background: linear-gradient(135deg, #d1fae5 0%, #a7f3d0 100%);">0</div>
+                <span>Звітував недавно</span>
+            </div>
+            <span class="legend-separator">|</span>
+            <div class="legend-item">
+                <div class="legend-color" id="yellowCount" style="background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%);">0</div>
+                <span>Час йде</span>
+            </div>
+            <span class="legend-separator">|</span>
+            <div class="legend-item">
+                <div class="legend-color" id="redCount" style="background: linear-gradient(135deg, #fee2e2 0%, #fecaca 100%);">0</div>
+                <span>Час майже вийшов</span>
+            </div>
+            <span class="legend-separator">|</span>
+            <div class="legend-item">
+                <div class="legend-color" id="grayCount" style="background: linear-gradient(135deg, #f3f4f6 0%, #e5e7eb 100%);">0</div>
+                <span>Немає звіту</span>
+            </div>
+            <span class="legend-separator">|</span>
+            <div class="legend-item">
+                <span class="total-count">Всього: <strong id="totalCount">0</strong></span>
+            </div>
+        </div>
+    </div>
+
+    <div class="loading" id="loading">
+        <div class="spinner"></div>
+        <p>Завантаження даних...</p>
+    </div>
+
+    <div class="dashboard-grid" id="dashboard"></div>
+
+    <div class="modal" id="detailsModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <div class="modal-title">Деталі користувача</div>
+                <button class="close-btn" onclick="closeModal()">×</button>
+            </div>
+            <div class="modal-body" id="modalBody">
+                Завантаження...
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const urlParams = new URLSearchParams(window.location.search);
+        const token = urlParams.get('token');
+
+        if (!token) {
+            document.getElementById('loading').innerHTML = '<div class="error">❌ Відсутній токен доступу</div>';
+        } else {
+            loadDashboard();
+            setInterval(loadDashboard, 10000);
+        }
+
+        async function loadDashboard() {
+            try {
+                const response = await fetch(`/api/v1/admin/dashboard/${token}`);
+                
+                if (!response.ok) {
+                    throw new Error('Помилка завантаження даних');
+                }
+
+                const result = await response.json();
+                
+                if (!result.success) {
+                    throw new Error(result.message);
+                }
+
+                renderDashboard(result.data);
+                document.getElementById('loading').style.display = 'none';
+                document.getElementById('lastUpdate').textContent = `🔄 Оновлено: ${new Date().toLocaleTimeString('uk-UA')}`;
+
+            } catch (error) {
+                document.getElementById('loading').innerHTML = `<div class="error">❌ ${error.message}</div>`;
+            }
+        }
+
+        function getStatusColor(colorHex, percentageElapsed) {
+            if (colorHex === '#00FF00' || (percentageElapsed !== null && percentageElapsed < 50)) {
+                return 'green';
+            } else if (colorHex === '#FFFF00' || (percentageElapsed !== null && percentageElapsed < 75)) {
+                return 'yellow';
+            } else if (colorHex === '#FF0000' || (percentageElapsed !== null && percentageElapsed >= 75)) {
+                return 'red';
+            } else {
+                return 'gray';
+            }
+        }
+
+        function formatTime(dateString) {
+            if (!dateString) return '';
+            const date = new Date(dateString);
+            return date.toLocaleTimeString('uk-UA', { hour: '2-digit', minute: '2-digit' });
+        }
+
+        function renderDashboard(users) {
+            const dashboard = document.getElementById('dashboard');
+            dashboard.innerHTML = '';
+
+            if (!users || users.length === 0) {
+                dashboard.innerHTML = '<div class="error">Немає користувачів у групі</div>';
+                return;
+            }
+
+            // Підрахунок статусів
+            let greenCount = 0;
+            let yellowCount = 0;
+            let redCount = 0;
+            let grayCount = 0;
+
+            users.forEach(user => {
+                const statusColor = getStatusColor(user.colorHex, user.percentageElapsed);
+                
+                // Підрахунок
+                if (statusColor === 'green') greenCount++;
+                else if (statusColor === 'yellow') yellowCount++;
+                else if (statusColor === 'red') redCount++;
+                else grayCount++;
+
+                // Створення карточки
+                const card = document.createElement('div');
+                card.className = `user-card status-${statusColor}`;
+                card.onclick = () => showMemberDetails(user.userId);
+
+                const userName = user.userName || 'Невідомий';
+                const truncatedName = userName.length > 10 ? userName.substring(0, 10) + '...' : userName;
+
+                card.innerHTML = `
+                    <div class="user-name" title="${userName}">${truncatedName}</div>
+                    <div class="user-role">${user.role || 'MEMBER'}</div>
+                    <div class="user-response">${user.lastReportResponse || 'Немає звіту'}</div>
+                    <div class="user-time">${formatTime(user.lastReportAt)}</div>
+                `;
+
+                dashboard.appendChild(card);
+            });
+
+            // Оновлення лічильників
+            document.getElementById('greenCount').textContent = greenCount;
+            document.getElementById('yellowCount').textContent = yellowCount;
+            document.getElementById('redCount').textContent = redCount;
+            document.getElementById('grayCount').textContent = grayCount;
+            document.getElementById('totalCount').textContent = users.length;
+        }
+
+        async function showMemberDetails(userId) {
+            const modal = document.getElementById('detailsModal');
+            const modalBody = document.getElementById('modalBody');
+            
+            modal.style.display = 'flex';
+            modalBody.innerHTML = '<div style="text-align: center;"><div class="spinner"></div></div>';
+
+            try {
+                const response = await fetch(`/api/v1/admin/member/${userId}/details?token=${token}`);
+                
+                if (!response.ok) {
+                    throw new Error('Помилка завантаження деталей');
+                }
+
+                const result = await response.json();
+                
+                if (!result.success) {
+                    throw new Error(result.message);
+                }
+
+                const member = result.data;
+
+                modalBody.innerHTML = `
+                    <div class="detail-row">
+                        <span class="detail-label">👤 Ім'я:</span>
+                        <span class="detail-value">${member.name}</span>
+                    </div>
+                    <div class="detail-row">
+                        <span class="detail-label">📱 Телефон:</span>
+                        <span class="detail-value">${member.phone}</span>
+                    </div>
+                    <div class="detail-row">
+                        <span class="detail-label">🎖️ Роль:</span>
+                        <span class="detail-value">${member.role}</span>
+                    </div>
+                    <div class="detail-row">
+                        <span class="detail-label">📅 Приєднався:</span>
+                        <span class="detail-value">${new Date(member.joinedAt).toLocaleDateString('uk-UA')}</span>
+                    </div>
+                `;
+
+            } catch (error) {
+                modalBody.innerHTML = `<div class="error">❌ ${error.message}</div>`;
+            }
+        }
+
+        function closeModal() {
+            document.getElementById('detailsModal').style.display = 'none';
+        }
+
+        window.onclick = function(event) {
+            const modal = document.getElementById('detailsModal');
+            if (event.target === modal) {
+                closeModal();
+            }
+        }
+    </script>
+</body>
+</html>
