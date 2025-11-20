@@ -9,22 +9,26 @@ import lombok.NoArgsConstructor;
 import java.time.LocalDateTime;
 
 @Entity
-@Table(name = "reports")
+@Table(name = "reports", indexes = {
+    @Index(name = "idx_report_group_user", columnList = "group_id,user_id"),
+    @Index(name = "idx_report_group_submitted", columnList = "group_id,submitted_at"),
+    @Index(name = "idx_report_user_submitted", columnList = "user_id,submitted_at")
+})
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
 public class Report {
-    
+
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
     private String id;
 
-    @ManyToOne(fetch = FetchType.EAGER)
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "user_id", nullable = false)
     private User user;
 
-    @ManyToOne(fetch = FetchType.EAGER)
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "group_id", nullable = false)
     private Group group;
 

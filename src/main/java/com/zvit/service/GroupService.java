@@ -8,9 +8,13 @@ import com.zvit.dto.response.GroupResponse;
 import com.zvit.entity.Group;
 import com.zvit.entity.GroupMember;
 import com.zvit.entity.User;
+import com.zvit.exception.BusinessException;
+import com.zvit.exception.ResourceNotFoundException;
+import com.zvit.exception.UnauthorizedException;
 import com.zvit.repository.GroupMemberRepository;
 import com.zvit.repository.GroupRepository;
 import com.zvit.repository.UserRepository;
+import com.zvit.util.HashUtil;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -29,7 +33,7 @@ public class GroupService {
     @Transactional
     public GroupResponse createGroup(CreateGroupRequest request, String userId) {
         User user = userRepository.findById(userId)
-                .orElseThrow(() -> new RuntimeException("Користувача не знайдено"));
+                .orElseThrow(() -> new ResourceNotFoundException("Користувача не знайдено"));
 
         Group group = Group.builder()
                 .externalName(request.getExternalName())
@@ -54,7 +58,7 @@ public class GroupService {
     @Transactional(readOnly = true)
     public List<GroupResponse> getUserGroups(String userId) {
         userRepository.findById(userId)
-                .orElseThrow(() -> new RuntimeException("Користувача не знайдено"));
+                .orElseThrow(() -> new ResourceNotFoundException("Користувача не знайдено"));
 
         List<GroupMember> memberships = groupMemberRepository.findByUserId(userId);
 
@@ -66,10 +70,10 @@ public class GroupService {
     @Transactional(readOnly = true)
     public GroupResponse getGroupById(String groupId, String userId) {
         Group group = groupRepository.findById(groupId)
-                .orElseThrow(() -> new RuntimeException("Групу не знайдено"));
+                .orElseThrow(() -> new ResourceNotFoundException("Групу не знайдено"));
 
         GroupMember member = groupMemberRepository.findByGroupIdAndUserId(groupId, userId)
-                .orElseThrow(() -> new RuntimeException("Ви не є учасником цієї групи"));
+                .orElseThrow(() -> new UnauthorizedException("Ви не є учасником цієї групи"));
 
         return mapToGroupResponse(group, member);
     }
@@ -77,25 +81,25 @@ public class GroupService {
     @Transactional
     public void addMemberToGroup(String groupId, AddMemberRequest request, String adminUserId) {
         Group group = groupRepository.findById(groupId)
-                .orElseThrow(() -> new RuntimeException("Групу не знайдено"));
+                .orElseThrow(() -> new ResourceNotFoundException("Групу не знайдено"));
 
         GroupMember adminMember = groupMemberRepository.findByGroupIdAndUserId(groupId, adminUserId)
-                .orElseThrow(() -> new RuntimeException("Ви не є учасником цієї групи"));
+                .orElseThrow(() -> new UnauthorizedException("Ви не є учасником цієї групи"));
 
         if (adminMember.getRole() != GroupMember.Role.ADMIN) {
-            throw new RuntimeException("Тільки адміністратор може додавати учасників");
+            throw new UnauthorizedException("Тільки адміністратор може додавати учасників");
         }
 
         long currentMembers = groupMemberRepository.countByGroupId(groupId);
         if (currentMembers >= group.getMaxMembers()) {
-            throw new RuntimeException("Досягнуто максимальну кількість учасників");
+            throw new BusinessException("Досягнуто максимальну кількість учасників");
         }
 
-        User newUser = userRepository.findByPhoneHash(hashPhone(request.getPhone()))
-                .orElseThrow(() -> new RuntimeException("Користувача з таким телефоном не знайдено"));
+        User newUser = userRepository.findByPhoneHash(HashUtil.hashPhone(request.getPhone()))
+                .orElseThrow(() -> new ResourceNotFoundException("Користувача з таким телефоном не знайдено"));
 
         if (groupMemberRepository.findByGroupIdAndUserId(groupId, newUser.getId()).isPresent()) {
-            throw new RuntimeException("Користувач вже є учасником групи");
+            throw new BusinessException("Користувач вже є учасником групи");
         }
 
         GroupMember newMember = GroupMember.builder()
@@ -110,18 +114,18 @@ public class GroupService {
     @Transactional
     public GroupResponse joinGroupByAccessCode(JoinGroupRequest request, String userId) {
         Group group = groupRepository.findByAccessCode(request.getAccessCode())
-                .orElseThrow(() -> new RuntimeException("Групу з таким кодом не знайдено"));
+                .orElseThrow(() -> new ResourceNotFoundException("Групу з таким кодом не знайдено"));
 
         User user = userRepository.findById(userId)
-                .orElseThrow(() -> new RuntimeException("Користувача не знайдено"));
+                .orElseThrow(() -> new ResourceNotFoundException("Користувача не знайдено"));
 
         if (groupMemberRepository.findByGroupIdAndUserId(group.getId(), userId).isPresent()) {
-            throw new RuntimeException("Ви вже є учасником цієї групи");
+            throw new BusinessException("Ви вже є учасником цієї групи");
         }
 
         long currentMembers = groupMemberRepository.countByGroupId(group.getId());
         if (currentMembers >= group.getMaxMembers()) {
-            throw new RuntimeException("Досягнуто максимальну кількість учасників");
+            throw new BusinessException("Досягнуто максимальну кількість учасників");
         }
 
         GroupMember newMember = GroupMember.builder()
@@ -138,7 +142,7 @@ public class GroupService {
     @Transactional(readOnly = true)
     public List<GroupMemberResponse> getGroupMembers(String groupId, String userId) {
         groupMemberRepository.findByGroupIdAndUserId(groupId, userId)
-                .orElseThrow(() -> new RuntimeException("Ви не є учасником цієї групи"));
+                .orElseThrow(() -> new UnauthorizedException("Ви не є учасником цієї групи"));
 
         List<GroupMember> members = groupMemberRepository.findByGroupId(groupId);
 
@@ -150,21 +154,21 @@ public class GroupService {
     @Transactional
     public void removeMemberFromGroup(String groupId, String memberUserId, String adminUserId) {
         groupRepository.findById(groupId)
-                .orElseThrow(() -> new RuntimeException("Групу не знайдено"));
+                .orElseThrow(() -> new ResourceNotFoundException("Групу не знайдено"));
 
         GroupMember adminMember = groupMemberRepository.findByGroupIdAndUserId(groupId, adminUserId)
-                .orElseThrow(() -> new RuntimeException("Ви не є учасником цієї групи"));
+                .orElseThrow(() -> new UnauthorizedException("Ви не є учасником цієї групи"));
 
         if (adminMember.getRole() != GroupMember.Role.ADMIN) {
-            throw new RuntimeException("Тільки адміністратор може видаляти учасників");
+            throw new UnauthorizedException("Тільки адміністратор може видаляти учасників");
         }
 
         if (memberUserId.equals(adminUserId)) {
-            throw new RuntimeException("Використовуйте endpoint /leave для виходу з групи");
+            throw new BusinessException("Використовуйте endpoint /leave для виходу з групи");
         }
 
         GroupMember memberToRemove = groupMemberRepository.findByGroupIdAndUserId(groupId, memberUserId)
-                .orElseThrow(() -> new RuntimeException("Учасника не знайдено в групі"));
+                .orElseThrow(() -> new ResourceNotFoundException("Учасника не знайдено в групі"));
 
         groupMemberRepository.delete(memberToRemove);
     }
@@ -172,15 +176,15 @@ public class GroupService {
     @Transactional
     public void leaveGroup(String groupId, String userId) {
         Group group = groupRepository.findById(groupId)
-                .orElseThrow(() -> new RuntimeException("Групу не знайдено"));
+                .orElseThrow(() -> new ResourceNotFoundException("Групу не знайдено"));
 
         GroupMember member = groupMemberRepository.findByGroupIdAndUserId(groupId, userId)
-                .orElseThrow(() -> new RuntimeException("Ви не є учасником цієї групи"));
+                .orElseThrow(() -> new UnauthorizedException("Ви не є учасником цієї групи"));
 
         long currentMembers = groupMemberRepository.countByGroupId(groupId);
-        
+
         if (member.getRole() == GroupMember.Role.ADMIN && currentMembers > 1) {
-            throw new RuntimeException("Адміністратор не може вийти доки в групі є інші учасники");
+            throw new BusinessException("Адміністратор не може вийти доки в групі є інші учасники");
         }
 
         groupMemberRepository.delete(member);
@@ -193,13 +197,13 @@ public class GroupService {
     @Transactional
     public void deleteGroup(String groupId, String userId) {
         Group group = groupRepository.findById(groupId)
-                .orElseThrow(() -> new RuntimeException("Групу не знайдено"));
+                .orElseThrow(() -> new ResourceNotFoundException("Групу не знайдено"));
 
         GroupMember adminMember = groupMemberRepository.findByGroupIdAndUserId(groupId, userId)
-                .orElseThrow(() -> new RuntimeException("Ви не є учасником цієї групи"));
+                .orElseThrow(() -> new UnauthorizedException("Ви не є учасником цієї групи"));
 
         if (adminMember.getRole() != GroupMember.Role.ADMIN) {
-            throw new RuntimeException("Тільки адміністратор може видалити групу");
+            throw new UnauthorizedException("Тільки адміністратор може видалити групу");
         }
 
         List<GroupMember> members = groupMemberRepository.findByGroupId(groupId);
@@ -232,19 +236,5 @@ public class GroupService {
                 .role(member.getRole().name())
                 .joinedAt(member.getJoinedAt())
                 .build();
-    }
-
-    private String hashPhone(String phone) {
-        try {
-            java.security.MessageDigest digest = java.security.MessageDigest.getInstance("SHA-256");
-            byte[] hash = digest.digest(phone.getBytes(java.nio.charset.StandardCharsets.UTF_8));
-            StringBuilder hexString = new StringBuilder();
-            for (byte b : hash) {
-                hexString.append(String.format("%02x", b));
-            }
-            return hexString.toString();
-        } catch (Exception e) {
-            throw new RuntimeException("Помилка хешування телефону", e);
-        }
     }
 }

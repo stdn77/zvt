@@ -6,16 +6,21 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import java.security.SecureRandom;
 import java.time.LocalDateTime;
-import java.util.Random;
 
 @Entity
-@Table(name = "`groups`")
+@Table(name = "`groups`", indexes = {
+    @Index(name = "idx_group_created_by", columnList = "created_by"),
+    @Index(name = "idx_group_created_at", columnList = "created_at")
+})
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
 public class Group {
+
+    private static final SecureRandom SECURE_RANDOM = new SecureRandom();
 
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
@@ -72,17 +77,15 @@ public class Group {
     }
 
     private String generateAccessCode() {
-        Random random = new Random();
-        int number = 10000 + random.nextInt(90000); // 10000-99999
+        int number = 10000 + SECURE_RANDOM.nextInt(90000); // 10000-99999
         return "GROUP-" + number;
     }
 
     private String generateInternalCode() {
         String chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
-        Random random = new Random();
         StringBuilder code = new StringBuilder("@");
         for (int i = 0; i < 16; i++) {
-            code.append(chars.charAt(random.nextInt(chars.length())));
+            code.append(chars.charAt(SECURE_RANDOM.nextInt(chars.length())));
         }
         return code.toString();
     }

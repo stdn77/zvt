@@ -10,6 +10,8 @@ import com.zvit.entity.GroupMember;
 import com.zvit.entity.Report;
 import com.zvit.entity.User;
 import com.zvit.entity.enums.Role;
+import com.zvit.exception.ResourceNotFoundException;
+import com.zvit.exception.UnauthorizedException;
 import com.zvit.repository.GroupMemberRepository;
 import com.zvit.repository.GroupRepository;
 import com.zvit.repository.ReportRepository;
@@ -20,7 +22,9 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.time.Duration;
 import java.time.LocalDateTime;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 @Service
@@ -37,13 +41,13 @@ public class ReportService {
     @Transactional
     public ReportResponse createSimpleReport(SimpleReportRequest request, String userId) {
         Group group = groupRepository.findById(request.getGroupId())
-                .orElseThrow(() -> new RuntimeException("Групу не знайдено"));
+                .orElseThrow(() -> new ResourceNotFoundException("Групу не знайдено"));
 
         User user = userRepository.findById(userId)
-                .orElseThrow(() -> new RuntimeException("Користувача не знайдено"));
+                .orElseThrow(() -> new ResourceNotFoundException("Користувача не знайдено"));
 
         groupMemberRepository.findByGroupIdAndUserId(request.getGroupId(), userId)
-                .orElseThrow(() -> new RuntimeException("Ви не є учасником цієї групи"));
+                .orElseThrow(() -> new UnauthorizedException("Ви не є учасником цієї групи"));
 
         Report report = Report.builder()
                 .group(group)
@@ -61,13 +65,13 @@ public class ReportService {
     @Transactional
     public ReportResponse createExtendedReport(ExtendedReportRequest request, String userId) {
         Group group = groupRepository.findById(request.getGroupId())
-                .orElseThrow(() -> new RuntimeException("Групу не знайдено"));
+                .orElseThrow(() -> new ResourceNotFoundException("Групу не знайдено"));
 
         User user = userRepository.findById(userId)
-                .orElseThrow(() -> new RuntimeException("Користувача не знайдено"));
+                .orElseThrow(() -> new ResourceNotFoundException("Користувача не знайдено"));
 
         groupMemberRepository.findByGroupIdAndUserId(request.getGroupId(), userId)
-                .orElseThrow(() -> new RuntimeException("Ви не є учасником цієї групи"));
+                .orElseThrow(() -> new UnauthorizedException("Ви не є учасником цієї групи"));
 
         Report report = Report.builder()
                 .group(group)
@@ -88,7 +92,7 @@ public class ReportService {
 
     public List<ReportResponse> getMyReports(String groupId, String userId) {
         groupMemberRepository.findByGroupIdAndUserId(groupId, userId)
-                .orElseThrow(() -> new RuntimeException("Ви не є учасником цієї групи"));
+                .orElseThrow(() -> new UnauthorizedException("Ви не є учасником цієї групи"));
 
         List<Report> reports = reportRepository.findByGroup_IdAndUser_IdOrderBySubmittedAtDesc(groupId, userId);
 
@@ -99,10 +103,10 @@ public class ReportService {
 
     public ReportResponse getMyLastReport(String groupId, String userId) {
         groupMemberRepository.findByGroupIdAndUserId(groupId, userId)
-                .orElseThrow(() -> new RuntimeException("Ви не є учасником цієї групи"));
+                .orElseThrow(() -> new UnauthorizedException("Ви не є учасником цієї групи"));
 
         Report lastReport = reportRepository.findFirstByGroup_IdAndUser_IdOrderBySubmittedAtDesc(groupId, userId)
-                .orElseThrow(() -> new RuntimeException("Звітів не знайдено"));
+                .orElseThrow(() -> new ResourceNotFoundException("Звітів не знайдено"));
 
         return mapToReportResponse(lastReport);
     }
@@ -110,18 +114,27 @@ public class ReportService {
     @Transactional(readOnly = true)
     public List<UserStatusResponse> getGroupStatuses(String groupId, String userId) {
         groupMemberRepository.findByGroupIdAndUserId(groupId, userId)
-                .orElseThrow(() -> new RuntimeException("Ви не є учасником цієї групи"));
+                .orElseThrow(() -> new UnauthorizedException("Ви не є учасником цієї групи"));
 
         List<GroupMember> members = groupMemberRepository.findByGroupId(groupId);
+
+        // Оптимізація: отримуємо всі останні звіти одним запитом
+        List<Report> latestReports = reportRepository.findLatestReportsByGroupId(groupId);
+
+        // Створюємо Map для швидкого доступу до звітів по userId
+        Map<String, Report> reportsByUserId = latestReports.stream()
+                .collect(Collectors.toMap(
+                        report -> report.getUser().getId(),
+                        report -> report,
+                        (existing, replacement) -> existing
+                ));
 
         LocalDateTime now = LocalDateTime.now();
         LocalDateTime windowStart = now.minusHours(REPORT_WINDOW_HOURS);
 
         return members.stream()
                 .map(member -> {
-                    Report lastReport = reportRepository
-                            .findFirstByGroup_IdAndUser_IdOrderBySubmittedAtDesc(groupId, member.getUser().getId())
-                            .orElse(null);
+                    Report lastReport = reportsByUserId.get(member.getUser().getId());
 
                     String colorHex;
                     Double percentageElapsed;
@@ -144,13 +157,13 @@ public class ReportService {
     @Transactional
     public void createUrgentRequest(UrgentReportRequest request, String userId) {
         Group group = groupRepository.findById(request.getGroupId())
-                .orElseThrow(() -> new RuntimeException("Групу не знайдено"));
+                .orElseThrow(() -> new ResourceNotFoundException("Групу не знайдено"));
 
         GroupMember adminMember = groupMemberRepository.findByGroupIdAndUserId(request.getGroupId(), userId)
-                .orElseThrow(() -> new RuntimeException("Ви не є учасником цієї групи"));
+                .orElseThrow(() -> new UnauthorizedException("Ви не є учасником цієї групи"));
 
         if (adminMember.getRole() != GroupMember.Role.ADMIN) {
-            throw new RuntimeException("Тільки адміністратор може створювати термінові запити");
+            throw new UnauthorizedException("Тільки адміністратор може створювати термінові запити");
         }
 
         System.out.println("Терміновий запит для групи: " + group.getExternalName());
@@ -159,10 +172,10 @@ public class ReportService {
 
     public List<ReportResponse> getAllGroupReports(String groupId, String userId) {
         GroupMember adminMember = groupMemberRepository.findByGroupIdAndUserId(groupId, userId)
-                .orElseThrow(() -> new RuntimeException("Ви не є учасником цієї групи"));
+                .orElseThrow(() -> new UnauthorizedException("Ви не є учасником цієї групи"));
 
         if (adminMember.getRole() != GroupMember.Role.ADMIN) {
-            throw new RuntimeException("Тільки адміністратор може переглядати всі звіти");
+            throw new UnauthorizedException("Тільки адміністратор може переглядати всі звіти");
         }
 
         List<Report> reports = reportRepository.findByGroup_IdOrderBySubmittedAtDesc(groupId);

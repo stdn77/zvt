@@ -5,15 +5,16 @@ import com.zvit.dto.request.RegisterRequest;
 import com.zvit.dto.response.LoginResponse;
 import com.zvit.dto.response.RegisterResponse;
 import com.zvit.entity.User;
+import com.zvit.exception.BusinessException;
+import com.zvit.exception.UnauthorizedException;
+import com.zvit.exception.ValidationException;
 import com.zvit.repository.UserRepository;
+import com.zvit.util.HashUtil;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.nio.charset.StandardCharsets;
-import java.security.MessageDigest;
-import java.security.NoSuchAlgorithmException;
 import java.time.LocalDateTime;
 import java.util.UUID;
 
@@ -29,23 +30,23 @@ public class AuthService {
     @Transactional
     public RegisterResponse register(RegisterRequest request) {
         if (!isValidPhone(request.getPhone())) {
-            throw new RuntimeException("Невірний формат телефону");
+            throw new ValidationException("Невірний формат телефону");
         }
 
         if (request.getEmail() != null && !isValidEmail(request.getEmail())) {
-            throw new RuntimeException("Невірний формат email");
+            throw new ValidationException("Невірний формат email");
         }
 
-        String phoneHash = hashPhone(request.getPhone());
+        String phoneHash = HashUtil.hashPhone(request.getPhone());
         String phoneEncrypted = encryptionService.encrypt(request.getPhone());
-        String emailHash = request.getEmail() != null ? hashEmail(request.getEmail()) : null;
+        String emailHash = request.getEmail() != null ? HashUtil.hashEmail(request.getEmail()) : null;
 
         if (userRepository.existsByPhoneHash(phoneHash)) {
-            throw new RuntimeException("Користувач з таким телефоном вже існує");
+            throw new BusinessException("Користувач з таким телефоном вже існує");
         }
 
         if (emailHash != null && userRepository.existsByEmailHash(emailHash)) {
-            throw new RuntimeException("Користувач з таким email вже існує");
+            throw new BusinessException("Користувач з таким email вже існує");
         }
 
         User user = User.builder()
@@ -73,17 +74,17 @@ public class AuthService {
 
     @Transactional
     public LoginResponse login(LoginRequest request) {
-        String phoneHash = hashPhone(request.getPhone());
+        String phoneHash = HashUtil.hashPhone(request.getPhone());
 
         User user = userRepository.findByPhoneHash(phoneHash)
-                .orElseThrow(() -> new RuntimeException("Невірний телефон або пароль"));
+                .orElseThrow(() -> new UnauthorizedException("Невірний телефон або пароль"));
 
         if (!passwordEncoder.matches(request.getPassword(), user.getPasswordHash())) {
-            throw new RuntimeException("Невірний телефон або пароль");
+            throw new UnauthorizedException("Невірний телефон або пароль");
         }
 
         if (!user.isActive()) {
-            throw new RuntimeException("Обліковий запис деактивовано");
+            throw new UnauthorizedException("Обліковий запис деактивовано");
         }
 
         user.setLastLoginAt(LocalDateTime.now());
@@ -99,35 +100,7 @@ public class AuthService {
     }
 
     public String test() {
-        return "Auth API працює! Версія: 1.3 (JWT)";
-    }
-
-    private String hashPhone(String phone) {
-        try {
-            MessageDigest digest = MessageDigest.getInstance("SHA-256");
-            byte[] hash = digest.digest(phone.getBytes(StandardCharsets.UTF_8));
-            return bytesToHex(hash);
-        } catch (NoSuchAlgorithmException e) {
-            throw new RuntimeException("Помилка хешування телефону", e);
-        }
-    }
-
-    private String hashEmail(String email) {
-        try {
-            MessageDigest digest = MessageDigest.getInstance("SHA-256");
-            byte[] hash = digest.digest(email.toLowerCase().getBytes(StandardCharsets.UTF_8));
-            return bytesToHex(hash);
-        } catch (NoSuchAlgorithmException e) {
-            throw new RuntimeException("Помилка хешування email", e);
-        }
-    }
-
-    private String bytesToHex(byte[] bytes) {
-        StringBuilder result = new StringBuilder();
-        for (byte b : bytes) {
-            result.append(String.format("%02x", b));
-        }
-        return result.toString();
+        return "Auth API працює! Версія: 1.5 (Оптимізовано)";
     }
 
     private boolean isValidPhone(String phone) {
