@@ -29,7 +29,9 @@
             display: flex;
             justify-content: space-between;
             align-items: center;
-            margin-bottom: 15px;
+            margin-bottom: 10px;
+            flex-wrap: wrap;
+            gap: 10px;
         }
 
         .header h1 {
@@ -48,6 +50,53 @@
             justify-content: center;
             align-items: center;
             flex-wrap: wrap;
+            flex: 1;
+        }
+
+        .refresh-control {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 10px 0;
+            border-top: 1px solid #e5e7eb;
+            margin-top: 10px;
+        }
+
+        .refresh-control label {
+            font-size: 12px;
+            color: #6b7280;
+            font-weight: 500;
+        }
+
+        .refresh-control input {
+            width: 70px;
+            padding: 5px 10px;
+            border: 1px solid #d1d5db;
+            border-radius: 4px;
+            font-size: 12px;
+            color: #1f2937;
+        }
+
+        .refresh-control button {
+            padding: 5px 15px;
+            background: #667eea;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 12px;
+            font-weight: 500;
+            transition: background 0.2s;
+        }
+
+        .refresh-control button:hover {
+            background: #5568d3;
+        }
+
+        .refresh-control .current-interval {
+            font-size: 11px;
+            color: #6b7280;
+            font-style: italic;
         }
 
         .legend-item {
@@ -257,20 +306,44 @@
             .dashboard-grid {
                 grid-template-columns: repeat(auto-fill, minmax(80px, 1fr));
             }
-            
+
             .user-card {
                 min-height: 80px;
                 padding: 6px;
             }
 
+            .header-top {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+
             .status-legend {
                 font-size: 10px;
+                width: 100%;
+                justify-content: flex-start;
             }
 
             .legend-color {
                 min-width: 35px;
                 height: 20px;
                 font-size: 11px;
+            }
+
+            .last-update {
+                width: 100%;
+            }
+
+            .refresh-control {
+                flex-wrap: wrap;
+                gap: 5px;
+            }
+
+            .refresh-control input {
+                width: 60px;
+            }
+
+            .refresh-control .current-interval {
+                width: 100%;
             }
         }
     </style>
@@ -279,33 +352,40 @@
     <div class="header">
         <div class="header-top">
             <h1 id="groupName">📊 Dashboard</h1>
+            <div class="status-legend">
+                <div class="legend-item">
+                    <div class="legend-color" id="greenCount" style="background: linear-gradient(135deg, #d1fae5 0%, #a7f3d0 100%);">0</div>
+                    <span>Звітував недавно</span>
+                </div>
+                <span class="legend-separator">|</span>
+                <div class="legend-item">
+                    <div class="legend-color" id="yellowCount" style="background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%);">0</div>
+                    <span>Час йде</span>
+                </div>
+                <span class="legend-separator">|</span>
+                <div class="legend-item">
+                    <div class="legend-color" id="redCount" style="background: linear-gradient(135deg, #fee2e2 0%, #fecaca 100%);">0</div>
+                    <span>Час майже вийшов</span>
+                </div>
+                <span class="legend-separator">|</span>
+                <div class="legend-item">
+                    <div class="legend-color" id="grayCount" style="background: linear-gradient(135deg, #f3f4f6 0%, #e5e7eb 100%);">0</div>
+                    <span>Немає звіту</span>
+                </div>
+                <span class="legend-separator">|</span>
+                <div class="legend-item">
+                    <span class="total-count">Всього: <strong id="totalCount">0</strong></span>
+                </div>
+            </div>
             <div class="last-update" id="lastUpdate">Завантаження...</div>
         </div>
 
-        <div class="status-legend">
-            <div class="legend-item">
-                <div class="legend-color" id="greenCount" style="background: linear-gradient(135deg, #d1fae5 0%, #a7f3d0 100%);">0</div>
-                <span>Звітував недавно</span>
-            </div>
-            <span class="legend-separator">|</span>
-            <div class="legend-item">
-                <div class="legend-color" id="yellowCount" style="background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%);">0</div>
-                <span>Час йде</span>
-            </div>
-            <span class="legend-separator">|</span>
-            <div class="legend-item">
-                <div class="legend-color" id="redCount" style="background: linear-gradient(135deg, #fee2e2 0%, #fecaca 100%);">0</div>
-                <span>Час майже вийшов</span>
-            </div>
-            <span class="legend-separator">|</span>
-            <div class="legend-item">
-                <div class="legend-color" id="grayCount" style="background: linear-gradient(135deg, #f3f4f6 0%, #e5e7eb 100%);">0</div>
-                <span>Немає звіту</span>
-            </div>
-            <span class="legend-separator">|</span>
-            <div class="legend-item">
-                <span class="total-count">Всього: <strong id="totalCount">0</strong></span>
-            </div>
+        <div class="refresh-control">
+            <label for="refreshInterval">⏱️ Інтервал оновлення:</label>
+            <input type="number" id="refreshInterval" min="1" max="60" value="10" />
+            <span style="font-size: 12px; color: #6b7280;">хв</span>
+            <button onclick="setRefreshInterval()">Застосувати</button>
+            <span class="current-interval" id="currentIntervalText">(зараз: 10 хв)</span>
         </div>
     </div>
 
@@ -331,12 +411,44 @@
     <script>
         const urlParams = new URLSearchParams(window.location.search);
         const token = urlParams.get('token');
+        let refreshIntervalId = null;
+        let currentRefreshInterval = parseInt(localStorage.getItem('dashboardRefreshInterval')) || 10;
+
+        // Встановлюємо збережене значення при завантаженні
+        document.getElementById('refreshInterval').value = currentRefreshInterval;
+        document.getElementById('currentIntervalText').textContent = `(зараз: ${currentRefreshInterval} хв)`;
 
         if (!token) {
             document.getElementById('loading').innerHTML = '<div class="error">❌ Відсутній токен доступу</div>';
         } else {
             loadDashboard();
-            setInterval(loadDashboard, 10000);
+            startAutoRefresh();
+        }
+
+        function startAutoRefresh() {
+            if (refreshIntervalId) {
+                clearInterval(refreshIntervalId);
+            }
+            refreshIntervalId = setInterval(loadDashboard, currentRefreshInterval * 60 * 1000);
+        }
+
+        function setRefreshInterval() {
+            const input = document.getElementById('refreshInterval');
+            let minutes = parseInt(input.value);
+
+            if (isNaN(minutes) || minutes < 1 || minutes > 60) {
+                alert('Будь ласка, введіть значення від 1 до 60 хвилин');
+                input.value = currentRefreshInterval;
+                return;
+            }
+
+            currentRefreshInterval = minutes;
+            localStorage.setItem('dashboardRefreshInterval', minutes);
+            document.getElementById('currentIntervalText').textContent = `(зараз: ${minutes} хв)`;
+
+            startAutoRefresh();
+
+            alert(`Інтервал оновлення встановлено: ${minutes} хв`);
         }
 
         async function loadDashboard() {
