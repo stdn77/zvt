@@ -9,12 +9,12 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @AllArgsConstructor
 public class SimpleReportRequest {
-    
+
     @NotBlank(message = "ID групи обов'язковий")
     private String groupId;
-    
+
     @NotBlank(message = "Відповідь обов'язкова")
     private String simpleResponse;
-    
+
     private String comment;
 }

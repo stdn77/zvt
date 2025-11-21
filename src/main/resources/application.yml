@@ -2,6 +2,9 @@ spring:
   application:
     name: zvit-backend
 
+  messages:
+    encoding: UTF-8
+
   datasource:
     url: jdbc:mysql://localhost:3307/zvit_db?useSSL=false&serverTimezone=UTC&allowPublicKeyRetrieval=true
     username: zvituser
@@ -27,6 +30,10 @@ server:
   port: 8080
   servlet:
     context-path: /
+    encoding:
+      charset: UTF-8
+      enabled: true
+      force: true
 
 jwt:
   secret: eW91ci1zZWNyZXQta2V5LWNoYW5nZS1pbi1wcm9kdWN0aW9uLW1pbi0yNTYtYml0cy1sb25nLWZvci1zZWN1cml0eQ==

@@ -6,7 +6,7 @@ import lombok.Data;
 
 @Data
 public class JoinGroupRequest {
-    
+
     @NotBlank(message = "Код доступу обов'язковий")
     @Pattern(regexp = "^GROUP-\\d{5}$", message = "Невірний формат коду")
     private String accessCode;

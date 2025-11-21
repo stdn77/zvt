@@ -13,15 +13,15 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @AllArgsConstructor
 public class CreateGroupRequest {
-    
+
     @NotBlank(message = "Назва групи обов'язкова")
     private String externalName;
-    
+
     @NotNull(message = "Максимальна кількість учасників обов'язкова")
     @Min(value = 2, message = "Мінімум 2 учасники")
     @Max(value = 1000, message = "Максимум 1000 учасників")
     private Integer maxMembers;
-    
+
     @NotNull(message = "Тип звіту обов'язковий")
     private Group.ReportType reportType;
 }
