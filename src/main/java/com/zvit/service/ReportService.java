@@ -180,6 +180,24 @@ public class ReportService {
                 .collect(Collectors.toList());
     }
 
+    public List<ReportResponse> getUserReportsInGroup(String groupId, String targetUserId, String requesterId) {
+        GroupMember requesterMember = groupMemberRepository.findByGroupIdAndUserId(groupId, requesterId)
+                .orElseThrow(() -> new RuntimeException("Ви не є учасником цієї групи"));
+
+        if (requesterMember.getRole() != GroupMember.Role.ADMIN) {
+            throw new RuntimeException("Тільки адміністратор може переглядати звіти інших учасників");
+        }
+
+        groupMemberRepository.findByGroupIdAndUserId(groupId, targetUserId)
+                .orElseThrow(() -> new RuntimeException("Користувач не є учасником цієї групи"));
+
+        List<Report> reports = reportRepository.findByGroup_IdAndUser_IdOrderBySubmittedAtDesc(groupId, targetUserId);
+
+        return reports.stream()
+                .map(this::mapToReportResponse)
+                .collect(Collectors.toList());
+    }
+
     private UserStatusResponse createStatusResponse(
             GroupMember member,
             Report lastReport,

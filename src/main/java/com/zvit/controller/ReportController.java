@@ -110,4 +110,15 @@ public class ReportController {
         List<ReportResponse> reports = reportService.getAllGroupReports(groupId, userId);
         return ResponseEntity.ok(ApiResponse.success("Всі звіти отримано", reports));
     }
+
+    @GetMapping("/group/{groupId}/user/{targetUserId}")
+    public ResponseEntity<ApiResponse<List<ReportResponse>>> getUserReportsInGroup(
+            @PathVariable String groupId,
+            @PathVariable String targetUserId,
+            Authentication authentication
+    ) {
+        String userId = authentication.getName();
+        List<ReportResponse> reports = reportService.getUserReportsInGroup(groupId, targetUserId, userId);
+        return ResponseEntity.ok(ApiResponse.success("Звіти користувача отримано", reports));
+    }
 }
