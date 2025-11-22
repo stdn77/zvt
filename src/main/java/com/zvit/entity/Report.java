@@ -54,6 +54,7 @@ public class Report {
     private String field5Value;
 
     @Column(name = "is_urgent")
+    @lombok.Builder.Default
     private Boolean isUrgent = false;
 
     @Column(name = "deadline_at")
