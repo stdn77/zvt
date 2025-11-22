@@ -9,10 +9,12 @@ import java.util.Optional;
 
 @Repository
 public interface ReportRepository extends JpaRepository<Report, String> {
-    
+
+    List<Report> findByUser_IdOrderBySubmittedAtDesc(String userId);
+
     List<Report> findByGroup_IdAndUser_IdOrderBySubmittedAtDesc(String groupId, String userId);
-    
+
     Optional<Report> findFirstByGroup_IdAndUser_IdOrderBySubmittedAtDesc(String groupId, String userId);
-    
+
     List<Report> findByGroup_IdOrderBySubmittedAtDesc(String groupId);
 }

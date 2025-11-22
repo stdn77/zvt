@@ -86,6 +86,14 @@ public class ReportService {
         return mapToReportResponse(report);
     }
 
+    public List<ReportResponse> getAllMyReports(String userId) {
+        List<Report> reports = reportRepository.findByUser_IdOrderBySubmittedAtDesc(userId);
+
+        return reports.stream()
+                .map(this::mapToReportResponse)
+                .collect(Collectors.toList());
+    }
+
     public List<ReportResponse> getMyReports(String groupId, String userId) {
         groupMemberRepository.findByGroupIdAndUserId(groupId, userId)
                 .orElseThrow(() -> new RuntimeException("Ви не є учасником цієї групи"));
@@ -196,10 +204,11 @@ public class ReportService {
                 .userId(report.getUser().getId())
                 .userName(report.getUser().getName())
                 .groupId(report.getGroup().getId())
+                .groupName(report.getGroup().getExternalName())
                 .reportType(com.zvit.entity.enums.ReportType.valueOf(report.getReportType().name()))
                 .simpleResponse(report.getSimpleResponse())
                 .comment(report.getComment())
-                .createdAt(report.getSubmittedAt())
+                .submittedAt(report.getSubmittedAt())
                 .build();
     }
 

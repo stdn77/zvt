@@ -52,6 +52,15 @@ public class ReportController {
                 .body(ApiResponse.success("Розгорнутий звіт створено", response));
     }
 
+    @GetMapping("/my")
+    public ResponseEntity<ApiResponse<List<ReportResponse>>> getAllMyReports(
+            Authentication authentication
+    ) {
+        String userId = authentication.getName();
+        List<ReportResponse> reports = reportService.getAllMyReports(userId);
+        return ResponseEntity.ok(ApiResponse.success("Всі звіти отримано", reports));
+    }
+
     @GetMapping("/my/{groupId}")
     public ResponseEntity<ApiResponse<List<ReportResponse>>> getMyReports(
             @PathVariable String groupId,

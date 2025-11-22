@@ -17,8 +17,9 @@ public class ReportResponse {
     private String userId;
     private String userName;
     private String groupId;
+    private String groupName;
     private ReportType reportType;
     private String simpleResponse;
     private String comment;
-    private LocalDateTime createdAt;
+    private LocalDateTime submittedAt;
 }
