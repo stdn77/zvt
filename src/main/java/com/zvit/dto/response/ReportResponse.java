@@ -22,4 +22,11 @@ public class ReportResponse {
     private String simpleResponse;
     private String comment;
     private LocalDateTime submittedAt;
+
+    // Extended report fields
+    private String field1Value;
+    private String field2Value;
+    private String field3Value;
+    private String field4Value;
+    private String field5Value;
 }

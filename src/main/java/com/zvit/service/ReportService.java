@@ -227,6 +227,11 @@ public class ReportService {
                 .simpleResponse(report.getSimpleResponse())
                 .comment(report.getComment())
                 .submittedAt(report.getSubmittedAt())
+                .field1Value(report.getField1Value())
+                .field2Value(report.getField2Value())
+                .field3Value(report.getField3Value())
+                .field4Value(report.getField4Value())
+                .field5Value(report.getField5Value())
                 .build();
     }
 
