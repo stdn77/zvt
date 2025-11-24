@@ -108,7 +108,7 @@ public class AdminService {
         return GroupMemberResponse.builder()
             .userId(member.getUser().getId())
             .name(member.getUser().getName())
-            .phone(decryptedPhone)
+            .phoneNumber(decryptedPhone)
             .role(member.getRole().name())
             .joinedAt(member.getJoinedAt())
             .build();
