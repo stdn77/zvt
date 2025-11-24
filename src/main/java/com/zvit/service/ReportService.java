@@ -31,6 +31,7 @@ public class ReportService {
     private final GroupRepository groupRepository;
     private final GroupMemberRepository groupMemberRepository;
     private final UserRepository userRepository;
+    private final EncryptionService encryptionService;
 
     private static final int REPORT_WINDOW_HOURS = 24;
 
@@ -117,8 +118,11 @@ public class ReportService {
 
     @Transactional(readOnly = true)
     public List<UserStatusResponse> getGroupStatuses(String groupId, String userId) {
-        groupMemberRepository.findByGroupIdAndUserId(groupId, userId)
+        GroupMember requesterMember = groupMemberRepository.findByGroupIdAndUserId(groupId, userId)
                 .orElseThrow(() -> new RuntimeException("Ви не є учасником цієї групи"));
+
+        // Перевіряємо чи запитувач є адміністратором
+        boolean isAdmin = requesterMember.getRole() == GroupMember.Role.ADMIN;
 
         List<GroupMember> members = groupMemberRepository.findByGroupId(groupId);
 
@@ -144,7 +148,7 @@ public class ReportService {
                         colorHex = calculateGradientColor(percentageElapsed);
                     }
 
-                    return createStatusResponse(member, lastReport, colorHex, percentageElapsed);
+                    return createStatusResponse(member, lastReport, colorHex, percentageElapsed, isAdmin);
                 })
                 .collect(Collectors.toList());
     }
@@ -202,9 +206,10 @@ public class ReportService {
             GroupMember member,
             Report lastReport,
             String colorHex,
-            Double percentageElapsed
+            Double percentageElapsed,
+            boolean isRequesterAdmin
     ) {
-        return UserStatusResponse.builder()
+        UserStatusResponse.UserStatusResponseBuilder builder = UserStatusResponse.builder()
                 .userId(member.getUser().getId())
                 .userName(member.getUser().getName())
                 .role(Role.valueOf(member.getRole().name()))
@@ -212,8 +217,20 @@ public class ReportService {
                 .lastReportAt(lastReport != null ? lastReport.getSubmittedAt() : null)
                 .lastReportResponse(lastReport != null ? lastReport.getSimpleResponse() : null)
                 .colorHex(colorHex)
-                .percentageElapsed(percentageElapsed)
-                .build();
+                .percentageElapsed(percentageElapsed);
+
+        // Тільки адміністратори можуть бачити реальні номери телефонів
+        if (isRequesterAdmin) {
+            try {
+                String decryptedPhone = encryptionService.decrypt(member.getUser().getPhoneEncrypted());
+                builder.phoneNumber(decryptedPhone);
+            } catch (Exception e) {
+                // Якщо не вдалося розшифрувати, просто не додаємо номер
+                builder.phoneNumber(null);
+            }
+        }
+
+        return builder.build();
     }
 
     private ReportResponse mapToReportResponse(Report report) {

@@ -21,4 +21,5 @@ public class UserStatusResponse {
     private String lastReportResponse;
     private String colorHex;
     private Double percentageElapsed;
+    private String phoneNumber; // Тільки для адміністраторів
 }

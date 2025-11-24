@@ -25,6 +25,7 @@ public class GroupService {
     private final GroupRepository groupRepository;
     private final GroupMemberRepository groupMemberRepository;
     private final UserRepository userRepository;
+    private final EncryptionService encryptionService;
 
     @Transactional
     public GroupResponse createGroup(CreateGroupRequest request, String userId) {
@@ -137,13 +138,16 @@ public class GroupService {
 
     @Transactional(readOnly = true)
     public List<GroupMemberResponse> getGroupMembers(String groupId, String userId) {
-        groupMemberRepository.findByGroupIdAndUserId(groupId, userId)
+        GroupMember requesterMember = groupMemberRepository.findByGroupIdAndUserId(groupId, userId)
                 .orElseThrow(() -> new RuntimeException("Ви не є учасником цієї групи"));
+
+        // Перевіряємо чи запитувач є адміністратором
+        boolean isAdmin = requesterMember.getRole() == GroupMember.Role.ADMIN;
 
         List<GroupMember> members = groupMemberRepository.findByGroupId(groupId);
 
         return members.stream()
-                .map(this::mapToMemberResponse)
+                .map(member -> mapToMemberResponse(member, isAdmin))
                 .collect(Collectors.toList());
     }
 
@@ -224,14 +228,26 @@ public class GroupService {
                 .build();
     }
 
-    private GroupMemberResponse mapToMemberResponse(GroupMember member) {
-        return GroupMemberResponse.builder()
+    private GroupMemberResponse mapToMemberResponse(GroupMember member, boolean isRequesterAdmin) {
+        GroupMemberResponse.GroupMemberResponseBuilder builder = GroupMemberResponse.builder()
                 .userId(member.getUser().getId())
                 .name(member.getUser().getName())
-                .phone(member.getUser().getPhoneHash())
                 .role(member.getRole().name())
-                .joinedAt(member.getJoinedAt())
-                .build();
+                .joinedAt(member.getJoinedAt());
+
+        // Тільки адміністратори можуть бачити реальні номери телефонів
+        // Не-адміністратори не бачать нічого (ні хеш, ні реальний номер)
+        if (isRequesterAdmin) {
+            try {
+                String decryptedPhone = encryptionService.decrypt(member.getUser().getPhoneEncrypted());
+                builder.phoneNumber(decryptedPhone);
+            } catch (Exception e) {
+                // Якщо не вдалося розшифрувати, просто не додаємо номер
+                builder.phoneNumber(null);
+            }
+        }
+
+        return builder.build();
     }
 
     private String hashPhone(String phone) {

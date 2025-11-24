@@ -14,7 +14,7 @@ import java.time.LocalDateTime;
 public class GroupMemberResponse {
     private String userId;
     private String name;
-    private String phone;
+    private String phoneNumber; // Тільки для адміністраторів, null для інших
     private String role;
     private LocalDateTime joinedAt;
 }
