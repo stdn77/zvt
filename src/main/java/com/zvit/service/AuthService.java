@@ -74,11 +74,21 @@ public class AuthService {
     @Transactional
     public LoginResponse login(LoginRequest request) {
         String phoneHash = hashPhone(request.getPhone());
+        System.out.println("DEBUG: Login attempt for phone: " + request.getPhone());
+        System.out.println("DEBUG: Phone hash: " + phoneHash);
 
         User user = userRepository.findByPhoneHash(phoneHash)
-                .orElseThrow(() -> new RuntimeException("Невірний телефон або пароль"));
+                .orElseThrow(() -> {
+                    System.out.println("DEBUG: User not found for phone hash: " + phoneHash);
+                    return new RuntimeException("Невірний телефон або пароль");
+                });
+
+        System.out.println("DEBUG: User found: " + user.getId() + ", name: " + user.getName());
+        System.out.println("DEBUG: User password hash: " + user.getPasswordHash());
+        System.out.println("DEBUG: Password matches: " + passwordEncoder.matches(request.getPassword(), user.getPasswordHash()));
 
         if (!passwordEncoder.matches(request.getPassword(), user.getPasswordHash())) {
+            System.out.println("DEBUG: Password mismatch for user: " + user.getId());
             throw new RuntimeException("Невірний телефон або пароль");
         }
 
