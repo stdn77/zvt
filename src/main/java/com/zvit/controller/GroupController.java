@@ -1,10 +1,12 @@
 package com.zvit.controller;
 
 import com.zvit.dto.request.AddMemberRequest;
+import com.zvit.dto.request.ChangeRoleRequest;
 import com.zvit.dto.request.CreateGroupRequest;
 import com.zvit.dto.request.JoinGroupRequest;
 import com.zvit.dto.response.GroupMemberResponse;
 import com.zvit.dto.response.GroupResponse;
+import com.zvit.entity.GroupMember;
 import com.zvit.service.GroupService;
 import com.zvit.util.ApiResponse;
 import jakarta.validation.Valid;
@@ -119,5 +121,18 @@ public class GroupController {
         String userId = authentication.getName();
         groupService.deleteGroup(groupId, userId);
         return ResponseEntity.ok(ApiResponse.success("Групу видалено", null));
+    }
+
+    @PutMapping("/{groupId}/members/{memberId}/role")
+    public ResponseEntity<ApiResponse<Void>> changeUserRole(
+            @PathVariable String groupId,
+            @PathVariable String memberId,
+            @Valid @RequestBody ChangeRoleRequest request,
+            Authentication authentication
+    ) {
+        String userId = authentication.getName();
+        GroupMember.Role newRole = GroupMember.Role.valueOf(request.getRole());
+        groupService.changeUserRole(groupId, memberId, newRole, userId);
+        return ResponseEntity.ok(ApiResponse.success("Роль користувача змінено", null));
     }
 }

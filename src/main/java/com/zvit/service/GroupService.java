@@ -212,6 +212,39 @@ public class GroupService {
         groupRepository.delete(group);
     }
 
+    @Transactional
+    public void changeUserRole(String groupId, String memberUserId, GroupMember.Role newRole, String adminUserId) {
+        groupRepository.findById(groupId)
+                .orElseThrow(() -> new RuntimeException("Групу не знайдено"));
+
+        // Перевіряємо що запитувач є адміністратором
+        GroupMember adminMember = groupMemberRepository.findByGroupIdAndUserId(groupId, adminUserId)
+                .orElseThrow(() -> new RuntimeException("Ви не є учасником цієї групи"));
+
+        if (adminMember.getRole() != GroupMember.Role.ADMIN) {
+            throw new RuntimeException("Тільки адміністратор може змінювати ролі");
+        }
+
+        // Знаходимо учасника, роль якого потрібно змінити
+        GroupMember memberToChange = groupMemberRepository.findByGroupIdAndUserId(groupId, memberUserId)
+                .orElseThrow(() -> new RuntimeException("Учасника не знайдено в групі"));
+
+        // Якщо змінюємо адміністратора на користувача, перевіряємо що це не останній адмін
+        if (memberToChange.getRole() == GroupMember.Role.ADMIN && newRole == GroupMember.Role.MEMBER) {
+            long adminCount = groupMemberRepository.findByGroupId(groupId).stream()
+                    .filter(m -> m.getRole() == GroupMember.Role.ADMIN)
+                    .count();
+
+            if (adminCount < 2) {
+                throw new RuntimeException("Неможливо зняти останнього адміністратора");
+            }
+        }
+
+        // Змінюємо роль
+        memberToChange.setRole(newRole);
+        groupMemberRepository.save(memberToChange);
+    }
+
     private GroupResponse mapToGroupResponse(Group group, GroupMember member) {
         boolean isAdmin = member.getRole() == GroupMember.Role.ADMIN;
         long currentMembers = groupMemberRepository.countByGroupId(group.getId());
