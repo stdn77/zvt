@@ -245,9 +245,76 @@ public class GroupService {
         groupMemberRepository.save(memberToChange);
     }
 
+    @Transactional
+    public void updateGroupSettings(String groupId, com.zvit.dto.request.UpdateGroupSettingsRequest request, String adminUserId) {
+        Group group = groupRepository.findById(groupId)
+                .orElseThrow(() -> new RuntimeException("Групу не знайдено"));
+
+        // Перевіряємо що запитувач є адміністратором
+        GroupMember adminMember = groupMemberRepository.findByGroupIdAndUserId(groupId, adminUserId)
+                .orElseThrow(() -> new RuntimeException("Ви не є учасником цієї групи"));
+
+        if (adminMember.getRole() != GroupMember.Role.ADMIN) {
+            throw new RuntimeException("Тільки адміністратор може змінювати налаштування групи");
+        }
+
+        // Оновлюємо тип звіту
+        if (request.getReportType() != null) {
+            group.setReportType(Group.ReportType.valueOf(request.getReportType()));
+        }
+
+        // Оновлюємо розклад звітів
+        if (request.getScheduleType() != null) {
+            Group.ScheduleType scheduleType = Group.ScheduleType.valueOf(request.getScheduleType());
+            group.setScheduleType(scheduleType);
+
+            if (scheduleType == Group.ScheduleType.FIXED_TIMES) {
+                // Очищаємо старі значення
+                group.setFixedTime1(null);
+                group.setFixedTime2(null);
+                group.setFixedTime3(null);
+                group.setFixedTime4(null);
+                group.setFixedTime5(null);
+                group.setIntervalMinutes(null);
+                group.setIntervalStartTime(null);
+
+                // Встановлюємо нові часи (до 5)
+                if (request.getFixedTimes() != null) {
+                    List<String> times = request.getFixedTimes();
+                    if (times.size() > 0) group.setFixedTime1(times.get(0));
+                    if (times.size() > 1) group.setFixedTime2(times.get(1));
+                    if (times.size() > 2) group.setFixedTime3(times.get(2));
+                    if (times.size() > 3) group.setFixedTime4(times.get(3));
+                    if (times.size() > 4) group.setFixedTime5(times.get(4));
+                }
+            } else if (scheduleType == Group.ScheduleType.INTERVAL) {
+                // Очищаємо старі значення
+                group.setFixedTime1(null);
+                group.setFixedTime2(null);
+                group.setFixedTime3(null);
+                group.setFixedTime4(null);
+                group.setFixedTime5(null);
+
+                // Встановлюємо інтервал
+                group.setIntervalMinutes(request.getIntervalMinutes());
+                group.setIntervalStartTime(request.getIntervalStartTime());
+            }
+        }
+
+        groupRepository.save(group);
+    }
+
     private GroupResponse mapToGroupResponse(Group group, GroupMember member) {
         boolean isAdmin = member.getRole() == GroupMember.Role.ADMIN;
         long currentMembers = groupMemberRepository.countByGroupId(group.getId());
+
+        // Збираємо fixed times в список
+        List<String> fixedTimes = new java.util.ArrayList<>();
+        if (group.getFixedTime1() != null) fixedTimes.add(group.getFixedTime1());
+        if (group.getFixedTime2() != null) fixedTimes.add(group.getFixedTime2());
+        if (group.getFixedTime3() != null) fixedTimes.add(group.getFixedTime3());
+        if (group.getFixedTime4() != null) fixedTimes.add(group.getFixedTime4());
+        if (group.getFixedTime5() != null) fixedTimes.add(group.getFixedTime5());
 
         return GroupResponse.builder()
                 .groupId(group.getId())
@@ -258,6 +325,10 @@ public class GroupService {
                 .reportType(group.getReportType())
                 .userRole(member.getRole().name())
                 .createdAt(group.getCreatedAt())
+                .scheduleType(group.getScheduleType())
+                .fixedTimes(fixedTimes.isEmpty() ? null : fixedTimes)
+                .intervalMinutes(group.getIntervalMinutes())
+                .intervalStartTime(group.getIntervalStartTime())
                 .build();
     }
 

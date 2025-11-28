@@ -7,6 +7,7 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 import java.time.LocalDateTime;
+import java.util.List;
 
 @Data
 @Builder
@@ -21,4 +22,10 @@ public class GroupResponse {
     private Group.ReportType reportType;
     private String userRole;
     private LocalDateTime createdAt;
+
+    // Налаштування розкладу звітів
+    private Group.ScheduleType scheduleType;
+    private List<String> fixedTimes;  // Для FIXED_TIMES
+    private Integer intervalMinutes;  // Для INTERVAL
+    private String intervalStartTime; // Для INTERVAL
 }

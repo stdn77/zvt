@@ -37,6 +37,34 @@ public class Group {
     @Column(name = "report_type", nullable = false, length = 20)
     private ReportType reportType;
 
+    @Enumerated(EnumType.STRING)
+    @Column(name = "schedule_type", length = 20)
+    private ScheduleType scheduleType; // FIXED_TIMES або INTERVAL
+
+    // Для FIXED_TIMES: до 5 часів звітування (формат HH:mm)
+    @Column(name = "fixed_time_1", length = 5)
+    private String fixedTime1;
+
+    @Column(name = "fixed_time_2", length = 5)
+    private String fixedTime2;
+
+    @Column(name = "fixed_time_3", length = 5)
+    private String fixedTime3;
+
+    @Column(name = "fixed_time_4", length = 5)
+    private String fixedTime4;
+
+    @Column(name = "fixed_time_5", length = 5)
+    private String fixedTime5;
+
+    // Для INTERVAL: інтервал в хвилинах (5-1440)
+    @Column(name = "interval_minutes")
+    private Integer intervalMinutes;
+
+    // Для INTERVAL: час початку відліку (формат HH:mm)
+    @Column(name = "interval_start_time", length = 5)
+    private String intervalStartTime;
+
     @Column(name = "created_by", nullable = false)
     private String createdBy; // UUID користувача-створювача
 
@@ -50,6 +78,11 @@ public class Group {
         SIMPLE,    // Простий: ОК/Проблема + коментар
         EXTENDED,  // Розгорнутий: 5 полів
         URGENT     // Терміновий запит
+    }
+
+    public enum ScheduleType {
+        FIXED_TIMES,  // На конкретний час (до 5 разів на добу)
+        INTERVAL      // Через певний інтервал
     }
 
     @PrePersist

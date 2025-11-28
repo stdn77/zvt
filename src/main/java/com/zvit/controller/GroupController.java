@@ -135,4 +135,15 @@ public class GroupController {
         groupService.changeUserRole(groupId, memberId, newRole, userId);
         return ResponseEntity.ok(ApiResponse.success("Роль користувача змінено", null));
     }
+
+    @PutMapping("/{groupId}/settings")
+    public ResponseEntity<ApiResponse<Void>> updateGroupSettings(
+            @PathVariable String groupId,
+            @Valid @RequestBody com.zvit.dto.request.UpdateGroupSettingsRequest request,
+            Authentication authentication
+    ) {
+        String userId = authentication.getName();
+        groupService.updateGroupSettings(groupId, request, userId);
+        return ResponseEntity.ok(ApiResponse.success("Налаштування групи оновлено", null));
+    }
 }
