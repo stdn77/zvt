@@ -25,10 +25,13 @@ public class User {
     
     @Column(name = "phone_encrypted", nullable = false, length = 500)
     private String phoneEncrypted;
-    
+
     @Column(name = "email_hash", unique = true, length = 64)
     private String emailHash;
-    
+
+    @Column(name = "email_encrypted", length = 500)
+    private String emailEncrypted;
+
     @Column(name = "password_hash", nullable = false, length = 255)
     private String passwordHash;
     

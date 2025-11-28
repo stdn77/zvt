@@ -39,6 +39,7 @@ public class AuthService {
         String phoneHash = hashPhone(request.getPhone());
         String phoneEncrypted = encryptionService.encrypt(request.getPhone());
         String emailHash = request.getEmail() != null ? hashEmail(request.getEmail()) : null;
+        String emailEncrypted = request.getEmail() != null ? encryptionService.encrypt(request.getEmail()) : null;
 
         if (userRepository.existsByPhoneHash(phoneHash)) {
             throw new RuntimeException("Користувач з таким телефоном вже існує");
@@ -53,6 +54,7 @@ public class AuthService {
                 .phoneHash(phoneHash)
                 .phoneEncrypted(phoneEncrypted)
                 .emailHash(emailHash)
+                .emailEncrypted(emailEncrypted)
                 .passwordHash(passwordEncoder.encode(request.getPassword()))
                 .name(request.getName())
                 .phoneVerified(false)
@@ -101,10 +103,20 @@ public class AuthService {
 
         String jwtToken = jwtService.generateToken(user.getId(), request.getPhone());
 
+        // Дешифрувати телефон для відповіді
+        String decryptedPhone = encryptionService.decrypt(user.getPhoneEncrypted());
+
+        // Дешифрувати email, якщо він є
+        String decryptedEmail = user.getEmailEncrypted() != null
+                ? encryptionService.decrypt(user.getEmailEncrypted())
+                : null;
+
         return LoginResponse.builder()
                 .userId(user.getId())
                 .token(jwtToken)
                 .name(user.getName())
+                .phone(decryptedPhone)
+                .email(decryptedEmail)
                 .build();
     }
 
