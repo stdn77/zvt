@@ -7,15 +7,18 @@ import com.zvit.dto.response.GroupMemberResponse;
 import com.zvit.dto.response.GroupResponse;
 import com.zvit.entity.Group;
 import com.zvit.entity.GroupMember;
+import com.zvit.entity.Report;
 import com.zvit.entity.User;
 import com.zvit.repository.GroupMemberRepository;
 import com.zvit.repository.GroupRepository;
+import com.zvit.repository.ReportRepository;
 import com.zvit.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 @Service
@@ -25,6 +28,7 @@ public class GroupService {
     private final GroupRepository groupRepository;
     private final GroupMemberRepository groupMemberRepository;
     private final UserRepository userRepository;
+    private final ReportRepository reportRepository;
     private final EncryptionService encryptionService;
 
     @Transactional
@@ -316,6 +320,10 @@ public class GroupService {
         if (group.getFixedTime4() != null) fixedTimes.add(group.getFixedTime4());
         if (group.getFixedTime5() != null) fixedTimes.add(group.getFixedTime5());
 
+        // Отримуємо час останнього звіту користувача
+        Optional<Report> lastReport = reportRepository.findFirstByGroup_IdAndUser_IdOrderBySubmittedAtDesc(
+                group.getId(), member.getUser().getId());
+
         return GroupResponse.builder()
                 .groupId(group.getId())
                 .externalName(group.getExternalName())
@@ -329,6 +337,7 @@ public class GroupService {
                 .fixedTimes(fixedTimes.isEmpty() ? null : fixedTimes)
                 .intervalMinutes(group.getIntervalMinutes())
                 .intervalStartTime(group.getIntervalStartTime())
+                .lastReportAt(lastReport.map(Report::getSubmittedAt).orElse(null))
                 .build();
     }
 

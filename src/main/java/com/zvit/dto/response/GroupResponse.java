@@ -28,4 +28,7 @@ public class GroupResponse {
     private List<String> fixedTimes;  // Для FIXED_TIMES
     private Integer intervalMinutes;  // Для INTERVAL
     private String intervalStartTime; // Для INTERVAL
+
+    // Для учасників групи - час останнього звіту
+    private LocalDateTime lastReportAt;
 }
