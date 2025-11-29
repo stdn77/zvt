@@ -138,7 +138,11 @@ public class ReportService {
                     String colorHex;
                     Double percentageElapsed;
 
-                    if (lastReport == null || lastReport.getSubmittedAt().isBefore(windowStart)) {
+                    // Якщо це адміністратор - завжди темно-зелений колір
+                    if (member.getRole() == GroupMember.Role.ADMIN) {
+                        colorHex = "#006400"; // Темно-зелений (DarkGreen)
+                        percentageElapsed = 0.0;
+                    } else if (lastReport == null || lastReport.getSubmittedAt().isBefore(windowStart)) {
                         colorHex = "#CCCCCC";
                         percentageElapsed = null;
                     } else {
