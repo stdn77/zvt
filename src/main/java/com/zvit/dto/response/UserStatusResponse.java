@@ -20,6 +20,10 @@ public class UserStatusResponse {
     private LocalDateTime lastReportAt;  // MVZ - час останнього звіту (може бути null)
     private String lastReportResponse;
 
+    // Поля для веб-дашборду (обчислюються на бекенді)
+    private String colorHex;              // Колір для веб-інтерфейсу
+    private Double percentageElapsed;     // Відсоток часу що минув
+
     // Нові поля для обчислення кольорів на фронтенді
     private LocalDateTime previousScheduledTime;  // MZZ - минулий запланований час
     private LocalDateTime nextScheduledTime;      // NZ - наступний запланований час
