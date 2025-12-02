@@ -338,6 +338,8 @@ public class GroupService {
                 .intervalMinutes(group.getIntervalMinutes())
                 .intervalStartTime(group.getIntervalStartTime())
                 .lastReportAt(lastReport.map(Report::getSubmittedAt).orElse(null))
+                .serverTime(java.time.LocalDateTime.now())  // Серверний час
+                .timezone("Europe/Kiev")                    // Часова зона
                 .build();
     }
 

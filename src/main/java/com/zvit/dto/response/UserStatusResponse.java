@@ -17,9 +17,14 @@ public class UserStatusResponse {
     private String userName;
     private Role role;
     private boolean hasReported;
-    private LocalDateTime lastReportAt;
+    private LocalDateTime lastReportAt;  // MVZ - час останнього звіту (може бути null)
     private String lastReportResponse;
-    private String colorHex;
-    private Double percentageElapsed;
+
+    // Нові поля для обчислення кольорів на фронтенді
+    private LocalDateTime previousScheduledTime;  // MZZ - минулий запланований час
+    private LocalDateTime nextScheduledTime;      // NZ - наступний запланований час
+    private LocalDateTime serverTime;             // Серверний час для синхронізації
+    private String timezone;                      // Часова зона сервера
+
     private String phoneNumber; // Тільки для адміністраторів
 }

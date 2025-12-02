@@ -124,10 +124,17 @@ public class ReportService {
         // Перевіряємо чи запитувач є адміністратором
         boolean isAdmin = requesterMember.getRole() == GroupMember.Role.ADMIN;
 
+        Group group = groupRepository.findById(groupId)
+                .orElseThrow(() -> new RuntimeException("Групу не знайдено"));
+
+        // Обчислюємо розклад для групи
+        LocalDateTime nextScheduled = calculateNextScheduledTime(group);
+        LocalDateTime prevScheduled = calculatePreviousScheduledTime(group);
+
         List<GroupMember> members = groupMemberRepository.findByGroupId(groupId);
 
-        LocalDateTime now = LocalDateTime.now();
-        LocalDateTime windowStart = now.minusHours(REPORT_WINDOW_HOURS);
+        LocalDateTime serverTime = LocalDateTime.now();
+        String timezone = "Europe/Kiev";
 
         return members.stream()
                 .map(member -> {
@@ -135,24 +142,20 @@ public class ReportService {
                             .findFirstByGroup_IdAndUser_IdOrderBySubmittedAtDesc(groupId, member.getUser().getId())
                             .orElse(null);
 
-                    String colorHex;
-                    Double percentageElapsed;
+                    // MVZ - час останнього звіту (тільки якщо актуальний)
+                    LocalDateTime lastReportTime = null;
+                    if (lastReport != null && prevScheduled != null) {
+                        // Обчислюємо CP (чверть періоду) для фільтрації старих звітів
+                        long periodMinutes = Duration.between(prevScheduled, nextScheduled).toMinutes();
+                        long cpMinutes = periodMinutes / 4;
 
-                    // Якщо це адміністратор - завжди темно-зелений колір
-                    if (member.getRole() == GroupMember.Role.ADMIN) {
-                        colorHex = "#006400"; // Темно-зелений (DarkGreen)
-                        percentageElapsed = 0.0;
-                    } else if (lastReport == null || lastReport.getSubmittedAt().isBefore(windowStart)) {
-                        colorHex = "#CCCCCC";
-                        percentageElapsed = null;
-                    } else {
-                        Duration elapsed = Duration.between(lastReport.getSubmittedAt(), now);
-                        long elapsedHours = elapsed.toHours();
-                        percentageElapsed = (elapsedHours * 100.0) / REPORT_WINDOW_HOURS;
-                        colorHex = calculateGradientColor(percentageElapsed);
+                        // Відправляти MVZ тільки якщо звіт не дуже старий (пізніше ніж MZZ - CP)
+                        if (lastReport.getSubmittedAt().isAfter(prevScheduled.minusMinutes(cpMinutes))) {
+                            lastReportTime = lastReport.getSubmittedAt();
+                        }
                     }
 
-                    return createStatusResponse(member, lastReport, colorHex, percentageElapsed, isAdmin);
+                    return createStatusResponse(member, lastReport, lastReportTime, prevScheduled, nextScheduled, serverTime, timezone, isAdmin);
                 })
                 .collect(Collectors.toList());
     }
@@ -209,8 +212,11 @@ public class ReportService {
     private UserStatusResponse createStatusResponse(
             GroupMember member,
             Report lastReport,
-            String colorHex,
-            Double percentageElapsed,
+            LocalDateTime lastReportTime,
+            LocalDateTime previousScheduledTime,
+            LocalDateTime nextScheduledTime,
+            LocalDateTime serverTime,
+            String timezone,
             boolean isRequesterAdmin
     ) {
         UserStatusResponse.UserStatusResponseBuilder builder = UserStatusResponse.builder()
@@ -218,10 +224,12 @@ public class ReportService {
                 .userName(member.getUser().getName())
                 .role(Role.valueOf(member.getRole().name()))
                 .hasReported(lastReport != null)
-                .lastReportAt(lastReport != null ? lastReport.getSubmittedAt() : null)
+                .lastReportAt(lastReportTime)  // MVZ - може бути null якщо звіт старий
                 .lastReportResponse(lastReport != null ? lastReport.getSimpleResponse() : null)
-                .colorHex(colorHex)
-                .percentageElapsed(percentageElapsed);
+                .previousScheduledTime(previousScheduledTime)  // MZZ
+                .nextScheduledTime(nextScheduledTime)          // NZ
+                .serverTime(serverTime)                        // Серверний час
+                .timezone(timezone);                           // Часова зона
 
         // Тільки адміністратори можуть бачити реальні номери телефонів
         if (isRequesterAdmin) {
@@ -270,5 +278,205 @@ public class ReportService {
         }
 
         return String.format("#%02X%02X00", red, green);
+    }
+
+    /**
+     * Обчислює наступний запланований час звіту для групи
+     */
+    private LocalDateTime calculateNextScheduledTime(Group group) {
+        if (group.getScheduleType() == null) {
+            return null;
+        }
+
+        LocalDateTime now = LocalDateTime.now();
+
+        if (group.getScheduleType() == Group.ScheduleType.FIXED_TIMES) {
+            return getNextFixedTime(group, now);
+        } else if (group.getScheduleType() == Group.ScheduleType.INTERVAL) {
+            return getNextIntervalTime(group, now);
+        }
+
+        return null;
+    }
+
+    /**
+     * Обчислює попередній запланований час звіту для групи
+     */
+    private LocalDateTime calculatePreviousScheduledTime(Group group) {
+        if (group.getScheduleType() == null) {
+            return null;
+        }
+
+        LocalDateTime now = LocalDateTime.now();
+
+        if (group.getScheduleType() == Group.ScheduleType.FIXED_TIMES) {
+            return getPreviousFixedTime(group, now);
+        } else if (group.getScheduleType() == Group.ScheduleType.INTERVAL) {
+            return getPreviousIntervalTime(group, now);
+        }
+
+        return null;
+    }
+
+    /**
+     * Знаходить наступний фіксований час звіту
+     */
+    private LocalDateTime getNextFixedTime(Group group, LocalDateTime now) {
+        List<String> fixedTimes = getFixedTimesFromGroup(group);
+        if (fixedTimes.isEmpty()) {
+            return null;
+        }
+
+        int currentMinutes = now.getHour() * 60 + now.getMinute();
+        LocalDateTime nextTime = null;
+        int minDiff = Integer.MAX_VALUE;
+
+        for (String time : fixedTimes) {
+            try {
+                String[] parts = time.split(":");
+                int hours = Integer.parseInt(parts[0]);
+                int minutes = Integer.parseInt(parts[1]);
+                int timeInMinutes = hours * 60 + minutes;
+                int diff = timeInMinutes - currentMinutes;
+
+                if (diff > 0 && diff < minDiff) {
+                    minDiff = diff;
+                    nextTime = now.withHour(hours).withMinute(minutes).withSecond(0).withNano(0);
+                }
+            } catch (Exception e) {
+                // Пропускаємо невалідні часи
+            }
+        }
+
+        // Якщо не знайшли час сьогодні, беремо перший час завтра
+        if (nextTime == null && !fixedTimes.isEmpty()) {
+            String firstTime = fixedTimes.get(0);
+            String[] parts = firstTime.split(":");
+            int hours = Integer.parseInt(parts[0]);
+            int minutes = Integer.parseInt(parts[1]);
+            nextTime = now.plusDays(1).withHour(hours).withMinute(minutes).withSecond(0).withNano(0);
+        }
+
+        return nextTime;
+    }
+
+    /**
+     * Обчислює наступний час звіту для інтервального розкладу
+     */
+    private LocalDateTime getNextIntervalTime(Group group, LocalDateTime now) {
+        if (group.getIntervalMinutes() == null || group.getIntervalStartTime() == null) {
+            return null;
+        }
+
+        try {
+            String[] parts = group.getIntervalStartTime().split(":");
+            int startHours = Integer.parseInt(parts[0]);
+            int startMinutes = Integer.parseInt(parts[1]);
+
+            LocalDateTime startTime = now.withHour(startHours).withMinute(startMinutes).withSecond(0).withNano(0);
+
+            // Якщо час початку ще не настав сьогодні
+            if (now.isBefore(startTime)) {
+                return startTime;
+            }
+
+            // Обраховуємо скільки інтервалів пройшло
+            long diffMinutes = Duration.between(startTime, now).toMinutes();
+            long intervalsPassed = diffMinutes / group.getIntervalMinutes();
+
+            // Наступний інтервал
+            return startTime.plusMinutes((intervalsPassed + 1) * group.getIntervalMinutes());
+
+        } catch (Exception e) {
+            return null;
+        }
+    }
+
+    /**
+     * Знаходить попередній фіксований час звіту
+     */
+    private LocalDateTime getPreviousFixedTime(Group group, LocalDateTime now) {
+        List<String> fixedTimes = getFixedTimesFromGroup(group);
+        if (fixedTimes.isEmpty()) {
+            return null;
+        }
+
+        int currentMinutes = now.getHour() * 60 + now.getMinute();
+        LocalDateTime previousTime = null;
+        int maxDiff = Integer.MIN_VALUE;
+
+        for (String time : fixedTimes) {
+            try {
+                String[] parts = time.split(":");
+                int hours = Integer.parseInt(parts[0]);
+                int minutes = Integer.parseInt(parts[1]);
+                int timeInMinutes = hours * 60 + minutes;
+                int diff = currentMinutes - timeInMinutes;
+
+                // Шукаємо найближчий час, що менший за поточний
+                if (diff > 0 && diff > maxDiff) {
+                    maxDiff = diff;
+                    previousTime = now.withHour(hours).withMinute(minutes).withSecond(0).withNano(0);
+                }
+            } catch (Exception e) {
+                // Пропускаємо невалідні часи
+            }
+        }
+
+        // Якщо не знайшли час сьогодні, беремо останній час вчора
+        if (previousTime == null && !fixedTimes.isEmpty()) {
+            String lastTime = fixedTimes.get(fixedTimes.size() - 1);
+            String[] parts = lastTime.split(":");
+            int hours = Integer.parseInt(parts[0]);
+            int minutes = Integer.parseInt(parts[1]);
+            previousTime = now.minusDays(1).withHour(hours).withMinute(minutes).withSecond(0).withNano(0);
+        }
+
+        return previousTime;
+    }
+
+    /**
+     * Обчислює попередній час звіту для інтервального розкладу
+     */
+    private LocalDateTime getPreviousIntervalTime(Group group, LocalDateTime now) {
+        if (group.getIntervalMinutes() == null || group.getIntervalStartTime() == null) {
+            return null;
+        }
+
+        try {
+            String[] parts = group.getIntervalStartTime().split(":");
+            int startHours = Integer.parseInt(parts[0]);
+            int startMinutes = Integer.parseInt(parts[1]);
+
+            LocalDateTime startTime = now.withHour(startHours).withMinute(startMinutes).withSecond(0).withNano(0);
+
+            // Якщо час початку ще не настав сьогодні, попередній звіт був вчора
+            if (now.isBefore(startTime)) {
+                return startTime;
+            }
+
+            // Обраховуємо скільки інтервалів пройшло
+            long diffMinutes = Duration.between(startTime, now).toMinutes();
+            long intervalsPassed = diffMinutes / group.getIntervalMinutes();
+
+            // Попередній інтервал
+            return startTime.plusMinutes(intervalsPassed * group.getIntervalMinutes());
+
+        } catch (Exception e) {
+            return null;
+        }
+    }
+
+    /**
+     * Збирає всі фіксовані часи з групи в список
+     */
+    private List<String> getFixedTimesFromGroup(Group group) {
+        List<String> times = new java.util.ArrayList<>();
+        if (group.getFixedTime1() != null) times.add(group.getFixedTime1());
+        if (group.getFixedTime2() != null) times.add(group.getFixedTime2());
+        if (group.getFixedTime3() != null) times.add(group.getFixedTime3());
+        if (group.getFixedTime4() != null) times.add(group.getFixedTime4());
+        if (group.getFixedTime5() != null) times.add(group.getFixedTime5());
+        return times;
     }
 }

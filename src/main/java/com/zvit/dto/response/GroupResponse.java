@@ -31,4 +31,8 @@ public class GroupResponse {
 
     // Для учасників групи - час останнього звіту
     private LocalDateTime lastReportAt;
+
+    // Серверний час для синхронізації
+    private LocalDateTime serverTime;
+    private String timezone;
 }

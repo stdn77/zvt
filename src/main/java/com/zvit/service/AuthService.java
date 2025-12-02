@@ -117,6 +117,8 @@ public class AuthService {
                 .name(user.getName())
                 .phone(decryptedPhone)
                 .email(decryptedEmail)
+                .serverTime(LocalDateTime.now())  // Серверний час для синхронізації
+                .timezone("Europe/Kiev")          // Часова зона сервера
                 .build();
     }
 
