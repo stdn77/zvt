@@ -143,18 +143,8 @@ public class ReportService {
                             .findFirstByGroup_IdAndUser_IdOrderBySubmittedAtDesc(groupId, member.getUser().getId())
                             .orElse(null);
 
-                    // MVZ - час останнього звіту (тільки якщо актуальний)
-                    LocalDateTime lastReportTime = null;
-                    if (lastReport != null && prevScheduled != null) {
-                        // Обчислюємо CP (чверть періоду) для фільтрації старих звітів
-                        long periodMinutes = Duration.between(prevScheduled, nextScheduled).toMinutes();
-                        long cpMinutes = periodMinutes / 4;
-
-                        // Відправляти MVZ тільки якщо звіт не дуже старий (пізніше ніж MZZ - CP)
-                        if (lastReport.getSubmittedAt().isAfter(prevScheduled.minusMinutes(cpMinutes))) {
-                            lastReportTime = lastReport.getSubmittedAt();
-                        }
-                    }
+                    // MVZ - час останнього звіту (завжди відправляємо якщо є)
+                    LocalDateTime lastReportTime = (lastReport != null) ? lastReport.getSubmittedAt() : null;
 
                     return createStatusResponse(member, lastReport, lastReportTime, prevScheduled, nextScheduled, serverTime, timezone, isAdmin);
                 })
