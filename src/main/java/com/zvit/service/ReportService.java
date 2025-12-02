@@ -9,7 +9,6 @@ import com.zvit.entity.Group;
 import com.zvit.entity.GroupMember;
 import com.zvit.entity.Report;
 import com.zvit.entity.User;
-import com.zvit.entity.enums.GroupMemberRole;
 import com.zvit.entity.enums.Role;
 import com.zvit.repository.GroupMemberRepository;
 import com.zvit.repository.GroupRepository;
@@ -226,7 +225,7 @@ public class ReportService {
         Double percentageElapsed = null;
 
         // АДМІНІСТРАТОР - завжди темно-зелений
-        if (member.getRole() == GroupMemberRole.ADMIN) {
+        if (member.getRole() == GroupMember.Role.ADMIN) {
             colorHex = "#006400";
             percentageElapsed = 0.0;
         }
