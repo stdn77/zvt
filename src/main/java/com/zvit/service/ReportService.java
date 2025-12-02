@@ -219,6 +219,47 @@ public class ReportService {
             String timezone,
             boolean isRequesterAdmin
     ) {
+        // Обчислення colorHex та percentageElapsed для веб-дашборду
+        String colorHex = "#CCCCCC";  // За замовчуванням сірий
+        Double percentageElapsed = null;
+
+        // АДМІНІСТРАТОР - завжди темно-зелений
+        if (member.getRole() == GroupMemberRole.ADMIN) {
+            colorHex = "#006400";
+            percentageElapsed = 0.0;
+        }
+        // Якщо є дані для обчислення кольору
+        else if (lastReportTime != null && previousScheduledTime != null && nextScheduledTime != null) {
+            long mzz = previousScheduledTime.atZone(ZoneId.systemDefault()).toInstant().toEpochMilli();
+            long mvz = lastReportTime.atZone(ZoneId.systemDefault()).toInstant().toEpochMilli();
+            long nz = nextScheduledTime.atZone(ZoneId.systemDefault()).toInstant().toEpochMilli();
+            long ct = serverTime.atZone(ZoneId.systemDefault()).toInstant().toEpochMilli();
+
+            long periodMillis = nz - mzz;
+            long cp = periodMillis / 4;
+            long pp = periodMillis / 2;
+
+            // ЛОГІКА КОЛЬОРІВ (використовуємо серверний час)
+            if (mvz > (nz - cp)) {
+                colorHex = "#00FF00";  // Рання подача
+                percentageElapsed = 0.0;
+            } else if (mvz < (mzz - cp)) {
+                colorHex = "#FF0000";  // Дуже старий
+                percentageElapsed = 100.0;
+            } else {
+                if (ct > (nz - cp)) {
+                    colorHex = "#FF0000";  // >75%
+                    percentageElapsed = 80.0;
+                } else if (ct > (nz - pp)) {
+                    colorHex = "#FFFF00";  // 50-75%
+                    percentageElapsed = 60.0;
+                } else {
+                    colorHex = "#00FF00";  // 0-50%
+                    percentageElapsed = 25.0;
+                }
+            }
+        }
+
         UserStatusResponse.UserStatusResponseBuilder builder = UserStatusResponse.builder()
                 .userId(member.getUser().getId())
                 .userName(member.getUser().getName())
@@ -226,6 +267,8 @@ public class ReportService {
                 .hasReported(lastReport != null)
                 .lastReportAt(lastReportTime)  // MVZ - може бути null якщо звіт старий
                 .lastReportResponse(lastReport != null ? lastReport.getSimpleResponse() : null)
+                .colorHex(colorHex)                            // Для веб-дашборду
+                .percentageElapsed(percentageElapsed)          // Для веб-дашборду
                 .previousScheduledTime(previousScheduledTime)  // MZZ
                 .nextScheduledTime(nextScheduledTime)          // NZ
                 .serverTime(serverTime)                        // Серверний час
