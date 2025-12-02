@@ -221,7 +221,7 @@ public class ReportService {
             boolean isRequesterAdmin
     ) {
         // Обчислення colorHex та percentageElapsed для веб-дашборду
-        String colorHex = "#CCCCCC";  // За замовчуванням сірий
+        String colorHex = "#E0E0E0";  // За замовчуванням світло-сірий
         Double percentageElapsed = null;
 
         // АДМІНІСТРАТОР - завжди темно-зелений
@@ -240,22 +240,22 @@ public class ReportService {
             long cp = periodMillis / 4;
             long pp = periodMillis / 2;
 
-            // ЛОГІКА КОЛЬОРІВ (використовуємо серверний час)
+            // ЛОГІКА КОЛЬОРІВ (світлі відтінки для кращої читабельності)
             if (mvz > (nz - cp)) {
-                colorHex = "#00FF00";  // Рання подача
+                colorHex = "#C8E6C9";  // Рання подача - світло-зелений
                 percentageElapsed = 0.0;
             } else if (mvz < (mzz - cp)) {
-                colorHex = "#FF0000";  // Дуже старий
+                colorHex = "#FFCDD2";  // Дуже старий - світло-червоний
                 percentageElapsed = 100.0;
             } else {
                 if (ct > (nz - cp)) {
-                    colorHex = "#FF0000";  // >75%
+                    colorHex = "#FFCDD2";  // >75% - світло-червоний
                     percentageElapsed = 80.0;
                 } else if (ct > (nz - pp)) {
-                    colorHex = "#FFFF00";  // 50-75%
+                    colorHex = "#FFF59D";  // 50-75% - світло-жовтий
                     percentageElapsed = 60.0;
                 } else {
-                    colorHex = "#00FF00";  // 0-50%
+                    colorHex = "#C8E6C9";  // 0-50% - світло-зелений
                     percentageElapsed = 25.0;
                 }
             }
