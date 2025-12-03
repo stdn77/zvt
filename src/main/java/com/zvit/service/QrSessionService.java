@@ -5,6 +5,7 @@ import com.zvit.dto.response.QrSessionResponse;
 import com.zvit.entity.Group;
 import com.zvit.entity.QrSession;
 import com.zvit.entity.User;
+import com.zvit.repository.GroupMemberRepository;
 import com.zvit.repository.GroupRepository;
 import com.zvit.repository.QrSessionRepository;
 import com.zvit.repository.UserRepository;
@@ -30,6 +31,7 @@ public class QrSessionService {
     private final QrSessionRepository qrSessionRepository;
     private final UserRepository userRepository;
     private final GroupRepository groupRepository;
+    private final GroupMemberRepository groupMemberRepository;
     private final SecureRandom secureRandom = new SecureRandom();
 
     @Value("${app.base-url:http://localhost:8080}")
@@ -78,9 +80,9 @@ public class QrSessionService {
      * Авторизувати QR сесію (викликається з мобільного додатку)
      */
     @Transactional
-    public void authorizeSession(AuthorizeQrRequest request, String userEmail) {
+    public void authorizeSession(AuthorizeQrRequest request, String userId) {
         // Знайти користувача
-        User user = userRepository.findByEmail(userEmail)
+        User user = userRepository.findById(userId)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Користувача не знайдено"));
 
         // Знайти сесію
@@ -98,15 +100,17 @@ public class QrSessionService {
         }
 
         // Перевірити чи користувач є адміном групи
-        Group group = groupRepository.findById(request.getGroupId())
+        String groupId = String.valueOf(request.getGroupId());
+        Group group = groupRepository.findById(groupId)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Групу не знайдено"));
 
-        if (!group.getAdminUser().getId().equals(user.getId())) {
+        // Перевірка через GroupMemberRepository
+        if (!groupMemberRepository.isUserAdminOfGroup(groupId, userId)) {
             throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Тільки адміністратор групи може авторизувати веб сесію");
         }
 
         // Авторизувати сесію
-        session.setUserId(user.getId());
+        session.setUserId(userId);
         session.setGroupId(request.getGroupId());
         session.setIsAuthorized(true);
         session.setAuthorizedAt(LocalDateTime.now());
@@ -116,7 +120,7 @@ public class QrSessionService {
         qrSessionRepository.save(session);
 
         log.info("QR session {} authorized by user {} for group {}",
-                 session.getSessionToken(), user.getEmail(), group.getExternalName());
+                 session.getSessionToken(), userId, group.getExternalName());
     }
 
     /**
