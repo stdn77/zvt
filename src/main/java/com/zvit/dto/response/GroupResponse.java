@@ -29,6 +29,10 @@ public class GroupResponse {
     private Integer intervalMinutes;  // Для INTERVAL
     private String intervalStartTime; // Для INTERVAL
 
+    // Налаштування слів для простих звітів
+    private String positiveWord;  // Наприклад: "ОК", "ДОБРЕ"
+    private String negativeWord;  // Наприклад: "НЕ ОК", "ПОГАНО"
+
     // Для учасників групи - час останнього звіту
     private LocalDateTime lastReportAt;
 

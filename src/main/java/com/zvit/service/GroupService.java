@@ -272,6 +272,14 @@ public class GroupService {
             group.setReportType(Group.ReportType.valueOf(request.getReportType()));
         }
 
+        // Оновлюємо слова для простих звітів
+        if (request.getPositiveWord() != null) {
+            group.setPositiveWord(request.getPositiveWord());
+        }
+        if (request.getNegativeWord() != null) {
+            group.setNegativeWord(request.getNegativeWord());
+        }
+
         // Оновлюємо розклад звітів
         if (request.getScheduleType() != null) {
             Group.ScheduleType scheduleType = Group.ScheduleType.valueOf(request.getScheduleType());
@@ -387,6 +395,8 @@ public class GroupService {
                 .fixedTimes(fixedTimes.isEmpty() ? null : fixedTimes)
                 .intervalMinutes(group.getIntervalMinutes())
                 .intervalStartTime(group.getIntervalStartTime())
+                .positiveWord(group.getPositiveWord())
+                .negativeWord(group.getNegativeWord())
                 .lastReportAt(lastReport.map(Report::getSubmittedAt).orElse(null))
                 .serverTime(java.time.LocalDateTime.now())  // Серверний час
                 .timezone("Europe/Kiev")                    // Часова зона

@@ -27,4 +27,11 @@ public class UpdateGroupSettingsRequest {
     // Для INTERVAL: час початку (формат HH:mm)
     @Pattern(regexp = "^([01]\\d|2[0-3]):[0-5]\\d$", message = "Формат часу: HH:mm")
     private String intervalStartTime;
+
+    // Налаштування слів для простих звітів
+    @Pattern(regexp = "^.{1,20}$", message = "Довжина слова має бути від 1 до 20 символів")
+    private String positiveWord;  // Наприклад: "ОК", "ДОБРЕ"
+
+    @Pattern(regexp = "^.{1,20}$", message = "Довжина слова має бути від 1 до 20 символів")
+    private String negativeWord;  // Наприклад: "НЕ ОК", "ПОГАНО"
 }

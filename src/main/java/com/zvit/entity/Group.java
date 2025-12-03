@@ -65,6 +65,15 @@ public class Group {
     @Column(name = "interval_start_time", length = 5)
     private String intervalStartTime;
 
+    // Налаштування слів для простих звітів
+    @Column(name = "positive_word", length = 20)
+    @Builder.Default
+    private String positiveWord = "ОК"; // За замовчуванням "ОК"
+
+    @Column(name = "negative_word", length = 20)
+    @Builder.Default
+    private String negativeWord = "НЕ ОК"; // За замовчуванням "НЕ ОК"
+
     @Column(name = "created_by", nullable = false)
     private String createdBy; // UUID користувача-створювача
 
