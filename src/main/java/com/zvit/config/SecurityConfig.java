@@ -32,6 +32,7 @@ public class SecurityConfig {
                 .requestMatchers("/api/v1/auth/test").permitAll()
                 .requestMatchers("/error").permitAll()
                 .requestMatchers("/web/**").permitAll()
+                .requestMatchers("/api/web-session/**").permitAll() // QR session status
                 .requestMatchers("/css/**").permitAll()
                 .requestMatchers("/js/**").permitAll()
                 .requestMatchers("/favicon.ico").permitAll()

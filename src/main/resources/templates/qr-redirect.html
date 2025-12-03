@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="uk">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ZVIT - Відкрийте в додатку</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        .container {
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            padding: 40px;
+            max-width: 500px;
+            width: 100%;
+            text-align: center;
+        }
+
+        .icon {
+            font-size: 80px;
+            margin-bottom: 20px;
+        }
+
+        h1 {
+            color: #333;
+            margin-bottom: 20px;
+            font-size: 28px;
+        }
+
+        p {
+            color: #666;
+            line-height: 1.8;
+            margin-bottom: 15px;
+            font-size: 16px;
+        }
+
+        .app-link {
+            display: inline-block;
+            background: #667eea;
+            color: white;
+            padding: 15px 30px;
+            border-radius: 10px;
+            text-decoration: none;
+            margin: 20px 0;
+            font-weight: 600;
+            transition: background 0.3s;
+        }
+
+        .app-link:hover {
+            background: #5568d3;
+        }
+
+        .info-box {
+            background: #f8f9fa;
+            border-radius: 10px;
+            padding: 20px;
+            margin-top: 30px;
+            text-align: left;
+        }
+
+        .info-box h3 {
+            color: #333;
+            margin-bottom: 10px;
+            font-size: 16px;
+        }
+
+        .info-box p {
+            font-size: 14px;
+            margin-bottom: 5px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="icon">📱</div>
+        <h1>Відкрийте в додатку ZVIT</h1>
+
+        <p>
+            Для авторизації вам потрібно відкрити це посилання в мобільному додатку ZVIT.
+        </p>
+
+        <p>
+            Якщо у вас встановлено додаток, натисніть кнопку нижче:
+        </p>
+
+        <a href="#" class="app-link" th:href="'zvit://auth?token=' + ${token}">
+            Відкрити в ZVIT
+        </a>
+
+        <div class="info-box">
+            <h3>💡 Що робити:</h3>
+            <p>1. Встановіть додаток ZVIT на Android</p>
+            <p>2. Відскануйте QR код камерою додатку</p>
+            <p>3. Або скопіюйте посилання і вставте в додаток</p>
+        </div>
+
+        <div class="info-box" style="margin-top: 15px; background: #fff3cd;">
+            <p style="margin: 0; color: #856404;">
+                <strong>Токен сесії:</strong><br>
+                <code style="word-break: break-all; font-size: 12px;" th:text="${token}"></code>
+            </p>
+        </div>
+    </div>
+
+    <script th:inline="javascript">
+        // Try to deep link to the app
+        const token = /*[[${token}]]*/ '';
+        const deepLink = `zvit://auth?token=${token}`;
+
+        // Attempt to open the app
+        window.location.href = deepLink;
+
+        // If app doesn't open, the page will stay visible with instructions
+    </script>
+</body>
+</html>
