@@ -138,6 +138,8 @@ public class ReportService {
         String timezone = "Europe/Kiev";
 
         return members.stream()
+                // Фільтруємо тільки ACCEPTED користувачів (ігноруємо PENDING)
+                .filter(member -> member.getStatus() == GroupMember.MemberStatus.ACCEPTED)
                 .map(member -> {
                     Report lastReport = reportRepository
                             .findFirstByGroup_IdAndUser_IdOrderBySubmittedAtDesc(groupId, member.getUser().getId())

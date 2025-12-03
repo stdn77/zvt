@@ -16,5 +16,6 @@ public class GroupMemberResponse {
     private String name;
     private String phoneNumber; // Тільки для адміністраторів, null для інших
     private String role;
+    private String status; // PENDING, ACCEPTED, REJECTED
     private LocalDateTime joinedAt;
 }

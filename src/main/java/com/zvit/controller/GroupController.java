@@ -146,4 +146,26 @@ public class GroupController {
         groupService.updateGroupSettings(groupId, request, userId);
         return ResponseEntity.ok(ApiResponse.success("Налаштування групи оновлено", null));
     }
+
+    @PostMapping("/{groupId}/members/{memberId}/approve")
+    public ResponseEntity<ApiResponse<Void>> approveMember(
+            @PathVariable String groupId,
+            @PathVariable String memberId,
+            Authentication authentication
+    ) {
+        String adminUserId = authentication.getName();
+        groupService.approveMember(groupId, memberId, adminUserId);
+        return ResponseEntity.ok(ApiResponse.success("Учасника затверджено", null));
+    }
+
+    @PostMapping("/{groupId}/members/{memberId}/reject")
+    public ResponseEntity<ApiResponse<Void>> rejectMember(
+            @PathVariable String groupId,
+            @PathVariable String memberId,
+            Authentication authentication
+    ) {
+        String adminUserId = authentication.getName();
+        groupService.rejectMember(groupId, memberId, adminUserId);
+        return ResponseEntity.ok(ApiResponse.success("Заявку на приєднання відхилено", null));
+    }
 }

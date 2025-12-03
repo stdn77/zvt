@@ -49,6 +49,7 @@ public class GroupService {
                 .group(group)
                 .user(user)
                 .role(GroupMember.Role.ADMIN)
+                .status(GroupMember.MemberStatus.ACCEPTED) // Адміністратор автоматично прийнятий
                 .build();
 
         groupMemberRepository.save(adminMember);
@@ -63,7 +64,9 @@ public class GroupService {
 
         List<GroupMember> memberships = groupMemberRepository.findByUserId(userId);
 
+        // Фільтруємо тільки групи зі статусом ACCEPTED
         return memberships.stream()
+                .filter(member -> member.getStatus() == GroupMember.MemberStatus.ACCEPTED)
                 .map(member -> mapToGroupResponse(member.getGroup(), member))
                 .collect(Collectors.toList());
     }
@@ -107,6 +110,7 @@ public class GroupService {
                 .group(group)
                 .user(newUser)
                 .role(GroupMember.Role.MEMBER)
+                .status(GroupMember.MemberStatus.ACCEPTED) // Додані адміністратором автоматично прийняті
                 .build();
 
         groupMemberRepository.save(newMember);
@@ -133,6 +137,7 @@ public class GroupService {
                 .group(group)
                 .user(user)
                 .role(GroupMember.Role.MEMBER)
+                .status(GroupMember.MemberStatus.PENDING) // Очікує затвердження адміністратором
                 .build();
 
         groupMemberRepository.save(newMember);
@@ -308,6 +313,51 @@ public class GroupService {
         groupRepository.save(group);
     }
 
+    @Transactional
+    public void approveMember(String groupId, String userId, String adminUserId) {
+        // Перевіряємо що запитувач є адміністратором
+        GroupMember adminMember = groupMemberRepository.findByGroupIdAndUserId(groupId, adminUserId)
+                .orElseThrow(() -> new RuntimeException("Ви не є учасником цієї групи"));
+
+        if (adminMember.getRole() != GroupMember.Role.ADMIN) {
+            throw new RuntimeException("Тільки адміністратор може затверджувати учасників"));
+        }
+
+        // Знаходимо учасника що очікує затвердження
+        GroupMember pendingMember = groupMemberRepository.findByGroupIdAndUserId(groupId, userId)
+                .orElseThrow(() -> new RuntimeException("Користувача не знайдено в групі"));
+
+        if (pendingMember.getStatus() != GroupMember.MemberStatus.PENDING) {
+            throw new RuntimeException("Користувач не очікує затвердження"));
+        }
+
+        // Затверджуємо учасника
+        pendingMember.setStatus(GroupMember.MemberStatus.ACCEPTED);
+        groupMemberRepository.save(pendingMember);
+    }
+
+    @Transactional
+    public void rejectMember(String groupId, String userId, String adminUserId) {
+        // Перевіряємо що запитувач є адміністратором
+        GroupMember adminMember = groupMemberRepository.findByGroupIdAndUserId(groupId, adminUserId)
+                .orElseThrow(() -> new RuntimeException("Ви не є учасником цієї групи"));
+
+        if (adminMember.getRole() != GroupMember.Role.ADMIN) {
+            throw new RuntimeException("Тільки адміністратор може відхиляти учасників"));
+        }
+
+        // Знаходимо учасника що очікує затвердження
+        GroupMember pendingMember = groupMemberRepository.findByGroupIdAndUserId(groupId, userId)
+                .orElseThrow(() -> new RuntimeException("Користувача не знайдено в групі"));
+
+        if (pendingMember.getStatus() != GroupMember.MemberStatus.PENDING) {
+            throw new RuntimeException("Користувач не очікує затвердження"));
+        }
+
+        // Відхиляємо і видаляємо учасника
+        groupMemberRepository.delete(pendingMember);
+    }
+
     private GroupResponse mapToGroupResponse(Group group, GroupMember member) {
         boolean isAdmin = member.getRole() == GroupMember.Role.ADMIN;
         long currentMembers = groupMemberRepository.countByGroupId(group.getId());
@@ -348,6 +398,7 @@ public class GroupService {
                 .userId(member.getUser().getId())
                 .name(member.getUser().getName())
                 .role(member.getRole().name())
+                .status(member.getStatus().name())
                 .joinedAt(member.getJoinedAt());
 
         // Тільки адміністратори можуть бачити реальні номери телефонів
