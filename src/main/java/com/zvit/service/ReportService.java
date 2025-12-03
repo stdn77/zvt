@@ -396,6 +396,7 @@ public class ReportService {
 
     /**
      * Обчислює наступний час звіту для інтервального розкладу
+     * Звіти йдуть безперервно 24/7 від часу початку
      */
     private LocalDateTime getNextIntervalTime(Group group, LocalDateTime now) {
         if (group.getIntervalMinutes() == null || group.getIntervalStartTime() == null) {
@@ -407,19 +408,20 @@ public class ReportService {
             int startHours = Integer.parseInt(parts[0]);
             int startMinutes = Integer.parseInt(parts[1]);
 
-            LocalDateTime startTime = now.withHour(startHours).withMinute(startMinutes).withSecond(0).withNano(0);
+            // Знаходимо останнє спрацювання intervalStartTime (сьогодні або вчора)
+            LocalDateTime baseTime = now.withHour(startHours).withMinute(startMinutes).withSecond(0).withNano(0);
 
-            // Якщо час початку ще не настав сьогодні
-            if (now.isBefore(startTime)) {
-                return startTime;
+            // Якщо сьогодні ще не настав час початку, беремо вчорашній день
+            if (baseTime.isAfter(now)) {
+                baseTime = baseTime.minusDays(1);
             }
 
-            // Обраховуємо скільки інтервалів пройшло
-            long diffMinutes = Duration.between(startTime, now).toMinutes();
+            // Від baseTime відраховуємо інтервали до now
+            long diffMinutes = Duration.between(baseTime, now).toMinutes();
             long intervalsPassed = diffMinutes / group.getIntervalMinutes();
 
-            // Наступний інтервал
-            return startTime.plusMinutes((intervalsPassed + 1) * group.getIntervalMinutes());
+            // Наступний інтервал після now
+            return baseTime.plusMinutes((intervalsPassed + 1) * group.getIntervalMinutes());
 
         } catch (Exception e) {
             return null;
@@ -471,6 +473,7 @@ public class ReportService {
 
     /**
      * Обчислює попередній час звіту для інтервального розкладу
+     * Звіти йдуть безперервно 24/7 від часу початку
      */
     private LocalDateTime getPreviousIntervalTime(Group group, LocalDateTime now) {
         if (group.getIntervalMinutes() == null || group.getIntervalStartTime() == null) {
@@ -482,19 +485,20 @@ public class ReportService {
             int startHours = Integer.parseInt(parts[0]);
             int startMinutes = Integer.parseInt(parts[1]);
 
-            LocalDateTime startTime = now.withHour(startHours).withMinute(startMinutes).withSecond(0).withNano(0);
+            // Знаходимо останнє спрацювання intervalStartTime (сьогодні або вчора)
+            LocalDateTime baseTime = now.withHour(startHours).withMinute(startMinutes).withSecond(0).withNano(0);
 
-            // Якщо час початку ще не настав сьогодні, попередній звіт був вчора
-            if (now.isBefore(startTime)) {
-                return startTime;
+            // Якщо сьогодні ще не настав час початку, беремо вчорашній день
+            if (baseTime.isAfter(now)) {
+                baseTime = baseTime.minusDays(1);
             }
 
-            // Обраховуємо скільки інтервалів пройшло
-            long diffMinutes = Duration.between(startTime, now).toMinutes();
+            // Від baseTime відраховуємо інтервали до now
+            long diffMinutes = Duration.between(baseTime, now).toMinutes();
             long intervalsPassed = diffMinutes / group.getIntervalMinutes();
 
-            // Попередній інтервал
-            return startTime.plusMinutes(intervalsPassed * group.getIntervalMinutes());
+            // Попередній інтервал (останній що був до now)
+            return baseTime.plusMinutes(intervalsPassed * group.getIntervalMinutes());
 
         } catch (Exception e) {
             return null;
