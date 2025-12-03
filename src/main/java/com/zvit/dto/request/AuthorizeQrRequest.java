@@ -16,6 +16,6 @@ public class AuthorizeQrRequest {
     @NotBlank(message = "Session token обов'язковий")
     private String sessionToken; // Токен з QR коду
 
-    @NotNull(message = "Group ID обов'язковий")
-    private Long groupId; // ID групи для перегляду звітів
+    @NotBlank(message = "Group ID обов'язковий")
+    private String groupId; // ID групи для перегляду звітів
 }

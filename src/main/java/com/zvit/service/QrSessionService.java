@@ -100,7 +100,7 @@ public class QrSessionService {
         }
 
         // Перевірити чи користувач є адміном групи
-        String groupId = String.valueOf(request.getGroupId());
+        String groupId = request.getGroupId();
         Group group = groupRepository.findById(groupId)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Групу не знайдено"));
 

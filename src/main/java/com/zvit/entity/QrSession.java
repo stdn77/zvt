@@ -23,11 +23,11 @@ public class QrSession {
     @Column(name = "session_token", unique = true, nullable = false, length = 64)
     private String sessionToken; // Унікальний токен сесії для QR коду
 
-    @Column(name = "user_id")
-    private Long userId; // ID користувача який авторизувався (null до авторизації)
+    @Column(name = "user_id", length = 36)
+    private String userId; // ID користувача який авторизувався (null до авторизації)
 
-    @Column(name = "group_id")
-    private Long groupId; // ID групи для перегляду звітів (null до авторизації)
+    @Column(name = "group_id", length = 36)
+    private String groupId; // ID групи для перегляду звітів (null до авторизації)
 
     @Column(name = "is_authorized", nullable = false)
     @Builder.Default
