@@ -328,7 +328,7 @@ public class GroupService {
                 .orElseThrow(() -> new RuntimeException("Ви не є учасником цієї групи"));
 
         if (adminMember.getRole() != GroupMember.Role.ADMIN) {
-            throw new RuntimeException("Тільки адміністратор може затверджувати учасників"));
+            throw new RuntimeException("Тільки адміністратор може затверджувати учасників");
         }
 
         // Знаходимо учасника що очікує затвердження
@@ -336,7 +336,7 @@ public class GroupService {
                 .orElseThrow(() -> new RuntimeException("Користувача не знайдено в групі"));
 
         if (pendingMember.getStatus() != GroupMember.MemberStatus.PENDING) {
-            throw new RuntimeException("Користувач не очікує затвердження"));
+            throw new RuntimeException("Користувач не очікує затвердження");
         }
 
         // Затверджуємо учасника
@@ -351,7 +351,7 @@ public class GroupService {
                 .orElseThrow(() -> new RuntimeException("Ви не є учасником цієї групи"));
 
         if (adminMember.getRole() != GroupMember.Role.ADMIN) {
-            throw new RuntimeException("Тільки адміністратор може відхиляти учасників"));
+            throw new RuntimeException("Тільки адміністратор може відхиляти учасників");
         }
 
         // Знаходимо учасника що очікує затвердження
@@ -359,7 +359,7 @@ public class GroupService {
                 .orElseThrow(() -> new RuntimeException("Користувача не знайдено в групі"));
 
         if (pendingMember.getStatus() != GroupMember.MemberStatus.PENDING) {
-            throw new RuntimeException("Користувач не очікує затвердження"));
+            throw new RuntimeException("Користувач не очікує затвердження");
         }
 
         // Відхиляємо і видаляємо учасника
