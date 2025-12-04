@@ -249,6 +249,14 @@
             margin-bottom: 20px;
             padding-bottom: 15px;
             border-bottom: 2px solid #2a2a2a;
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            gap: 20px;
+        }
+
+        .user-info-content {
+            flex: 1;
         }
 
         .user-info-row {
@@ -343,13 +351,14 @@
             background: #dc2626;
             color: white;
             border: none;
-            padding: 10px 20px;
+            padding: 8px 16px;
             border-radius: 5px;
             cursor: pointer;
             font-weight: 500;
-            font-size: 14px;
-            margin-top: 10px;
+            font-size: 13px;
             transition: all 0.2s;
+            white-space: nowrap;
+            flex-shrink: 0;
         }
 
         .btn-delete-member:hover {
@@ -442,13 +451,13 @@
             </div>
             <div class="modal-body">
                 <div class="user-info">
-                    <div class="user-info-row"><strong>Ім'я:</strong> <span id="modalName"></span></div>
-                    <div class="user-info-row"><strong>Телефон:</strong> <span id="modalPhone"></span></div>
-                    <div class="user-info-row">
-                        <button id="btnRemoveMember" class="btn-delete-member" onclick="confirmRemoveMember()" style="display: none;">
-                            🗑️ Видалити учасника
-                        </button>
+                    <div class="user-info-content">
+                        <div class="user-info-row"><strong>Ім'я:</strong> <span id="modalName"></span></div>
+                        <div class="user-info-row"><strong>Телефон:</strong> <span id="modalPhone"></span></div>
                     </div>
+                    <button id="btnRemoveMember" class="btn-delete-member" onclick="confirmRemoveMember()" style="display: none;">
+                        🗑️ Видалити
+                    </button>
                 </div>
                 <div id="modalReports">
                     <div class="loading">
