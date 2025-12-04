@@ -338,6 +338,25 @@
             box-shadow: 0 3px 6px rgba(76, 175, 80, 0.5);
             transform: translateY(-1px);
         }
+
+        .btn-delete-member {
+            background: #dc2626;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-weight: 500;
+            font-size: 14px;
+            margin-top: 10px;
+            transition: all 0.2s;
+        }
+
+        .btn-delete-member:hover {
+            background: #b91c1c;
+            transform: translateY(-1px);
+            box-shadow: 0 3px 6px rgba(220, 38, 38, 0.5);
+        }
     </style>
 </head>
 <body>
@@ -425,6 +444,11 @@
                 <div class="user-info">
                     <div class="user-info-row"><strong>Ім'я:</strong> <span id="modalName"></span></div>
                     <div class="user-info-row"><strong>Телефон:</strong> <span id="modalPhone"></span></div>
+                    <div class="user-info-row">
+                        <button id="btnRemoveMember" class="btn-delete-member" onclick="confirmRemoveMember()" style="display: none;">
+                            🗑️ Видалити учасника
+                        </button>
+                    </div>
                 </div>
                 <div id="modalReports">
                     <div class="loading">
@@ -441,6 +465,8 @@
         const groupId = /*[[${groupId}]]*/ '';
         let allUsers = [];
         let groupInfo = null;
+        let currentUserId = null;
+        let currentUserName = null;
 
         async function loadReports() {
             try {
@@ -607,6 +633,10 @@
         }
 
         async function showUserDetails(userId, userName, phoneNumber) {
+            // Зберігаємо поточного користувача
+            currentUserId = userId;
+            currentUserName = userName;
+
             document.getElementById('modalUserName').textContent = 'Деталі учасника';
             document.getElementById('modalName').textContent = userName;
             document.getElementById('modalPhone').textContent = phoneNumber;
@@ -616,6 +646,9 @@
                     <p>Завантаження звітів...</p>
                 </div>
             `;
+
+            // Показуємо кнопку видалення (кнопка видалення доступна для всіх, бо доступ до цієї сторінки мають тільки адміни)
+            document.getElementById('btnRemoveMember').style.display = 'block';
 
             // Show modal
             document.getElementById('userModal').style.display = 'block';
@@ -699,6 +732,40 @@
                         ❌ Помилка завантаження звітів
                     </div>
                 `;
+            }
+        }
+
+        function confirmRemoveMember() {
+            if (!currentUserId || !currentUserName) return;
+
+            if (confirm(`Ви впевнені, що хочете видалити ${currentUserName} з групи?`)) {
+                removeMember();
+            }
+        }
+
+        async function removeMember() {
+            if (!currentUserId) return;
+
+            try {
+                const response = await fetch(`/api/v1/groups/${groupId}/members/${currentUserId}`, {
+                    method: 'DELETE',
+                    headers: {
+                        'X-Session-Token': sessionToken
+                    }
+                });
+
+                if (!response.ok) {
+                    throw new Error('Failed to remove member');
+                }
+
+                alert('Учасника видалено');
+                closeModal();
+                // Перезавантажуємо список користувачів
+                loadReports();
+
+            } catch (error) {
+                console.error('Error removing member:', error);
+                alert('Помилка видалення учасника');
             }
         }
 
