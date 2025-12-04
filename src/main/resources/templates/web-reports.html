@@ -521,11 +521,19 @@
                     textColor = '#FFFFFF';
                     timeText = 'Адмін';
                 } else {
-                    // Use colorHex from backend
-                    bgColor = user.colorHex || '#9E9E9E';
-                    // White text for dark colors (red, dark green)
-                    const isDark = category === 'red' || bgColor.includes('F44336') || bgColor.includes('E57373');
-                    textColor = isDark ? '#FFFFFF' : '#333333';
+                    // Use light colors for regular users with black text
+                    textColor = '#000000';
+
+                    // Assign light background color based on category
+                    if (category === 'green') {
+                        bgColor = '#C8E6C9'; // Light green
+                    } else if (category === 'yellow') {
+                        bgColor = '#FFF9C4'; // Light yellow
+                    } else if (category === 'red') {
+                        bgColor = '#FFCDD2'; // Light red
+                    } else {
+                        bgColor = '#EEEEEE'; // Light gray
+                    }
 
                     // Time text
                     if (category === 'gray') {
