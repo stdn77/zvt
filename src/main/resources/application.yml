@@ -6,9 +6,9 @@ spring:
     encoding: UTF-8
 
   datasource:
-    url: jdbc:mysql://localhost:3307/zvit_db?useSSL=false&serverTimezone=UTC&allowPublicKeyRetrieval=true
-    username: zvituser
-    password: zvitpass123
+    url: ${DB_URL:jdbc:mysql://localhost:3307/zvit_db?useSSL=true&serverTimezone=UTC&allowPublicKeyRetrieval=true}
+    username: ${DB_USERNAME:zvituser}
+    password: ${DB_PASSWORD:changeme}
     driver-class-name: com.mysql.cj.jdbc.Driver
 
   jpa:
@@ -23,8 +23,8 @@ spring:
 
   security:
     user:
-      name: admin
-      password: admin
+      name: ${SPRING_SECURITY_USER:admin}
+      password: ${SPRING_SECURITY_PASSWORD:changeme}
 
 server:
   port: 8080
@@ -36,8 +36,8 @@ server:
       force: true
 
 jwt:
-  secret: eW91ci1zZWNyZXQta2V5LWNoYW5nZS1pbi1wcm9kdWN0aW9uLW1pbi0yNTYtYml0cy1sb25nLWZvci1zZWN1cml0eQ==
-  expiration: 86400000
+  secret: ${JWT_SECRET:eW91ci1zZWNyZXQta2V5LWNoYW5nZS1pbi1wcm9kdWN0aW9uLW1pbi0yNTYtYml0cy1sb25nLWZvci1zZWN1cml0eQ==}
+  expiration: ${JWT_EXPIRATION:86400000}
 
 logging:
   level:
