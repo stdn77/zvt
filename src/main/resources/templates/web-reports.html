@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>ZVIT - Звіти учасників</title>
+    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg viewBox='0 0 1024 1024' xmlns='http://www.w3.org/2000/svg'%3E%3Cdefs%3E%3ClinearGradient id='iconBg' x1='0%25' y1='0%25' x2='100%25' y2='100%25'%3E%3Cstop offset='0%25' stop-color='%230f172a' /%3E%3Cstop offset='100%25' stop-color='%231e293b' /%3E%3C/linearGradient%3E%3ClinearGradient id='iconGrad' x1='0%25' y1='0%25' x2='100%25' y2='100%25'%3E%3Cstop offset='0%25' stop-color='%2322c55e' /%3E%3Cstop offset='100%25' stop-color='%2316a34a' /%3E%3C/linearGradient%3E%3Cfilter id='iconGlow' x='-50%25' y='-50%25' width='200%25' height='200%25'%3E%3CfeGaussianBlur stdDeviation='15' result='blur'/%3E%3CfeMerge%3E%3CfeMergeNode in='blur'/%3E%3CfeMergeNode in='SourceGraphic'/%3E%3C/feMerge%3E%3C/filter%3E%3C/defs%3E%3Crect width='1024' height='1024' rx='225' fill='url(%23iconBg)'/%3E%3Ccircle cx='512' cy='512' r='390' fill='none' stroke='%2322c55e' stroke-width='15' opacity='0.12'/%3E%3Ccircle cx='512' cy='512' r='297' fill='none' stroke='%2322c55e' stroke-width='15' opacity='0.25'/%3E%3Ccircle cx='512' cy='512' r='205' fill='none' stroke='%2322c55e' stroke-width='20' opacity='0.45'/%3E%3Ccircle cx='512' cy='512' r='143' fill='url(%23iconGrad)' filter='url(%23iconGlow)'/%3E%3Cpolyline points='440,512 492,564 584,460' fill='none' stroke='white' stroke-width='36' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E">
     <style>
         * {
             margin: 0;
@@ -32,6 +33,15 @@
         .header-left h1 {
             font-size: 22px;
             margin-bottom: 5px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .header-left h1 svg {
+            width: 32px;
+            height: 32px;
+            flex-shrink: 0;
         }
 
         .header-left p {
@@ -315,31 +325,46 @@
     <div class="container">
         <div class="header">
             <div class="header-left">
-                <h1>📊 ZVIT - Звіти учасників</h1>
+                <h1>
+                    <svg viewBox="0 0 1024 1024" xmlns="http://www.w3.org/2000/svg">
+                        <defs>
+                            <linearGradient id="headerIconGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+                                <stop offset="0%" stop-color="#22c55e" />
+                                <stop offset="100%" stop-color="#16a34a" />
+                            </linearGradient>
+                        </defs>
+                        <circle cx="512" cy="512" r="390" fill="none" stroke="#ffffff" stroke-width="15" opacity="0.12"/>
+                        <circle cx="512" cy="512" r="297" fill="none" stroke="#ffffff" stroke-width="15" opacity="0.25"/>
+                        <circle cx="512" cy="512" r="205" fill="none" stroke="#ffffff" stroke-width="20" opacity="0.45"/>
+                        <circle cx="512" cy="512" r="143" fill="url(#headerIconGrad)"/>
+                        <polyline points="440,512 492,564 584,460" fill="none" stroke="white" stroke-width="36" stroke-linecap="round" stroke-linejoin="round"/>
+                    </svg>
+                    ZVIT - Звіти учасників
+                </h1>
                 <p id="groupName">Завантаження...</p>
             </div>
             <div class="header-stats">
-                <div class="header-stat">
+                <div class="header-stat" style="color: #1a1a1a;">
                     <span class="header-stat-value" id="totalUsers">-</span>
                     <span class="header-stat-label">Всього</span>
                 </div>
-                <div class="header-stat" style="color: #C8E6C9;">
+                <div class="header-stat" style="color: #0d5f2a;">
                     <span class="header-stat-value" id="reportedUsers">-</span>
                     <span class="header-stat-label">Звітували</span>
                 </div>
-                <div class="header-stat" style="color: #FFD54F;">
+                <div class="header-stat" style="color: #854d0e;">
                     <span class="header-stat-value" id="awaitingUsers">-</span>
                     <span class="header-stat-label">Очікую звіт</span>
                 </div>
-                <div class="header-stat" style="color: #ff8a80;">
+                <div class="header-stat" style="color: #991b1b;">
                     <span class="header-stat-value" id="notReportedUsers">-</span>
                     <span class="header-stat-label">Не звітували</span>
                 </div>
-                <div class="header-stat" style="color: #aaaaaa;">
+                <div class="header-stat" style="color: #525252;">
                     <span class="header-stat-value" id="notActivatedUsers">-</span>
                     <span class="header-stat-label">Не активовані</span>
                 </div>
-                <div class="header-stat">
+                <div class="header-stat" style="color: #1a1a1a;">
                     <span class="header-stat-value" id="nextReportTime">-</span>
                     <span class="header-stat-label">Наступний звіт</span>
                 </div>
