@@ -1,6 +1,7 @@
 package com.zvit.controller;
 
 import com.zvit.dto.request.AuthorizeQrRequest;
+import com.zvit.dto.response.ApiResponse;
 import com.zvit.dto.response.QrSessionResponse;
 import com.zvit.service.QrSessionService;
 import jakarta.validation.Valid;
@@ -23,12 +24,12 @@ public class QrSessionController {
      * Авторизувати QR сесію (викликається з мобільного додатку після сканування QR)
      */
     @PostMapping("/web-auth/authorize")
-    public ResponseEntity<Void> authorizeSession(
+    public ResponseEntity<ApiResponse<Void>> authorizeSession(
             @Valid @RequestBody AuthorizeQrRequest request,
             Authentication authentication) {
         String userId = authentication.getName();
         qrSessionService.authorizeSession(request, userId);
-        return ResponseEntity.ok().build();
+        return ResponseEntity.ok(ApiResponse.success("Веб сесію авторизовано", null));
     }
 
     /**
