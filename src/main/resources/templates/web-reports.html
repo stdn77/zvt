@@ -24,48 +24,46 @@
             border-radius: 10px;
             margin-bottom: 15px;
             box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
         }
 
-        .header h1 {
+        .header-left h1 {
             font-size: 22px;
             margin-bottom: 5px;
         }
 
-        .header p {
+        .header-left p {
             opacity: 0.9;
             font-size: 14px;
+        }
+
+        .header-stats {
+            display: flex;
+            gap: 15px;
+            align-items: center;
+        }
+
+        .header-stat {
+            text-align: center;
+        }
+
+        .header-stat-value {
+            font-size: 24px;
+            font-weight: 700;
+            display: block;
+        }
+
+        .header-stat-label {
+            font-size: 11px;
+            opacity: 0.9;
+            display: block;
         }
 
         .container {
             max-width: 1400px;
             margin: 0 auto;
-        }
-
-        .stats {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
-            gap: 10px;
-            margin-bottom: 15px;
-        }
-
-        .stat-card {
-            background: white;
-            padding: 12px;
-            border-radius: 8px;
-            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
-            text-align: center;
-        }
-
-        .stat-value {
-            font-size: 24px;
-            font-weight: 700;
-            color: #667eea;
-            margin-bottom: 3px;
-        }
-
-        .stat-label {
-            font-size: 12px;
-            color: #666;
         }
 
         .filters {
@@ -105,13 +103,11 @@
         }
 
         .user-card {
-            background: white;
             border-radius: 8px;
             padding: 10px;
             box-shadow: 0 1px 4px rgba(0, 0, 0, 0.08);
             cursor: pointer;
             transition: all 0.2s;
-            border-left: 4px solid;
             min-height: 70px;
             display: flex;
             flex-direction: column;
@@ -126,7 +122,6 @@
         .user-name {
             font-weight: 600;
             font-size: 13px;
-            color: #333;
             margin-bottom: 4px;
             line-height: 1.2;
             overflow: hidden;
@@ -136,15 +131,9 @@
             -webkit-box-orient: vertical;
         }
 
-        .user-status {
-            font-size: 11px;
-            color: #666;
-            margin-bottom: 2px;
-        }
-
         .user-time {
             font-size: 10px;
-            color: #999;
+            margin-top: auto;
         }
 
         .loading {
@@ -257,16 +246,23 @@
             border-radius: 4px;
         }
 
+        .report-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 5px;
+        }
+
         .report-date {
             font-size: 13px;
             font-weight: 600;
             color: #333;
-            margin-bottom: 5px;
         }
 
         .report-status {
             font-size: 12px;
             color: #666;
+            font-weight: 600;
         }
 
         .report-comment {
@@ -301,26 +297,35 @@
 <body>
     <div class="container">
         <div class="header">
-            <h1>📊 ZVIT - Звіти учасників</h1>
-            <p id="groupName">Завантаження...</p>
-        </div>
-
-        <div class="stats">
-            <div class="stat-card">
-                <div class="stat-value" id="totalUsers">-</div>
-                <div class="stat-label">Всього</div>
+            <div class="header-left">
+                <h1>📊 ZVIT - Звіти учасників</h1>
+                <p id="groupName">Завантаження...</p>
             </div>
-            <div class="stat-card">
-                <div class="stat-value" id="reportedUsers" style="color: #4CAF50;">-</div>
-                <div class="stat-label">Звітували</div>
-            </div>
-            <div class="stat-card">
-                <div class="stat-value" id="notReportedUsers" style="color: #F44336;">-</div>
-                <div class="stat-label">Не звітували</div>
-            </div>
-            <div class="stat-card">
-                <div class="stat-value" id="nextReportTime">-</div>
-                <div class="stat-label">Наступний звіт</div>
+            <div class="header-stats">
+                <div class="header-stat">
+                    <span class="header-stat-value" id="totalUsers">-</span>
+                    <span class="header-stat-label">Всього</span>
+                </div>
+                <div class="header-stat" style="color: #4CAF50;">
+                    <span class="header-stat-value" id="reportedUsers">-</span>
+                    <span class="header-stat-label">Звітували</span>
+                </div>
+                <div class="header-stat" style="color: #FFC107;">
+                    <span class="header-stat-value" id="awaitingUsers">-</span>
+                    <span class="header-stat-label">Очікую звіт</span>
+                </div>
+                <div class="header-stat" style="color: #F44336;">
+                    <span class="header-stat-value" id="notReportedUsers">-</span>
+                    <span class="header-stat-label">Не звітували</span>
+                </div>
+                <div class="header-stat" style="color: #9E9E9E;">
+                    <span class="header-stat-value" id="notActivatedUsers">-</span>
+                    <span class="header-stat-label">Не активовані</span>
+                </div>
+                <div class="header-stat">
+                    <span class="header-stat-value" id="nextReportTime">-</span>
+                    <span class="header-stat-label">Наступний звіт</span>
+                </div>
             </div>
         </div>
 
@@ -329,8 +334,11 @@
                 <label>Фільтр:</label>
                 <select id="statusFilter">
                     <option value="all">Всі учасники</option>
-                    <option value="reported">Звітували</option>
-                    <option value="not-reported">Не звітували</option>
+                    <option value="reported">Звітували (зелені)</option>
+                    <option value="awaiting">Очікую звіт (жовті)</option>
+                    <option value="not-reported">Не звітували (червоні)</option>
+                    <option value="not-activated">Не активовані (сірі)</option>
+                    <option value="admins">Адміністратори</option>
                 </select>
                 <input type="text" id="searchInput" placeholder="Пошук за ім'ям...">
                 <button onclick="loadReports()">🔄 Оновити</button>
@@ -371,6 +379,7 @@
         const sessionToken = /*[[${sessionToken}]]*/ '';
         const groupId = /*[[${groupId}]]*/ '';
         let allUsers = [];
+        let groupInfo = null;
 
         async function loadReports() {
             try {
@@ -404,13 +413,44 @@
             }
         }
 
+        function getColorCategory(user) {
+            // Admin is always dark green
+            if (user.role === 'ADMIN') {
+                return 'admin';
+            }
+            // Use colorHex to determine category
+            const color = (user.colorHex || '').toUpperCase();
+            if (color.includes('4CAF50') || color.includes('81C784') || color.includes('C8E6C9')) {
+                return 'green';
+            } else if (color.includes('FFC107') || color.includes('FFD54F') || color.includes('FFF59D')) {
+                return 'yellow';
+            } else if (color.includes('F44336') || color.includes('E57373') || color.includes('FFCDD2')) {
+                return 'red';
+            } else {
+                return 'gray';
+            }
+        }
+
         function updateStats(users) {
             const total = users.length;
-            const reported = users.filter(u => u.hasReported).length;
+            let green = 0, yellow = 0, red = 0, gray = 0;
+
+            users.forEach(user => {
+                const category = getColorCategory(user);
+                switch(category) {
+                    case 'admin':
+                    case 'green': green++; break;
+                    case 'yellow': yellow++; break;
+                    case 'red': red++; break;
+                    case 'gray': gray++; break;
+                }
+            });
 
             document.getElementById('totalUsers').textContent = total;
-            document.getElementById('reportedUsers').textContent = reported;
-            document.getElementById('notReportedUsers').textContent = total - reported;
+            document.getElementById('reportedUsers').textContent = green;
+            document.getElementById('awaitingUsers').textContent = yellow;
+            document.getElementById('notReportedUsers').textContent = red;
+            document.getElementById('notActivatedUsers').textContent = gray;
 
             // Get next report time
             if (users.length > 0 && users[0].nextScheduledTime) {
@@ -428,10 +468,19 @@
                 const matchesSearch = user.userName.toLowerCase().includes(searchTerm);
 
                 let matchesFilter = true;
-                if (statusFilter === 'reported') {
-                    matchesFilter = user.hasReported;
-                } else if (statusFilter === 'not-reported') {
-                    matchesFilter = !user.hasReported;
+                if (statusFilter !== 'all') {
+                    const category = getColorCategory(user);
+                    if (statusFilter === 'reported') {
+                        matchesFilter = category === 'green' || category === 'admin';
+                    } else if (statusFilter === 'awaiting') {
+                        matchesFilter = category === 'yellow';
+                    } else if (statusFilter === 'not-reported') {
+                        matchesFilter = category === 'red';
+                    } else if (statusFilter === 'not-activated') {
+                        matchesFilter = category === 'gray';
+                    } else if (statusFilter === 'admins') {
+                        matchesFilter = user.role === 'ADMIN';
+                    }
                 }
 
                 return matchesSearch && matchesFilter;
@@ -447,22 +496,40 @@
             }
 
             const html = filtered.map(user => {
-                const borderColor = user.colorHex || '#9E9E9E';
-                const statusText = user.hasReported ? '✅ Звітував' : '❌ Не звітував';
-                const lastReportTime = user.lastReportAt ?
-                    new Date(user.lastReportAt).toLocaleString('uk-UA', {
-                        day: '2-digit',
-                        month: '2-digit',
-                        hour: '2-digit',
-                        minute: '2-digit'
-                    }) : 'Ніколи';
+                const category = getColorCategory(user);
+                let bgColor, textColor, timeText;
+
+                if (category === 'admin') {
+                    bgColor = '#2E7D32'; // Dark green for admins
+                    textColor = '#FFFFFF';
+                    timeText = 'Адмін';
+                } else {
+                    // Use colorHex from backend
+                    bgColor = user.colorHex || '#9E9E9E';
+                    // White text for dark colors (red, dark green)
+                    const isDark = category === 'red' || bgColor.includes('F44336') || bgColor.includes('E57373');
+                    textColor = isDark ? '#FFFFFF' : '#333333';
+
+                    // Time text
+                    if (category === 'gray') {
+                        timeText = ''; // Empty for never reported
+                    } else if (user.lastReportAt) {
+                        timeText = new Date(user.lastReportAt).toLocaleString('uk-UA', {
+                            day: '2-digit',
+                            month: '2-digit',
+                            hour: '2-digit',
+                            minute: '2-digit'
+                        });
+                    } else {
+                        timeText = '';
+                    }
+                }
 
                 return `
-                    <div class="user-card" style="border-left-color: ${borderColor}"
+                    <div class="user-card" style="background-color: ${bgColor}; color: ${textColor}"
                          onclick="showUserDetails('${escapeHtml(user.userId)}', '${escapeHtml(user.userName)}', '${escapeHtml(user.phoneNumber || 'Не вказано')}')">
                         <div class="user-name">${escapeHtml(user.userName)}</div>
-                        <div class="user-status">${statusText}</div>
-                        <div class="user-time">${lastReportTime}</div>
+                        <div class="user-time" style="color: ${textColor}">${timeText}</div>
                     </div>
                 `;
             }).join('');
@@ -507,6 +574,9 @@
                     return;
                 }
 
+                const positiveWord = groupInfo?.positiveWord || 'ОК';
+                const negativeWord = groupInfo?.negativeWord || 'НЕ ОК';
+
                 const reportsHtml = reports.map(report => {
                     const date = new Date(report.submittedAt).toLocaleString('uk-UA', {
                         year: 'numeric',
@@ -518,17 +588,19 @@
 
                     let statusText = '';
                     if (report.reportType === 'SIMPLE') {
-                        statusText = report.simpleResponse === 'OK' ? '✅ ОК' : '❌ НЕ ОК';
+                        statusText = report.simpleResponse === 'OK' ? `✅ ${positiveWord}` : `❌ ${negativeWord}`;
                     } else if (report.reportType === 'EXTENDED') {
-                        statusText = '📋 Розширений звіт';
+                        statusText = '📋 Розширений';
                     } else if (report.reportType === 'URGENT') {
-                        statusText = '🚨 Терміновий запит';
+                        statusText = '🚨 Терміновий';
                     }
 
                     return `
                         <div class="report-item">
-                            <div class="report-date">📅 ${date}</div>
-                            <div class="report-status">${statusText}</div>
+                            <div class="report-header">
+                                <div class="report-date">📅 ${date}</div>
+                                <div class="report-status">${statusText}</div>
+                            </div>
                             ${report.comment ? `<div class="report-comment">💬 ${escapeHtml(report.comment)}</div>` : ''}
                         </div>
                     `;
@@ -575,7 +647,7 @@
         // Initial load
         loadReports();
 
-        // Load group name
+        // Load group name and custom words
         async function loadGroupInfo() {
             try {
                 const response = await fetch(`/api/web/groups/${groupId}`, {
@@ -584,8 +656,8 @@
                     }
                 });
                 if (response.ok) {
-                    const group = await response.json();
-                    document.getElementById('groupName').textContent = `Група: ${group.externalName}`;
+                    groupInfo = await response.json();
+                    document.getElementById('groupName').textContent = `Група: ${groupInfo.externalName}`;
                 }
             } catch (error) {
                 console.error('Error loading group info:', error);

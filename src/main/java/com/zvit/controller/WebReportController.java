@@ -83,7 +83,9 @@ public class WebReportController {
         // Повернути тільки необхідну інформацію
         return ResponseEntity.ok(Map.of(
                 "externalName", group.getExternalName(),
-                "reportType", group.getReportType().toString()
+                "reportType", group.getReportType().toString(),
+                "positiveWord", group.getPositiveWord() != null ? group.getPositiveWord() : "ОК",
+                "negativeWord", group.getNegativeWord() != null ? group.getNegativeWord() : "НЕ ОК"
         ));
     }
 
