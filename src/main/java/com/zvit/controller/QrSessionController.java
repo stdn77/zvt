@@ -7,8 +7,7 @@ import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.core.annotation.AuthenticationPrincipal;
-import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
@@ -26,8 +25,9 @@ public class QrSessionController {
     @PostMapping("/web-auth/authorize")
     public ResponseEntity<Void> authorizeSession(
             @Valid @RequestBody AuthorizeQrRequest request,
-            @AuthenticationPrincipal UserDetails userDetails) {
-        qrSessionService.authorizeSession(request, userDetails.getUsername());
+            Authentication authentication) {
+        String userId = authentication.getName();
+        qrSessionService.authorizeSession(request, userId);
         return ResponseEntity.ok().build();
     }
 
