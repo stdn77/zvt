@@ -1,5 +1,6 @@
 package com.zvit.controller;
 
+import com.zvit.dto.response.ReportResponse;
 import com.zvit.dto.response.UserStatusResponse;
 import com.zvit.entity.Group;
 import com.zvit.entity.QrSession;
@@ -84,5 +85,31 @@ public class WebReportController {
                 "externalName", group.getExternalName(),
                 "reportType", group.getReportType().toString()
         ));
+    }
+
+    /**
+     * GET /api/web/reports/{groupId}/user/{userId}
+     * Отримати всі звіти конкретного користувача (для деталізації)
+     */
+    @GetMapping("/reports/{groupId}/user/{userId}")
+    public ResponseEntity<List<ReportResponse>> getUserReports(
+            @PathVariable String groupId,
+            @PathVariable String userId,
+            @RequestHeader("X-Session-Token") String sessionToken) {
+
+        // Перевірити та отримати авторизовану сесію
+        QrSession session = qrSessionService.getAuthorizedSession(sessionToken);
+
+        // Перевірити що сесія для цієї групи
+        if (!session.getGroupId().equals(groupId)) {
+            log.warn("Session token {} is for group {}, but requesting group {}",
+                     sessionToken, session.getGroupId(), groupId);
+            return ResponseEntity.status(403).build();
+        }
+
+        // Отримати звіти користувача
+        List<ReportResponse> reports = reportService.getUserReports(groupId, userId, session.getUserId());
+
+        return ResponseEntity.ok(reports);
     }
 }
