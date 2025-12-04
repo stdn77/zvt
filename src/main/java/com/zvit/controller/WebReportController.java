@@ -108,7 +108,7 @@ public class WebReportController {
         }
 
         // Отримати звіти користувача
-        List<ReportResponse> reports = reportService.getUserReports(groupId, userId, session.getUserId());
+        List<ReportResponse> reports = reportService.getUserReportsInGroup(groupId, userId, session.getUserId());
 
         return ResponseEntity.ok(reports);
     }
