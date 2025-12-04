@@ -295,6 +295,25 @@
             font-style: italic;
         }
 
+        .extended-fields {
+            margin-top: 8px;
+            padding: 8px;
+            background: #1a1a1a;
+            border-radius: 4px;
+            border-left: 3px solid #4CAF50;
+        }
+
+        .extended-field {
+            font-size: 12px;
+            color: #C8E6C9;
+            margin-bottom: 4px;
+            padding: 2px 0;
+        }
+
+        .extended-field:last-child {
+            margin-bottom: 0;
+        }
+
         .no-reports {
             text-align: center;
             padding: 40px;
@@ -637,12 +656,26 @@
                     });
 
                     let statusText = '';
+                    let extendedFieldsHtml = '';
+
                     if (report.reportType === 'SIMPLE') {
                         statusText = report.simpleResponse === 'OK' ? `✅ ${positiveWord}` : `❌ ${negativeWord}`;
                     } else if (report.reportType === 'EXTENDED') {
-                        statusText = '📋 Розширений';
+                        statusText = '📋 Розширений звіт';
+
+                        // Відобразити поля Т1-Т5 (тільки непусті)
+                        const fields = [];
+                        if (report.field1Value) fields.push(`<div class="extended-field">Т1: ${escapeHtml(report.field1Value)}</div>`);
+                        if (report.field2Value) fields.push(`<div class="extended-field">Т2: ${escapeHtml(report.field2Value)}</div>`);
+                        if (report.field3Value) fields.push(`<div class="extended-field">Т3: ${escapeHtml(report.field3Value)}</div>`);
+                        if (report.field4Value) fields.push(`<div class="extended-field">Т4: ${escapeHtml(report.field4Value)}</div>`);
+                        if (report.field5Value) fields.push(`<div class="extended-field">Т5: ${escapeHtml(report.field5Value)}</div>`);
+
+                        if (fields.length > 0) {
+                            extendedFieldsHtml = `<div class="extended-fields">${fields.join('')}</div>`;
+                        }
                     } else if (report.reportType === 'URGENT') {
-                        statusText = '🚨 Терміновий';
+                        statusText = '🚨 Терміновий запит';
                     }
 
                     return `
@@ -651,6 +684,7 @@
                                 <div class="report-date">📅 ${date}</div>
                                 <div class="report-status">${statusText}</div>
                             </div>
+                            ${extendedFieldsHtml}
                             ${report.comment ? `<div class="report-comment">💬 ${escapeHtml(report.comment)}</div>` : ''}
                         </div>
                     `;
