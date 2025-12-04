@@ -241,7 +241,7 @@
 
         async function loadReports() {
             try {
-                const response = await fetch(`/api/v1/reports/group/${groupId}/statuses`, {
+                const response = await fetch(`/api/web/reports/${groupId}/statuses`, {
                     headers: {
                         'X-Session-Token': sessionToken
                     }
@@ -373,7 +373,11 @@
         // Load group name
         async function loadGroupInfo() {
             try {
-                const response = await fetch(`/api/v1/groups/${groupId}`);
+                const response = await fetch(`/api/web/groups/${groupId}`, {
+                    headers: {
+                        'X-Session-Token': sessionToken
+                    }
+                });
                 if (response.ok) {
                     const group = await response.json();
                     document.getElementById('groupName').textContent = `Група: ${group.externalName}`;
