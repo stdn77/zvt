@@ -215,9 +215,15 @@ public class GroupService {
             throw new RuntimeException("Тільки адміністратор може видалити групу");
         }
 
+        // Delete all reports in the group first (to avoid foreign key constraint)
+        List<Report> reports = reportRepository.findByGroup_IdOrderBySubmittedAtDesc(groupId);
+        reportRepository.deleteAll(reports);
+
+        // Delete all group members
         List<GroupMember> members = groupMemberRepository.findByGroupId(groupId);
         groupMemberRepository.deleteAll(members);
 
+        // Finally, delete the group
         groupRepository.delete(group);
     }
 
