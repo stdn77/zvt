@@ -35,4 +35,18 @@ public class UserService {
         User user = getUserById(userId);
         return user.isActive();
     }
+
+    @Transactional
+    public void updateFcmToken(String userId, String fcmToken) {
+        User user = getUserById(userId);
+        user.setFcmToken(fcmToken);
+        userRepository.save(user);
+    }
+
+    @Transactional
+    public void clearFcmToken(String userId) {
+        User user = getUserById(userId);
+        user.setFcmToken(null);
+        userRepository.save(user);
+    }
 }

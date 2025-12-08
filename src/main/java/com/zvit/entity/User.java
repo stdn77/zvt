@@ -55,4 +55,7 @@ public class User {
     
     @Column(name = "last_login_at")
     private LocalDateTime lastLoginAt;
+
+    @Column(name = "fcm_token", length = 500)
+    private String fcmToken;
 }

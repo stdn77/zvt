@@ -39,6 +39,12 @@ jwt:
   secret: eW91ci1zZWNyZXQta2V5LWNoYW5nZS1pbi1wcm9kdWN0aW9uLW1pbi0yNTYtYml0cy1sb25nLWZvci1zZWN1cml0eQ==
   expiration: 86400000
 
+# Firebase Cloud Messaging
+# Покладіть файл firebase-service-account.json у src/main/resources/
+# Або вкажіть абсолютний шлях до файлу
+firebase:
+  config-path: firebase-service-account.json
+
 logging:
   level:
     com.zvit: DEBUG

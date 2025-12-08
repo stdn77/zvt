@@ -92,13 +92,13 @@ public class ReportController {
     }
 
     @PostMapping("/urgent")
-    public ResponseEntity<ApiResponse<Void>> createUrgentRequest(
+    public ResponseEntity<ApiResponse<Integer>> createUrgentRequest(
             @Valid @RequestBody UrgentReportRequest request,
             Authentication authentication
     ) {
         String userId = authentication.getName();
-        reportService.createUrgentRequest(request, userId);
-        return ResponseEntity.ok(ApiResponse.success("Терміновий запит створено", null));
+        int sentCount = reportService.createUrgentRequest(request, userId);
+        return ResponseEntity.ok(ApiResponse.success("Терміновий запит створено. Сповіщень відправлено: " + sentCount, sentCount));
     }
 
     @GetMapping("/group/{groupId}")

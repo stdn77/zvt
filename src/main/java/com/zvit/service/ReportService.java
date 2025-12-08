@@ -33,6 +33,7 @@ public class ReportService {
     private final GroupMemberRepository groupMemberRepository;
     private final UserRepository userRepository;
     private final EncryptionService encryptionService;
+    private final FirebaseService firebaseService;
 
     private static final int REPORT_WINDOW_HOURS = 24;
 
@@ -154,7 +155,7 @@ public class ReportService {
     }
 
     @Transactional
-    public void createUrgentRequest(UrgentReportRequest request, String userId) {
+    public int createUrgentRequest(UrgentReportRequest request, String userId) {
         Group group = groupRepository.findById(request.getGroupId())
                 .orElseThrow(() -> new RuntimeException("Групу не знайдено"));
 
@@ -165,8 +166,35 @@ public class ReportService {
             throw new RuntimeException("Тільки адміністратор може створювати термінові запити");
         }
 
+        // Отримуємо всіх учасників групи (крім адміна, який надіслав)
+        List<GroupMember> members = groupMemberRepository.findByGroupId(request.getGroupId());
+
+        List<String> fcmTokens = members.stream()
+                .filter(member -> member.getStatus() == GroupMember.MemberStatus.ACCEPTED)
+                .filter(member -> !member.getUser().getId().equals(userId)) // Виключаємо адміна
+                .map(member -> member.getUser().getFcmToken())
+                .filter(token -> token != null && !token.isEmpty())
+                .collect(Collectors.toList());
+
+        // Формуємо повідомлення
+        String title = "Терміновий звіт: " + group.getExternalName();
+        String body = request.getMessage();
+
+        // Додаткові дані для обробки в додатку
+        java.util.Map<String, String> data = new java.util.HashMap<>();
+        data.put("type", "URGENT_REPORT");
+        data.put("groupId", request.getGroupId());
+        data.put("groupName", group.getExternalName());
+        data.put("deadlineMinutes", String.valueOf(request.getDeadlineMinutes()));
+
+        // Відправляємо Push-сповіщення
+        int sentCount = firebaseService.sendPushNotificationToMultiple(fcmTokens, title, body, data);
+
         System.out.println("Терміновий запит для групи: " + group.getExternalName());
         System.out.println("Повідомлення: " + request.getMessage());
+        System.out.println("Push-сповіщень відправлено: " + sentCount + " з " + fcmTokens.size());
+
+        return sentCount;
     }
 
     public List<ReportResponse> getAllGroupReports(String groupId, String userId) {
