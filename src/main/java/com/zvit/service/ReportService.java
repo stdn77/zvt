@@ -169,12 +169,33 @@ public class ReportService {
         // Отримуємо всіх учасників групи (крім адміна, який надіслав)
         List<GroupMember> members = groupMemberRepository.findByGroupId(request.getGroupId());
 
+        System.out.println("=== URGENT REPORT DEBUG ===");
+        System.out.println("Група: " + group.getExternalName());
+        System.out.println("Admin userId: " + userId);
+        System.out.println("Всього учасників у групі: " + members.size());
+
+        // Детальне логування кожного учасника
+        for (GroupMember member : members) {
+            String memberId = member.getUser().getId();
+            String memberName = member.getUser().getName();
+            String status = member.getStatus() != null ? member.getStatus().name() : "NULL";
+            String fcmToken = member.getUser().getFcmToken();
+            boolean isAdmin = memberId.equals(userId);
+
+            System.out.println("  - " + memberName +
+                " | status=" + status +
+                " | isAdmin=" + isAdmin +
+                " | fcmToken=" + (fcmToken != null ? fcmToken.substring(0, Math.min(20, fcmToken.length())) + "..." : "NULL"));
+        }
+
         List<String> fcmTokens = members.stream()
                 .filter(member -> member.getStatus() == GroupMember.MemberStatus.ACCEPTED)
                 .filter(member -> !member.getUser().getId().equals(userId)) // Виключаємо адміна
                 .map(member -> member.getUser().getFcmToken())
                 .filter(token -> token != null && !token.isEmpty())
                 .collect(Collectors.toList());
+
+        System.out.println("FCM токенів для відправки: " + fcmTokens.size());
 
         // Формуємо повідомлення
         String title = "Терміновий звіт: " + group.getExternalName();
@@ -190,9 +211,8 @@ public class ReportService {
         // Відправляємо Push-сповіщення
         int sentCount = firebaseService.sendPushNotificationToMultiple(fcmTokens, title, body, data);
 
-        System.out.println("Терміновий запит для групи: " + group.getExternalName());
-        System.out.println("Повідомлення: " + request.getMessage());
         System.out.println("Push-сповіщень відправлено: " + sentCount + " з " + fcmTokens.size());
+        System.out.println("=== END DEBUG ===");
 
         return sentCount;
     }
