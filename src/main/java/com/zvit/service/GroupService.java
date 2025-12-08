@@ -30,6 +30,7 @@ public class GroupService {
     private final UserRepository userRepository;
     private final ReportRepository reportRepository;
     private final EncryptionService encryptionService;
+    private final FirebaseService firebaseService;
 
     @Transactional
     public GroupResponse createGroup(CreateGroupRequest request, String userId) {
@@ -273,6 +274,10 @@ public class GroupService {
             throw new RuntimeException("Тільки адміністратор може змінювати налаштування групи");
         }
 
+        // Зберігаємо старі значення для порівняння
+        Group.ReportType oldReportType = group.getReportType();
+        Group.ScheduleType oldScheduleType = group.getScheduleType();
+
         // Оновлюємо тип звіту
         if (request.getReportType() != null) {
             group.setReportType(Group.ReportType.valueOf(request.getReportType()));
@@ -325,6 +330,92 @@ public class GroupService {
         }
 
         groupRepository.save(group);
+
+        // Відправляємо Push-сповіщення всім учасникам групи (крім адміна)
+        sendSettingsUpdateNotification(group, adminUserId);
+    }
+
+    /**
+     * Відправляє Push-сповіщення про зміну налаштувань групи
+     */
+    private void sendSettingsUpdateNotification(Group group, String adminUserId) {
+        List<GroupMember> members = groupMemberRepository.findByGroupId(group.getId());
+
+        List<String> fcmTokens = members.stream()
+                .filter(member -> member.getStatus() == GroupMember.MemberStatus.ACCEPTED)
+                .filter(member -> !member.getUser().getId().equals(adminUserId))
+                .map(member -> member.getUser().getFcmToken())
+                .filter(token -> token != null && !token.isEmpty())
+                .collect(Collectors.toList());
+
+        if (fcmTokens.isEmpty()) {
+            System.out.println("Settings update: No FCM tokens to send notifications");
+            return;
+        }
+
+        // Формуємо заголовок
+        String title = "Зміни в групі: " + group.getExternalName();
+
+        // Формуємо текст повідомлення
+        String body = formatSettingsChangeMessage(group);
+
+        // Data payload для оновлення налаштувань в додатку
+        java.util.Map<String, String> data = new java.util.HashMap<>();
+        data.put("type", "SETTINGS_UPDATE");
+        data.put("groupId", group.getId());
+        data.put("groupName", group.getExternalName());
+
+        int sentCount = firebaseService.sendPushNotificationToMultiple(fcmTokens, title, body, data);
+        System.out.println("Settings update notifications sent: " + sentCount + " of " + fcmTokens.size());
+    }
+
+    /**
+     * Форматує повідомлення про зміни налаштувань
+     */
+    private String formatSettingsChangeMessage(Group group) {
+        StringBuilder sb = new StringBuilder();
+
+        // Тип звіту
+        String reportType = group.getReportType() == Group.ReportType.SIMPLE ? "Простий" : "Розширений";
+        sb.append("Тип: ").append(reportType);
+
+        // Розклад
+        if (group.getScheduleType() != null) {
+            sb.append("\n");
+            if (group.getScheduleType() == Group.ScheduleType.FIXED_TIMES) {
+                sb.append("Час: ");
+                List<String> times = new java.util.ArrayList<>();
+                if (group.getFixedTime1() != null) times.add(group.getFixedTime1());
+                if (group.getFixedTime2() != null) times.add(group.getFixedTime2());
+                if (group.getFixedTime3() != null) times.add(group.getFixedTime3());
+                if (group.getFixedTime4() != null) times.add(group.getFixedTime4());
+                if (group.getFixedTime5() != null) times.add(group.getFixedTime5());
+                sb.append(String.join(", ", times));
+            } else if (group.getScheduleType() == Group.ScheduleType.INTERVAL) {
+                sb.append("Інтервал: з ").append(group.getIntervalStartTime());
+                sb.append(" кожні ").append(formatInterval(group.getIntervalMinutes()));
+            }
+        }
+
+        return sb.toString();
+    }
+
+    /**
+     * Форматує інтервал у зручний для читання формат
+     */
+    private String formatInterval(Integer minutes) {
+        if (minutes == null) return "";
+        if (minutes < 60) {
+            return minutes + " хв.";
+        } else {
+            int hours = minutes / 60;
+            int mins = minutes % 60;
+            if (mins == 0) {
+                return hours + " год.";
+            } else {
+                return hours + " год. " + mins + " хв.";
+            }
+        }
     }
 
     @Transactional
