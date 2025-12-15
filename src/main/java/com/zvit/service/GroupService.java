@@ -469,6 +469,7 @@ public class GroupService {
 
     private GroupResponse mapToGroupResponse(Group group, GroupMember member) {
         boolean isAdmin = member.getRole() == GroupMember.Role.ADMIN;
+        boolean isAccepted = member.getStatus() == GroupMember.MemberStatus.ACCEPTED;
         long currentMembers = groupMemberRepository.countByGroupId(group.getId());
 
         // Збираємо fixed times в список
@@ -490,7 +491,8 @@ public class GroupService {
                 .maxMembers(group.getMaxMembers())
                 .currentMembers((int) currentMembers)
                 .reportType(group.getReportType())
-                .userRole(member.getRole().name())
+                // userRole = null якщо статус PENDING (користувач ще не прийнятий)
+                .userRole(isAccepted ? member.getRole().name() : null)
                 .createdAt(group.getCreatedAt())
                 .scheduleType(group.getScheduleType())
                 .fixedTimes(fixedTimes.isEmpty() ? null : fixedTimes)
