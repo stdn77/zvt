@@ -14,15 +14,19 @@ import com.zvit.repository.GroupRepository;
 import com.zvit.repository.ReportRepository;
 import com.zvit.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
+@Slf4j
 public class GroupService {
 
     private final GroupRepository groupRepository;
@@ -534,6 +538,21 @@ public class GroupService {
             return hexString.toString();
         } catch (Exception e) {
             throw new RuntimeException("Помилка хешування телефону", e);
+        }
+    }
+
+    /**
+     * Scheduled task для видалення прострочених pending запитів (раз на годину)
+     * Видаляє запити на приєднання до групи, які очікують більше 24 годин
+     */
+    @Scheduled(fixedRate = 3600000) // 1 година в мілісекундах
+    @Transactional
+    public void cleanupExpiredPendingMembers() {
+        LocalDateTime cutoffTime = LocalDateTime.now().minusHours(24);
+        int deletedCount = groupMemberRepository.deleteExpiredPendingMembers(cutoffTime);
+
+        if (deletedCount > 0) {
+            log.info("Видалено {} прострочених pending запитів на приєднання до груп", deletedCount);
         }
     }
 }
