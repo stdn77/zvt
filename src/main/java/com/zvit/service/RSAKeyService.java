@@ -1,6 +1,8 @@
 package com.zvit.service;
 
+import com.zvit.config.CryptoConfig;
 import jakarta.annotation.PostConstruct;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
@@ -13,14 +15,14 @@ import java.util.Base64;
  * Сервіс для RSA шифрування.
  * Генерує пару ключів при старті сервера.
  * Клієнт шифрує дані публічним ключем, сервер дешифрує приватним.
+ * Налаштування зчитуються з application.yml (crypto.rsa.*)
  */
 @Slf4j
 @Service
+@RequiredArgsConstructor
 public class RSAKeyService {
 
-    private static final String ALGORITHM = "RSA";
-    private static final String TRANSFORMATION = "RSA/ECB/PKCS1Padding";
-    private static final int KEY_SIZE = 2048;
+    private final CryptoConfig cryptoConfig;
 
     private KeyPair keyPair;
     private String publicKeyBase64;
@@ -28,7 +30,9 @@ public class RSAKeyService {
     @PostConstruct
     public void init() {
         generateKeyPair();
-        log.info("RSA key pair generated successfully");
+        log.info("RSA key pair generated: algorithm={}, keySize={}",
+                cryptoConfig.getRsa().getAlgorithm(),
+                cryptoConfig.getRsa().getKeySize());
     }
 
     /**
@@ -36,8 +40,8 @@ public class RSAKeyService {
      */
     private void generateKeyPair() {
         try {
-            KeyPairGenerator keyGen = KeyPairGenerator.getInstance(ALGORITHM);
-            keyGen.initialize(KEY_SIZE, new SecureRandom());
+            KeyPairGenerator keyGen = KeyPairGenerator.getInstance(cryptoConfig.getRsa().getAlgorithm());
+            keyGen.initialize(cryptoConfig.getRsa().getKeySize(), new SecureRandom());
             this.keyPair = keyGen.generateKeyPair();
 
             // Зберігаємо публічний ключ у Base64 форматі
@@ -57,11 +61,18 @@ public class RSAKeyService {
     }
 
     /**
+     * Повертає розмір ключа в бітах
+     */
+    public int getKeySize() {
+        return cryptoConfig.getRsa().getKeySize();
+    }
+
+    /**
      * Дешифрує дані, зашифровані публічним ключем
      */
     public String decrypt(String encryptedBase64) {
         try {
-            Cipher cipher = Cipher.getInstance(TRANSFORMATION);
+            Cipher cipher = Cipher.getInstance(cryptoConfig.getRsa().getTransformation());
             cipher.init(Cipher.DECRYPT_MODE, keyPair.getPrivate());
 
             byte[] encryptedBytes = Base64.getDecoder().decode(encryptedBase64);
@@ -84,8 +95,7 @@ public class RSAKeyService {
         }
         try {
             byte[] decoded = Base64.getDecoder().decode(value);
-            // RSA 2048 біт = 256 байт зашифрованих даних
-            return decoded.length == 256;
+            return decoded.length == cryptoConfig.getRsa().getEncryptedDataSize();
         } catch (IllegalArgumentException e) {
             return false;
         }

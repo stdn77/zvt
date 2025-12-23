@@ -52,3 +52,68 @@ logging:
     org.springframework.web: INFO
     org.hibernate.SQL: WARN
     org.hibernate.type.descriptor.sql.BasicBinder: WARN
+
+# ============================================
+# Application Configuration (Централізовані константи)
+# ============================================
+app:
+  timezone: Europe/Kiev
+  version: "1.0.0"
+  base-url: http://localhost:8080
+
+# Rate Limiting
+rate-limit:
+  max-attempts-login: 5
+  max-attempts-register: 3
+  window-size-ms: 60000
+  block-duration-ms: 300000
+  cleanup-interval-minutes: 5
+
+# Cryptography
+crypto:
+  hash:
+    algorithm: SHA-256
+  rsa:
+    algorithm: RSA
+    transformation: RSA/ECB/PKCS1Padding
+    key-size: 2048
+    encrypted-data-size: 256
+  aes:
+    algorithm: AES
+    key: MySecretKey12345MySecretKey12345
+
+# QR Sessions
+qr-session:
+  expiry-minutes: 5
+  authorized-expiry-hours: 24
+  token-size-bytes: 32
+  cleanup-interval-ms: 3600000
+
+# Reports
+report:
+  window-hours: 24
+  color:
+    default: "#E0E0E0"
+    admin: "#006400"
+    early: "#C8E6C9"
+    overdue: "#FFCDD2"
+    critical: "#FFCDD2"
+    warning: "#FFF59D"
+    normal: "#C8E6C9"
+  percentage:
+    early: 25.0
+    warning: 60.0
+    critical: 80.0
+
+# Groups
+group:
+  cleanup-interval-ms: 3600000
+  pending-expiry-hours: 24
+  min-admin-count: 2
+
+# Validation Patterns
+validation:
+  phone:
+    pattern: "^\\+\\d{10,14}$"
+  email:
+    pattern: "^[A-Za-z0-9+_.-]+@[A-Za-z0-9.-]+\\.[A-Za-z]{2,}$"

@@ -1,5 +1,7 @@
 package com.zvit.service;
 
+import com.zvit.config.RateLimitConfig;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
 import java.util.Map;
@@ -11,32 +13,37 @@ import java.util.concurrent.TimeUnit;
 /**
  * Rate limiting сервіс для захисту від brute force атак.
  * Обмежує кількість запитів з одного IP за певний період часу.
+ * Налаштування зчитуються з application.yml (rate-limit.*)
  */
+@Slf4j
 @Service
 public class RateLimitService {
 
-    // Максимальна кількість спроб за вікно часу
-    private static final int MAX_ATTEMPTS_LOGIN = 5;        // 5 спроб логіну
-    private static final int MAX_ATTEMPTS_REGISTER = 3;    // 3 спроби реєстрації
-
-    // Вікно часу в мілісекундах (1 хвилина)
-    private static final long WINDOW_SIZE_MS = 60_000;
-
-    // Час блокування після перевищення ліміту (5 хвилин)
-    private static final long BLOCK_DURATION_MS = 5 * 60_000;
+    private final RateLimitConfig config;
 
     // Зберігаємо спроби по IP
     private final Map<String, RateLimitInfo> loginAttempts = new ConcurrentHashMap<>();
     private final Map<String, RateLimitInfo> registerAttempts = new ConcurrentHashMap<>();
 
-    public RateLimitService() {
-        // Очищення застарілих записів кожні 5 хвилин
+    public RateLimitService(RateLimitConfig config) {
+        this.config = config;
+
+        // Очищення застарілих записів
         ScheduledExecutorService cleaner = Executors.newSingleThreadScheduledExecutor(r -> {
             Thread t = new Thread(r, "rate-limit-cleaner");
             t.setDaemon(true);
             return t;
         });
-        cleaner.scheduleAtFixedRate(this::cleanup, 5, 5, TimeUnit.MINUTES);
+        cleaner.scheduleAtFixedRate(this::cleanup,
+                config.getCleanupIntervalMinutes(),
+                config.getCleanupIntervalMinutes(),
+                TimeUnit.MINUTES);
+
+        log.info("RateLimitService initialized: maxLogin={}, maxRegister={}, windowMs={}, blockMs={}",
+                config.getMaxAttemptsLogin(),
+                config.getMaxAttemptsRegister(),
+                config.getWindowSizeMs(),
+                config.getBlockDurationMs());
     }
 
     /**
@@ -44,7 +51,7 @@ public class RateLimitService {
      * @return true якщо запит дозволено
      */
     public boolean isLoginAllowed(String ip) {
-        return isAllowed(ip, loginAttempts, MAX_ATTEMPTS_LOGIN);
+        return isAllowed(ip, loginAttempts, config.getMaxAttemptsLogin());
     }
 
     /**
@@ -52,21 +59,21 @@ public class RateLimitService {
      * @return true якщо запит дозволено
      */
     public boolean isRegisterAllowed(String ip) {
-        return isAllowed(ip, registerAttempts, MAX_ATTEMPTS_REGISTER);
+        return isAllowed(ip, registerAttempts, config.getMaxAttemptsRegister());
     }
 
     /**
      * Фіксує спробу логіну
      */
     public void recordLoginAttempt(String ip) {
-        recordAttempt(ip, loginAttempts);
+        recordAttempt(ip, loginAttempts, config.getMaxAttemptsLogin());
     }
 
     /**
      * Фіксує спробу реєстрації
      */
     public void recordRegisterAttempt(String ip) {
-        recordAttempt(ip, registerAttempts);
+        recordAttempt(ip, registerAttempts, config.getMaxAttemptsRegister());
     }
 
     /**
@@ -106,7 +113,7 @@ public class RateLimitService {
         }
 
         // Якщо пройшло вікно часу - скидаємо лічильник
-        if (now - info.windowStart > WINDOW_SIZE_MS) {
+        if (now - info.windowStart > config.getWindowSizeMs()) {
             attempts.remove(ip);
             return true;
         }
@@ -114,7 +121,7 @@ public class RateLimitService {
         return info.attempts < maxAttempts;
     }
 
-    private void recordAttempt(String ip, Map<String, RateLimitInfo> attempts) {
+    private void recordAttempt(String ip, Map<String, RateLimitInfo> attempts, int maxAttempts) {
         long now = System.currentTimeMillis();
 
         attempts.compute(ip, (key, info) -> {
@@ -123,19 +130,16 @@ public class RateLimitService {
             }
 
             // Якщо пройшло вікно часу - починаємо заново
-            if (now - info.windowStart > WINDOW_SIZE_MS) {
+            if (now - info.windowStart > config.getWindowSizeMs()) {
                 return new RateLimitInfo(now, 1, 0);
             }
 
             int newAttempts = info.attempts + 1;
             long blockedUntil = info.blockedUntil;
 
-            // Визначаємо ліміт на основі типу (login або register)
-            int maxAttempts = (attempts == loginAttempts) ? MAX_ATTEMPTS_LOGIN : MAX_ATTEMPTS_REGISTER;
-
             // Якщо перевищено ліміт - блокуємо
             if (newAttempts >= maxAttempts) {
-                blockedUntil = now + BLOCK_DURATION_MS;
+                blockedUntil = now + config.getBlockDurationMs();
             }
 
             return new RateLimitInfo(info.windowStart, newAttempts, blockedUntil);
@@ -144,7 +148,7 @@ public class RateLimitService {
 
     private void cleanup() {
         long now = System.currentTimeMillis();
-        long cutoff = now - WINDOW_SIZE_MS - BLOCK_DURATION_MS;
+        long cutoff = now - config.getWindowSizeMs() - config.getBlockDurationMs();
 
         loginAttempts.entrySet().removeIf(entry ->
             entry.getValue().windowStart < cutoff && entry.getValue().blockedUntil < now);
