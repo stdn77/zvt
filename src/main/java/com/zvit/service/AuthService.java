@@ -25,21 +25,29 @@ public class AuthService {
     private final PasswordEncoder passwordEncoder;
     private final JwtService jwtService;
     private final EncryptionService encryptionService;
+    private final RSAKeyService rsaKeyService;
 
     @Transactional
     public RegisterResponse register(RegisterRequest request) {
-        if (!isValidPhone(request.getPhone())) {
+        // Дешифруємо RSA-зашифровані дані (якщо вони зашифровані)
+        String phone = rsaKeyService.decryptIfEncrypted(request.getPhone());
+        String password = rsaKeyService.decryptIfEncrypted(request.getPassword());
+        String email = request.getEmail() != null
+                ? rsaKeyService.decryptIfEncrypted(request.getEmail())
+                : null;
+
+        if (!isValidPhone(phone)) {
             throw new RuntimeException("Невірний формат телефону");
         }
 
-        if (request.getEmail() != null && !isValidEmail(request.getEmail())) {
+        if (email != null && !isValidEmail(email)) {
             throw new RuntimeException("Невірний формат email");
         }
 
-        String phoneHash = hashPhone(request.getPhone());
-        String phoneEncrypted = encryptionService.encrypt(request.getPhone());
-        String emailHash = request.getEmail() != null ? hashEmail(request.getEmail()) : null;
-        String emailEncrypted = request.getEmail() != null ? encryptionService.encrypt(request.getEmail()) : null;
+        String phoneHash = hashPhone(phone);
+        String phoneEncrypted = encryptionService.encrypt(phone);
+        String emailHash = email != null ? hashEmail(email) : null;
+        String emailEncrypted = email != null ? encryptionService.encrypt(email) : null;
 
         if (userRepository.existsByPhoneHash(phoneHash)) {
             throw new RuntimeException("Користувач з таким телефоном вже існує");
@@ -55,7 +63,7 @@ public class AuthService {
                 .phoneEncrypted(phoneEncrypted)
                 .emailHash(emailHash)
                 .emailEncrypted(emailEncrypted)
-                .passwordHash(passwordEncoder.encode(request.getPassword()))
+                .passwordHash(passwordEncoder.encode(password))
                 .name(request.getName())
                 .phoneVerified(false)
                 .emailVerified(false)
@@ -75,22 +83,16 @@ public class AuthService {
 
     @Transactional
     public LoginResponse login(LoginRequest request) {
-        String phoneHash = hashPhone(request.getPhone());
-        System.out.println("DEBUG: Login attempt for phone: " + request.getPhone());
-        System.out.println("DEBUG: Phone hash: " + phoneHash);
+        // Дешифруємо RSA-зашифровані дані (якщо вони зашифровані)
+        String phone = rsaKeyService.decryptIfEncrypted(request.getPhone());
+        String password = rsaKeyService.decryptIfEncrypted(request.getPassword());
+
+        String phoneHash = hashPhone(phone);
 
         User user = userRepository.findByPhoneHash(phoneHash)
-                .orElseThrow(() -> {
-                    System.out.println("DEBUG: User not found for phone hash: " + phoneHash);
-                    return new RuntimeException("Невірний телефон або пароль");
-                });
+                .orElseThrow(() -> new RuntimeException("Невірний телефон або пароль"));
 
-        System.out.println("DEBUG: User found: " + user.getId() + ", name: " + user.getName());
-        System.out.println("DEBUG: User password hash: " + user.getPasswordHash());
-        System.out.println("DEBUG: Password matches: " + passwordEncoder.matches(request.getPassword(), user.getPasswordHash()));
-
-        if (!passwordEncoder.matches(request.getPassword(), user.getPasswordHash())) {
-            System.out.println("DEBUG: Password mismatch for user: " + user.getId());
+        if (!passwordEncoder.matches(password, user.getPasswordHash())) {
             throw new RuntimeException("Невірний телефон або пароль");
         }
 
@@ -101,7 +103,7 @@ public class AuthService {
         user.setLastLoginAt(LocalDateTime.now());
         userRepository.save(user);
 
-        String jwtToken = jwtService.generateToken(user.getId(), request.getPhone());
+        String jwtToken = jwtService.generateToken(user.getId(), phone);
 
         // Дешифрувати телефон для відповіді
         String decryptedPhone = encryptionService.decrypt(user.getPhoneEncrypted());

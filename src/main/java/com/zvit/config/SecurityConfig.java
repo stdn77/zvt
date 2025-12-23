@@ -1,6 +1,7 @@
 package com.zvit.config;
 
 import com.zvit.security.JwtAuthenticationFilter;
+import com.zvit.security.RateLimitFilter;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -18,6 +19,7 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
 public class SecurityConfig {
 
     private final JwtAuthenticationFilter jwtAuthFilter;
+    private final RateLimitFilter rateLimitFilter;
 
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
@@ -31,6 +33,7 @@ public class SecurityConfig {
                 .requestMatchers("/api/v1/auth/register").permitAll()
                 .requestMatchers("/api/v1/auth/login").permitAll()
                 .requestMatchers("/api/v1/auth/test").permitAll()
+                .requestMatchers("/api/v1/auth/public-key").permitAll()
                 .requestMatchers("/error").permitAll()
                 .requestMatchers("/web/**").permitAll()
                 .requestMatchers("/api/web/**").permitAll() // Web API з session token
@@ -45,6 +48,8 @@ public class SecurityConfig {
                 .requestMatchers("/api/v1/reports/**").authenticated()
                 .anyRequest().authenticated()
             )
+            // Rate limiting фільтр виконується першим
+            .addFilterBefore(rateLimitFilter, UsernamePasswordAuthenticationFilter.class)
             .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class);
 
         return http.build();

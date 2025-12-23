@@ -4,8 +4,10 @@ import com.zvit.dto.request.FcmTokenRequest;
 import com.zvit.dto.request.LoginRequest;
 import com.zvit.dto.request.RegisterRequest;
 import com.zvit.dto.response.LoginResponse;
+import com.zvit.dto.response.PublicKeyResponse;
 import com.zvit.dto.response.RegisterResponse;
 import com.zvit.service.AuthService;
+import com.zvit.service.RSAKeyService;
 import com.zvit.service.UserService;
 import com.zvit.util.ApiResponse;
 import jakarta.validation.Valid;
@@ -22,6 +24,7 @@ public class AuthController {
 
     private final AuthService authService;
     private final UserService userService;
+    private final RSAKeyService rsaKeyService;
 
     @PostMapping("/register")
     public ResponseEntity<ApiResponse<RegisterResponse>> register(@Valid @RequestBody RegisterRequest request) {
@@ -41,6 +44,19 @@ public class AuthController {
     public ResponseEntity<ApiResponse<String>> test() {
         String message = authService.test();
         return ResponseEntity.ok(ApiResponse.success("Test OK", message));
+    }
+
+    /**
+     * Повертає публічний ключ RSA для шифрування чутливих даних
+     */
+    @GetMapping("/public-key")
+    public ResponseEntity<ApiResponse<PublicKeyResponse>> getPublicKey() {
+        PublicKeyResponse response = PublicKeyResponse.builder()
+                .publicKey(rsaKeyService.getPublicKeyBase64())
+                .algorithm("RSA")
+                .keySize(2048)
+                .build();
+        return ResponseEntity.ok(ApiResponse.success("Публічний ключ", response));
     }
 
     /**
