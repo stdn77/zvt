@@ -12,11 +12,13 @@ import com.zvit.service.UserService;
 import com.zvit.util.ApiResponse;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
+@Slf4j
 @RestController
 @RequestMapping("/api/v1/auth")
 @RequiredArgsConstructor
@@ -28,7 +30,15 @@ public class AuthController {
 
     @PostMapping("/register")
     public ResponseEntity<ApiResponse<RegisterResponse>> register(@Valid @RequestBody RegisterRequest request) {
+        log.info("📝 REGISTER request received");
+        log.info("   Phone (encrypted?): {} (length: {})",
+            request.getPhone().length() > 50 ? request.getPhone().substring(0, 50) + "..." : request.getPhone(),
+            request.getPhone().length());
+        log.info("   Name: {}", request.getName());
+        log.info("   Email: {}", request.getEmail() != null ? "provided" : "null");
+
         RegisterResponse response = authService.register(request);
+        log.info("✅ REGISTER successful, userId: {}", response.getUserId());
         return ResponseEntity
                 .status(HttpStatus.CREATED)
                 .body(ApiResponse.success("Користувача зареєстровано", response));
@@ -36,7 +46,14 @@ public class AuthController {
 
     @PostMapping("/login")
     public ResponseEntity<ApiResponse<LoginResponse>> login(@Valid @RequestBody LoginRequest request) {
+        log.info("🔐 LOGIN request received");
+        log.info("   Phone (encrypted?): {} (length: {})",
+            request.getPhone().length() > 50 ? request.getPhone().substring(0, 50) + "..." : request.getPhone(),
+            request.getPhone().length());
+        log.info("   Password length: {}", request.getPassword().length());
+
         LoginResponse response = authService.login(request);
+        log.info("✅ LOGIN successful, userId: {}", response.getUserId());
         return ResponseEntity.ok(ApiResponse.success("Вхід успішний", response));
     }
 

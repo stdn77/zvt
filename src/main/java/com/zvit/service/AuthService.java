@@ -7,6 +7,7 @@ import com.zvit.dto.response.RegisterResponse;
 import com.zvit.entity.User;
 import com.zvit.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -17,6 +18,7 @@ import java.security.NoSuchAlgorithmException;
 import java.time.LocalDateTime;
 import java.util.UUID;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class AuthService {
@@ -29,12 +31,20 @@ public class AuthService {
 
     @Transactional
     public RegisterResponse register(RegisterRequest request) {
+        log.info("🔓 AuthService.register - Starting RSA decryption...");
+        log.info("   Input phone length: {}, isEncrypted: {}",
+            request.getPhone().length(), rsaKeyService.isEncrypted(request.getPhone()));
+
         // Дешифруємо RSA-зашифровані дані (якщо вони зашифровані)
         String phone = rsaKeyService.decryptIfEncrypted(request.getPhone());
         String password = rsaKeyService.decryptIfEncrypted(request.getPassword());
         String email = request.getEmail() != null
                 ? rsaKeyService.decryptIfEncrypted(request.getEmail())
                 : null;
+
+        log.info("   ✅ Decrypted phone: {}", phone);
+        log.info("   ✅ Decrypted password length: {}", password.length());
+        log.info("   ✅ Decrypted email: {}", email != null ? email : "null");
 
         if (!isValidPhone(phone)) {
             throw new RuntimeException("Невірний формат телефону");
@@ -83,18 +93,36 @@ public class AuthService {
 
     @Transactional
     public LoginResponse login(LoginRequest request) {
+        log.info("🔓 AuthService.login - Starting RSA decryption...");
+        log.info("   Input phone length: {}, isEncrypted: {}",
+            request.getPhone().length(), rsaKeyService.isEncrypted(request.getPhone()));
+        log.info("   Input password length: {}, isEncrypted: {}",
+            request.getPassword().length(), rsaKeyService.isEncrypted(request.getPassword()));
+
         // Дешифруємо RSA-зашифровані дані (якщо вони зашифровані)
         String phone = rsaKeyService.decryptIfEncrypted(request.getPhone());
         String password = rsaKeyService.decryptIfEncrypted(request.getPassword());
 
+        log.info("   ✅ Decrypted phone: {}", phone);
+        log.info("   ✅ Decrypted password length: {}", password.length());
+
         String phoneHash = hashPhone(phone);
+        log.info("   Phone hash: {}", phoneHash.substring(0, 16) + "...");
 
         User user = userRepository.findByPhoneHash(phoneHash)
-                .orElseThrow(() -> new RuntimeException("Невірний телефон або пароль"));
+                .orElseThrow(() -> {
+                    log.error("   ❌ User not found for phone hash");
+                    return new RuntimeException("Невірний телефон або пароль");
+                });
+
+        log.info("   ✅ User found: {}, name: {}", user.getId(), user.getName());
 
         if (!passwordEncoder.matches(password, user.getPasswordHash())) {
+            log.error("   ❌ Password mismatch!");
             throw new RuntimeException("Невірний телефон або пароль");
         }
+
+        log.info("   ✅ Password verified successfully");
 
         if (!user.isActive()) {
             throw new RuntimeException("Обліковий запис деактивовано");
