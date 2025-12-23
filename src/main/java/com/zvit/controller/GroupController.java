@@ -4,10 +4,12 @@ import com.zvit.dto.request.AddMemberRequest;
 import com.zvit.dto.request.ChangeRoleRequest;
 import com.zvit.dto.request.CreateGroupRequest;
 import com.zvit.dto.request.JoinGroupRequest;
+import com.zvit.dto.response.EncryptedData;
 import com.zvit.dto.response.GroupMemberResponse;
 import com.zvit.dto.response.GroupResponse;
 import com.zvit.entity.GroupMember;
 import com.zvit.service.GroupService;
+import com.zvit.service.ResponseEncryptionService;
 import com.zvit.util.ApiResponse;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -19,9 +21,10 @@ import org.springframework.web.bind.annotation.*;
 import java.util.List;
 
 /**
- * GroupController v1.3
+ * GroupController v1.4
  * - Використовує JWT Authentication
  * - userId береться з SecurityContext
+ * - Чутливі дані шифруються AES
  */
 @RestController
 @RequestMapping("/api/v1/groups")
@@ -29,6 +32,7 @@ import java.util.List;
 public class GroupController {
 
     private final GroupService groupService;
+    private final ResponseEncryptionService encryptionService;
 
     @PostMapping
     public ResponseEntity<ApiResponse<GroupResponse>> createGroup(
@@ -43,22 +47,25 @@ public class GroupController {
     }
 
     @GetMapping
-    public ResponseEntity<ApiResponse<List<GroupResponse>>> getUserGroups(
+    public ResponseEntity<ApiResponse<EncryptedData>> getUserGroups(
             Authentication authentication
     ) {
         String userId = authentication.getName();
         List<GroupResponse> groups = groupService.getUserGroups(userId);
-        return ResponseEntity.ok(ApiResponse.success("Групи отримано", groups));
+        // Шифруємо чутливі дані
+        String encryptedPayload = encryptionService.encryptObject(groups);
+        return ResponseEntity.ok(ApiResponse.success("Групи отримано", EncryptedData.of(encryptedPayload)));
     }
 
     @GetMapping("/{groupId}")
-    public ResponseEntity<ApiResponse<GroupResponse>> getGroupById(
+    public ResponseEntity<ApiResponse<EncryptedData>> getGroupById(
             @PathVariable String groupId,
             Authentication authentication
     ) {
         String userId = authentication.getName();
         GroupResponse response = groupService.getGroupById(groupId, userId);
-        return ResponseEntity.ok(ApiResponse.success("Групу знайдено", response));
+        String encryptedPayload = encryptionService.encryptObject(response);
+        return ResponseEntity.ok(ApiResponse.success("Групу знайдено", EncryptedData.of(encryptedPayload)));
     }
 
     @PostMapping("/{groupId}/members")
@@ -73,23 +80,25 @@ public class GroupController {
     }
 
     @PostMapping("/join")
-    public ResponseEntity<ApiResponse<GroupResponse>> joinGroup(
+    public ResponseEntity<ApiResponse<EncryptedData>> joinGroup(
             @Valid @RequestBody JoinGroupRequest request,
             Authentication authentication
     ) {
         String userId = authentication.getName();
         GroupResponse response = groupService.joinGroupByAccessCode(request, userId);
-        return ResponseEntity.ok(ApiResponse.success("Ви приєдналися до групи", response));
+        String encryptedPayload = encryptionService.encryptObject(response);
+        return ResponseEntity.ok(ApiResponse.success("Ви приєдналися до групи", EncryptedData.of(encryptedPayload)));
     }
 
     @GetMapping("/{groupId}/members")
-    public ResponseEntity<ApiResponse<List<GroupMemberResponse>>> getGroupMembers(
+    public ResponseEntity<ApiResponse<EncryptedData>> getGroupMembers(
             @PathVariable String groupId,
             Authentication authentication
     ) {
         String userId = authentication.getName();
         List<GroupMemberResponse> members = groupService.getGroupMembers(groupId, userId);
-        return ResponseEntity.ok(ApiResponse.success("Учасники отримано", members));
+        String encryptedPayload = encryptionService.encryptObject(members);
+        return ResponseEntity.ok(ApiResponse.success("Учасники отримано", EncryptedData.of(encryptedPayload)));
     }
 
     @DeleteMapping("/{groupId}/members/{memberId}")

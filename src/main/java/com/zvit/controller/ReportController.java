@@ -3,9 +3,11 @@ package com.zvit.controller;
 import com.zvit.dto.request.ExtendedReportRequest;
 import com.zvit.dto.request.SimpleReportRequest;
 import com.zvit.dto.request.UrgentReportRequest;
+import com.zvit.dto.response.EncryptedData;
 import com.zvit.dto.response.ReportResponse;
 import com.zvit.dto.response.UserStatusResponse;
 import com.zvit.service.ReportService;
+import com.zvit.service.ResponseEncryptionService;
 import com.zvit.util.ApiResponse;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -17,9 +19,10 @@ import org.springframework.web.bind.annotation.*;
 import java.util.List;
 
 /**
- * ReportController v1.3
+ * ReportController v1.4
  * - Використовує JWT Authentication
  * - userId береться з SecurityContext
+ * - Чутливі дані шифруються AES
  */
 @RestController
 @RequestMapping("/api/v1/reports")
@@ -27,6 +30,7 @@ import java.util.List;
 public class ReportController {
 
     private final ReportService reportService;
+    private final ResponseEncryptionService encryptionService;
 
     @PostMapping("/simple")
     public ResponseEntity<ApiResponse<ReportResponse>> createSimpleReport(
@@ -53,42 +57,46 @@ public class ReportController {
     }
 
     @GetMapping("/my")
-    public ResponseEntity<ApiResponse<List<ReportResponse>>> getAllMyReports(
+    public ResponseEntity<ApiResponse<EncryptedData>> getAllMyReports(
             Authentication authentication
     ) {
         String userId = authentication.getName();
         List<ReportResponse> reports = reportService.getAllMyReports(userId);
-        return ResponseEntity.ok(ApiResponse.success("Всі звіти отримано", reports));
+        String encryptedPayload = encryptionService.encryptObject(reports);
+        return ResponseEntity.ok(ApiResponse.success("Всі звіти отримано", EncryptedData.of(encryptedPayload)));
     }
 
     @GetMapping("/my/{groupId}")
-    public ResponseEntity<ApiResponse<List<ReportResponse>>> getMyReports(
+    public ResponseEntity<ApiResponse<EncryptedData>> getMyReports(
             @PathVariable String groupId,
             Authentication authentication
     ) {
         String userId = authentication.getName();
         List<ReportResponse> reports = reportService.getMyReports(groupId, userId);
-        return ResponseEntity.ok(ApiResponse.success("Звіти отримано", reports));
+        String encryptedPayload = encryptionService.encryptObject(reports);
+        return ResponseEntity.ok(ApiResponse.success("Звіти отримано", EncryptedData.of(encryptedPayload)));
     }
 
     @GetMapping("/my/{groupId}/last")
-    public ResponseEntity<ApiResponse<ReportResponse>> getMyLastReport(
+    public ResponseEntity<ApiResponse<EncryptedData>> getMyLastReport(
             @PathVariable String groupId,
             Authentication authentication
     ) {
         String userId = authentication.getName();
         ReportResponse report = reportService.getMyLastReport(groupId, userId);
-        return ResponseEntity.ok(ApiResponse.success("Останній звіт отримано", report));
+        String encryptedPayload = encryptionService.encryptObject(report);
+        return ResponseEntity.ok(ApiResponse.success("Останній звіт отримано", EncryptedData.of(encryptedPayload)));
     }
 
     @GetMapping("/statuses/{groupId}")
-    public ResponseEntity<ApiResponse<List<UserStatusResponse>>> getGroupStatuses(
+    public ResponseEntity<ApiResponse<EncryptedData>> getGroupStatuses(
             @PathVariable String groupId,
             Authentication authentication
     ) {
         String userId = authentication.getName();
         List<UserStatusResponse> statuses = reportService.getGroupStatuses(groupId, userId);
-        return ResponseEntity.ok(ApiResponse.success("Статуси отримано", statuses));
+        String encryptedPayload = encryptionService.encryptObject(statuses);
+        return ResponseEntity.ok(ApiResponse.success("Статуси отримано", EncryptedData.of(encryptedPayload)));
     }
 
     @PostMapping("/urgent")
@@ -102,23 +110,25 @@ public class ReportController {
     }
 
     @GetMapping("/group/{groupId}")
-    public ResponseEntity<ApiResponse<List<ReportResponse>>> getAllGroupReports(
+    public ResponseEntity<ApiResponse<EncryptedData>> getAllGroupReports(
             @PathVariable String groupId,
             Authentication authentication
     ) {
         String userId = authentication.getName();
         List<ReportResponse> reports = reportService.getAllGroupReports(groupId, userId);
-        return ResponseEntity.ok(ApiResponse.success("Всі звіти отримано", reports));
+        String encryptedPayload = encryptionService.encryptObject(reports);
+        return ResponseEntity.ok(ApiResponse.success("Всі звіти отримано", EncryptedData.of(encryptedPayload)));
     }
 
     @GetMapping("/group/{groupId}/user/{targetUserId}")
-    public ResponseEntity<ApiResponse<List<ReportResponse>>> getUserReportsInGroup(
+    public ResponseEntity<ApiResponse<EncryptedData>> getUserReportsInGroup(
             @PathVariable String groupId,
             @PathVariable String targetUserId,
             Authentication authentication
     ) {
         String userId = authentication.getName();
         List<ReportResponse> reports = reportService.getUserReportsInGroup(groupId, targetUserId, userId);
-        return ResponseEntity.ok(ApiResponse.success("Звіти користувача отримано", reports));
+        String encryptedPayload = encryptionService.encryptObject(reports);
+        return ResponseEntity.ok(ApiResponse.success("Звіти користувача отримано", EncryptedData.of(encryptedPayload)));
     }
 }

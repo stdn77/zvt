@@ -19,4 +19,7 @@ public class LoginResponse {
     private String email;
     private LocalDateTime serverTime;  // Серверний час для синхронізації
     private String timezone;           // Часова зона сервера
+
+    /** AES ключ для дешифрування наступних відповідей (Base64) */
+    private String encryptionKey;
 }

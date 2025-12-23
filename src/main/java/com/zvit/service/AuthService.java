@@ -28,6 +28,7 @@ public class AuthService {
     private final JwtService jwtService;
     private final EncryptionService encryptionService;
     private final RSAKeyService rsaKeyService;
+    private final ResponseEncryptionService responseEncryptionService;
 
     @Transactional
     public RegisterResponse register(RegisterRequest request) {
@@ -149,6 +150,7 @@ public class AuthService {
                 .email(decryptedEmail)
                 .serverTime(LocalDateTime.now())  // Серверний час для синхронізації
                 .timezone("Europe/Kiev")          // Часова зона сервера
+                .encryptionKey(responseEncryptionService.getEncryptionKeyBase64()) // AES ключ для дешифрування
                 .build();
     }
 
