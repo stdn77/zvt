@@ -825,6 +825,11 @@
         }
 
         loadGroupInfo();
+
+        // Приховати URL з токеном (безпека: не показувати токен в адресному рядку)
+        if (window.history && window.history.replaceState) {
+            window.history.replaceState({}, document.title, window.location.origin + '/');
+        }
     </script>
 </body>
 </html>
