@@ -6,7 +6,7 @@ spring:
     encoding: UTF-8
 
   datasource:
-    url: jdbc:mysql://localhost:3307/zvit_db?useSSL=false&serverTimezone=UTC&allowPublicKeyRetrieval=true
+    url: jdbc:mysql://localhost:3307/zvit_db?useSSL=false&serverTimezone=UTC&allowPublicKeyRetrieval=true&characterEncoding=UTF-8
     username: zvituser
     password: zvitpass123
     driver-class-name: com.mysql.cj.jdbc.Driver
@@ -26,6 +26,10 @@ spring:
       name: admin
       password: admin
 
+  # Jackson JSON encoding
+  jackson:
+    default-property-inclusion: non_null
+
 server:
   port: 8080
   servlet:
@@ -34,6 +38,8 @@ server:
       charset: UTF-8
       enabled: true
       force: true
+      force-request: true
+      force-response: true
 
 jwt:
   secret: eW91ci1zZWNyZXQta2V5LWNoYW5nZS1pbi1wcm9kdWN0aW9uLW1pbi0yNTYtYml0cy1sb25nLWZvci1zZWN1cml0eQ==
