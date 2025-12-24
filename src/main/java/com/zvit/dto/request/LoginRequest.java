@@ -16,4 +16,10 @@ public class LoginRequest {
 
     @NotBlank(message = "Пароль не може бути порожнім")
     private String password;
+
+    /**
+     * Публічний ключ клієнта для E2E шифрування AES ключа (Base64).
+     * Якщо присутній - AES ключ буде зашифрований цим ключем.
+     */
+    private String clientPublicKey;
 }

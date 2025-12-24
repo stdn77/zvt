@@ -9,6 +9,9 @@ import org.springframework.stereotype.Service;
 import javax.crypto.Cipher;
 import javax.crypto.spec.SecretKeySpec;
 import java.nio.charset.StandardCharsets;
+import java.security.KeyFactory;
+import java.security.PublicKey;
+import java.security.spec.X509EncodedKeySpec;
 import java.util.Base64;
 
 /**
@@ -103,5 +106,44 @@ public class ResponseEncryptionService {
         byte[] originalBytes = key.getBytes(StandardCharsets.UTF_8);
         System.arraycopy(originalBytes, 0, keyBytes, 0, Math.min(originalBytes.length, 32));
         return Base64.getEncoder().encodeToString(keyBytes);
+    }
+
+    /**
+     * Повертає ключ шифрування, зашифрований публічним ключем клієнта (E2E)
+     * @param clientPublicKeyBase64 Публічний ключ клієнта у Base64
+     * @return AES ключ, зашифрований RSA у Base64 форматі
+     */
+    public String getEncryptionKeyEncrypted(String clientPublicKeyBase64) {
+        if (clientPublicKeyBase64 == null || clientPublicKeyBase64.isEmpty()) {
+            log.warn("Client public key not provided, returning plain AES key");
+            return getEncryptionKeyBase64();
+        }
+
+        try {
+            // Декодуємо публічний ключ клієнта
+            byte[] publicKeyBytes = Base64.getDecoder().decode(clientPublicKeyBase64);
+            X509EncodedKeySpec keySpec = new X509EncodedKeySpec(publicKeyBytes);
+            KeyFactory keyFactory = KeyFactory.getInstance("RSA");
+            PublicKey clientPublicKey = keyFactory.generatePublic(keySpec);
+
+            // Шифруємо AES ключ публічним ключем клієнта
+            Cipher cipher = Cipher.getInstance(cryptoConfig.getRsa().getTransformation());
+            cipher.init(Cipher.ENCRYPT_MODE, clientPublicKey);
+
+            // Отримуємо байти AES ключа
+            String key = cryptoConfig.getAes().getKey();
+            byte[] keyBytes = new byte[32];
+            byte[] originalBytes = key.getBytes(StandardCharsets.UTF_8);
+            System.arraycopy(originalBytes, 0, keyBytes, 0, Math.min(originalBytes.length, 32));
+
+            byte[] encryptedKey = cipher.doFinal(keyBytes);
+            String result = Base64.getEncoder().encodeToString(encryptedKey);
+
+            log.debug("AES key encrypted with client RSA public key (E2E)");
+            return result;
+        } catch (Exception e) {
+            log.error("Failed to encrypt AES key with client public key", e);
+            throw new RuntimeException("Помилка E2E шифрування ключа", e);
+        }
     }
 }

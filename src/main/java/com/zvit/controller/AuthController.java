@@ -54,13 +54,23 @@ public class AuthController {
             request.getPhone().length() > 50 ? request.getPhone().substring(0, 50) + "..." : request.getPhone(),
             request.getPhone().length());
         log.info("   Password length: {}", request.getPassword().length());
+        log.info("   E2E enabled: {}", request.getClientPublicKey() != null);
 
         LoginResponse loginData = authService.login(request);
         log.info("✅ LOGIN successful, userId: {}", loginData.getUserId());
 
         // Шифруємо відповідь AES
         String encryptedPayload = encryptionService.encryptObject(loginData);
-        String encryptionKey = encryptionService.getEncryptionKeyBase64();
+
+        // E2E шифрування: якщо клієнт надав свій публічний ключ - шифруємо AES ключ
+        String encryptionKey;
+        if (request.getClientPublicKey() != null && !request.getClientPublicKey().isEmpty()) {
+            encryptionKey = encryptionService.getEncryptionKeyEncrypted(request.getClientPublicKey());
+            log.info("   AES key encrypted with client RSA (E2E)");
+        } else {
+            encryptionKey = encryptionService.getEncryptionKeyBase64();
+            log.warn("   AES key sent without E2E encryption (no client public key)");
+        }
 
         EncryptedData response = EncryptedData.ofWithKey(encryptedPayload, encryptionKey);
         return ResponseEntity.ok(ApiResponse.success("Вхід успішний", response));
