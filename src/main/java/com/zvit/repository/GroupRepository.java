@@ -8,13 +8,8 @@ import java.util.Optional;
 
 @Repository
 public interface GroupRepository extends JpaRepository<Group, String> {
-    
-    Optional<Group> findByAccessCode(String accessCode);
-    
-    Optional<Group> findByInternalCode(String internalCode);
-    
-    boolean existsByAccessCode(String accessCode);
-    
-    boolean existsByInternalCode(String internalCode);
-}
 
+    Optional<Group> findByAccessCode(String accessCode);
+
+    boolean existsByAccessCode(String accessCode);
+}

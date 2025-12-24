@@ -30,14 +30,6 @@ public interface GroupMemberRepository extends JpaRepository<GroupMember, String
     boolean isUserAdminOfGroup(@Param("groupId") String groupId, @Param("userId") String userId);
 
     /**
-     * Знаходить всі pending запити старші за вказану дату
-     */
-    @Query("SELECT gm FROM GroupMember gm " +
-           "WHERE gm.status = com.zvit.entity.GroupMember$MemberStatus.PENDING " +
-           "AND gm.joinedAt < :cutoffTime")
-    List<GroupMember> findExpiredPendingMembers(@Param("cutoffTime") LocalDateTime cutoffTime);
-
-    /**
      * Видаляє всі pending запити старші за вказану дату
      */
     @Modifying

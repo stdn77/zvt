@@ -18,25 +18,6 @@ public class UserService {
     }
 
     @Transactional
-    public void deactivateUser(String userId) {
-        User user = getUserById(userId);
-        user.setActive(false);
-        userRepository.save(user);
-    }
-
-    @Transactional
-    public void activateUser(String userId) {
-        User user = getUserById(userId);
-        user.setActive(true);
-        userRepository.save(user);
-    }
-
-    public boolean isUserActive(String userId) {
-        User user = getUserById(userId);
-        return user.isActive();
-    }
-
-    @Transactional
     public void updateFcmToken(String userId, String fcmToken) {
         User user = getUserById(userId);
         user.setFcmToken(fcmToken);

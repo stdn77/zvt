@@ -8,13 +8,10 @@ import java.util.Optional;
 
 @Repository
 public interface UserRepository extends JpaRepository<User, String> {
-    
+
     Optional<User> findByPhoneHash(String phoneHash);
-    
-    Optional<User> findByEmailHash(String emailHash);
-    
+
     boolean existsByPhoneHash(String phoneHash);
-    
+
     boolean existsByEmailHash(String emailHash);
 }
-

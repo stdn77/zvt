@@ -15,6 +15,7 @@ import com.zvit.repository.GroupRepository;
 import com.zvit.repository.ReportRepository;
 import com.zvit.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -24,6 +25,7 @@ import java.time.ZoneId;
 import java.util.List;
 import java.util.stream.Collectors;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class ReportService {
@@ -169,24 +171,8 @@ public class ReportService {
         // Отримуємо всіх учасників групи (крім адміна, який надіслав)
         List<GroupMember> members = groupMemberRepository.findByGroupId(request.getGroupId());
 
-        System.out.println("=== URGENT REPORT DEBUG ===");
-        System.out.println("Група: " + group.getExternalName());
-        System.out.println("Admin userId: " + userId);
-        System.out.println("Всього учасників у групі: " + members.size());
-
-        // Детальне логування кожного учасника
-        for (GroupMember member : members) {
-            String memberId = member.getUser().getId();
-            String memberName = member.getUser().getName();
-            String status = member.getStatus() != null ? member.getStatus().name() : "NULL";
-            String fcmToken = member.getUser().getFcmToken();
-            boolean isAdmin = memberId.equals(userId);
-
-            System.out.println("  - " + memberName +
-                " | status=" + status +
-                " | isAdmin=" + isAdmin +
-                " | fcmToken=" + (fcmToken != null ? fcmToken.substring(0, Math.min(20, fcmToken.length())) + "..." : "NULL"));
-        }
+        log.debug("Urgent report - Group: {}, Admin: {}, Members: {}",
+                group.getExternalName(), userId, members.size());
 
         List<String> fcmTokens = members.stream()
                 .filter(member -> member.getStatus() == GroupMember.MemberStatus.ACCEPTED)
@@ -195,7 +181,7 @@ public class ReportService {
                 .filter(token -> token != null && !token.isEmpty())
                 .collect(Collectors.toList());
 
-        System.out.println("FCM токенів для відправки: " + fcmTokens.size());
+        log.debug("FCM tokens to send: {}", fcmTokens.size());
 
         // Формуємо повідомлення
         String title = "Терміновий звіт: " + group.getExternalName();
@@ -211,8 +197,7 @@ public class ReportService {
         // Відправляємо Push-сповіщення
         int sentCount = firebaseService.sendPushNotificationToMultiple(fcmTokens, title, body, data);
 
-        System.out.println("Push-сповіщень відправлено: " + sentCount + " з " + fcmTokens.size());
-        System.out.println("=== END DEBUG ===");
+        log.info("Urgent report sent: {} of {} notifications", sentCount, fcmTokens.size());
 
         return sentCount;
     }
@@ -346,22 +331,6 @@ public class ReportService {
                 .field4Value(report.getField4Value())
                 .field5Value(report.getField5Value())
                 .build();
-    }
-
-    private String calculateGradientColor(double percentage) {
-        percentage = Math.max(0, Math.min(100, percentage));
-
-        int red, green;
-
-        if (percentage <= 50) {
-            red = (int) (255 * (percentage / 50.0));
-            green = 255;
-        } else {
-            red = 255;
-            green = (int) (255 * ((100 - percentage) / 50.0));
-        }
-
-        return String.format("#%02X%02X00", red, green);
     }
 
     /**

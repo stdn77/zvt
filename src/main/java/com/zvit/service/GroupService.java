@@ -353,7 +353,7 @@ public class GroupService {
                 .collect(Collectors.toList());
 
         if (fcmTokens.isEmpty()) {
-            System.out.println("Settings update: No FCM tokens to send notifications");
+            log.debug("Settings update: No FCM tokens to send notifications");
             return;
         }
 
@@ -370,7 +370,7 @@ public class GroupService {
         data.put("groupName", group.getExternalName());
 
         int sentCount = firebaseService.sendPushNotificationToMultiple(fcmTokens, title, body, data);
-        System.out.println("Settings update notifications sent: " + sentCount + " of " + fcmTokens.size());
+        log.info("Settings update notifications sent: {} of {}", sentCount, fcmTokens.size());
     }
 
     /**
