@@ -10,7 +10,7 @@ import com.zvit.dto.response.GroupResponse;
 import com.zvit.entity.GroupMember;
 import com.zvit.service.GroupService;
 import com.zvit.service.ResponseEncryptionService;
-import com.zvit.util.ApiResponse;
+import com.zvit.dto.response.ApiResponse;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;

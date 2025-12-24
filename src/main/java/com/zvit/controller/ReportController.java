@@ -8,7 +8,7 @@ import com.zvit.dto.response.ReportResponse;
 import com.zvit.dto.response.UserStatusResponse;
 import com.zvit.service.ReportService;
 import com.zvit.service.ResponseEncryptionService;
-import com.zvit.util.ApiResponse;
+import com.zvit.dto.response.ApiResponse;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;

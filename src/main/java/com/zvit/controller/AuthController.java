@@ -9,7 +9,7 @@ import com.zvit.dto.response.RegisterResponse;
 import com.zvit.service.AuthService;
 import com.zvit.service.RSAKeyService;
 import com.zvit.service.UserService;
-import com.zvit.util.ApiResponse;
+import com.zvit.dto.response.ApiResponse;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;

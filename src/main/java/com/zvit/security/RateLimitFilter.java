@@ -2,7 +2,7 @@ package com.zvit.security;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.zvit.service.RateLimitService;
-import com.zvit.util.ApiResponse;
+import com.zvit.dto.response.ApiResponse;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;

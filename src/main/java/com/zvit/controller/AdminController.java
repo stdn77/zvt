@@ -3,7 +3,7 @@ package com.zvit.controller;
 import com.zvit.dto.response.GroupMemberResponse;
 import com.zvit.dto.response.UserStatusResponse;
 import com.zvit.service.AdminService;
-import com.zvit.util.ApiResponse;
+import com.zvit.dto.response.ApiResponse;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
