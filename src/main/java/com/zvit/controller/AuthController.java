@@ -3,11 +3,13 @@ package com.zvit.controller;
 import com.zvit.dto.request.FcmTokenRequest;
 import com.zvit.dto.request.LoginRequest;
 import com.zvit.dto.request.RegisterRequest;
+import com.zvit.dto.response.EncryptedData;
 import com.zvit.dto.response.LoginResponse;
 import com.zvit.dto.response.PublicKeyResponse;
 import com.zvit.dto.response.RegisterResponse;
 import com.zvit.service.AuthService;
 import com.zvit.service.RSAKeyService;
+import com.zvit.service.ResponseEncryptionService;
 import com.zvit.service.UserService;
 import com.zvit.dto.response.ApiResponse;
 import jakarta.validation.Valid;
@@ -27,6 +29,7 @@ public class AuthController {
     private final AuthService authService;
     private final UserService userService;
     private final RSAKeyService rsaKeyService;
+    private final ResponseEncryptionService encryptionService;
 
     @PostMapping("/register")
     public ResponseEntity<ApiResponse<RegisterResponse>> register(@Valid @RequestBody RegisterRequest request) {
@@ -45,15 +48,21 @@ public class AuthController {
     }
 
     @PostMapping("/login")
-    public ResponseEntity<ApiResponse<LoginResponse>> login(@Valid @RequestBody LoginRequest request) {
+    public ResponseEntity<ApiResponse<EncryptedData>> login(@Valid @RequestBody LoginRequest request) {
         log.info("🔐 LOGIN request received");
         log.info("   Phone (encrypted?): {} (length: {})",
             request.getPhone().length() > 50 ? request.getPhone().substring(0, 50) + "..." : request.getPhone(),
             request.getPhone().length());
         log.info("   Password length: {}", request.getPassword().length());
 
-        LoginResponse response = authService.login(request);
-        log.info("✅ LOGIN successful, userId: {}", response.getUserId());
+        LoginResponse loginData = authService.login(request);
+        log.info("✅ LOGIN successful, userId: {}", loginData.getUserId());
+
+        // Шифруємо відповідь AES
+        String encryptedPayload = encryptionService.encryptObject(loginData);
+        String encryptionKey = encryptionService.getEncryptionKeyBase64();
+
+        EncryptedData response = EncryptedData.ofWithKey(encryptedPayload, encryptionKey);
         return ResponseEntity.ok(ApiResponse.success("Вхід успішний", response));
     }
 

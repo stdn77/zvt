@@ -21,10 +21,21 @@ public class EncryptedData {
     /** Прапорець що дані зашифровані */
     private boolean encrypted;
 
+    /** AES ключ для дешифрування (Base64) - передається тільки при логіні */
+    private String encryptionKey;
+
     public static EncryptedData of(String encryptedPayload) {
         return EncryptedData.builder()
                 .payload(encryptedPayload)
                 .encrypted(true)
+                .build();
+    }
+
+    public static EncryptedData ofWithKey(String encryptedPayload, String encryptionKey) {
+        return EncryptedData.builder()
+                .payload(encryptedPayload)
+                .encrypted(true)
+                .encryptionKey(encryptionKey)
                 .build();
     }
 }
