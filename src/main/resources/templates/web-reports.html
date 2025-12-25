@@ -726,8 +726,8 @@
                 const users = result.data?.users || result.users || (Array.isArray(result.data) ? result.data : result);
                 allUsers = users;
 
-                // Handle urgent session
-                urgentSession = result.data?.urgentSession || null;
+                // Handle urgent session (може бути в result.urgentSession або result.data.urgentSession)
+                urgentSession = result.urgentSession || result.data?.urgentSession || null;
                 updateUrgentBanner();
 
                 // Update stats
