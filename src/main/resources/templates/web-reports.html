@@ -19,12 +19,12 @@
         }
 
         .header {
-            background: linear-gradient(135deg, #4CAF50 0%, #81C784 50%, #C8E6C9 100%);
+            background: linear-gradient(135deg, #1B5E20 0%, #2E7D32 50%, #388E3C 100%);
             color: white;
             padding: 15px 20px;
             border-radius: 10px;
             margin-bottom: 15px;
-            box-shadow: 0 4px 8px rgba(76, 175, 80, 0.3);
+            box-shadow: 0 4px 8px rgba(27, 94, 32, 0.5);
             display: flex;
             justify-content: space-between;
             align-items: center;
@@ -216,7 +216,7 @@
             display: flex;
             justify-content: space-between;
             align-items: center;
-            background: linear-gradient(135deg, #4CAF50 0%, #81C784 100%);
+            background: linear-gradient(135deg, #1B5E20 0%, #2E7D32 100%);
             border-radius: 12px 12px 0 0;
         }
 
@@ -366,6 +366,106 @@
             transform: translateY(-1px);
             box-shadow: 0 3px 6px rgba(220, 38, 38, 0.5);
         }
+
+        /* Urgent report banner */
+        .urgent-banner {
+            background: linear-gradient(135deg, #dc2626 0%, #ef4444 100%);
+            color: white;
+            padding: 15px 20px;
+            border-radius: 10px;
+            margin-bottom: 15px;
+            box-shadow: 0 4px 8px rgba(220, 38, 38, 0.4);
+            display: none;
+            animation: urgentPulse 2s ease-in-out infinite;
+        }
+
+        .urgent-banner.active {
+            display: block;
+        }
+
+        @keyframes urgentPulse {
+            0%, 100% { box-shadow: 0 4px 8px rgba(220, 38, 38, 0.4); }
+            50% { box-shadow: 0 4px 20px rgba(220, 38, 38, 0.8); }
+        }
+
+        .urgent-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+
+        .urgent-title {
+            font-size: 18px;
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .urgent-countdown {
+            font-size: 24px;
+            font-weight: 700;
+            background: rgba(0, 0, 0, 0.2);
+            padding: 5px 15px;
+            border-radius: 8px;
+        }
+
+        .urgent-info {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 20px;
+            align-items: center;
+        }
+
+        .urgent-stat {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .urgent-stat-value {
+            font-size: 20px;
+            font-weight: 700;
+        }
+
+        .urgent-stat-label {
+            font-size: 11px;
+            opacity: 0.9;
+        }
+
+        .urgent-message {
+            flex: 1;
+            font-style: italic;
+            opacity: 0.95;
+            padding: 8px 15px;
+            background: rgba(0, 0, 0, 0.15);
+            border-radius: 6px;
+            font-size: 14px;
+        }
+
+        .urgent-requester {
+            font-size: 12px;
+            opacity: 0.85;
+            margin-top: 8px;
+        }
+
+        .btn-end-urgent {
+            background: rgba(255, 255, 255, 0.2);
+            color: white;
+            border: 2px solid rgba(255, 255, 255, 0.5);
+            padding: 8px 16px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: 600;
+            font-size: 13px;
+            transition: all 0.2s;
+        }
+
+        .btn-end-urgent:hover {
+            background: rgba(255, 255, 255, 0.3);
+            border-color: white;
+        }
     </style>
 </head>
 <body>
@@ -416,6 +516,29 @@
                     <span class="header-stat-label">Наступний звіт</span>
                 </div>
             </div>
+        </div>
+
+        <!-- Urgent Report Banner -->
+        <div id="urgentBanner" class="urgent-banner">
+            <div class="urgent-header">
+                <div class="urgent-title">
+                    🚨 ТЕРМІНОВИЙ ЗБІР
+                </div>
+                <div class="urgent-countdown" id="urgentCountdown">--:--</div>
+            </div>
+            <div class="urgent-info">
+                <div class="urgent-stat">
+                    <span class="urgent-stat-value" id="urgentResponded">0</span>
+                    <span class="urgent-stat-label">Відповіли</span>
+                </div>
+                <div class="urgent-stat">
+                    <span class="urgent-stat-value" id="urgentTotal">0</span>
+                    <span class="urgent-stat-label">Всього</span>
+                </div>
+                <div class="urgent-message" id="urgentMessage"></div>
+                <button class="btn-end-urgent" onclick="confirmEndUrgentSession()">✕ Завершити збір</button>
+            </div>
+            <div class="urgent-requester" id="urgentRequester"></div>
         </div>
 
         <div class="filters">
@@ -476,6 +599,115 @@
         let groupInfo = null;
         let currentUserId = null;
         let currentUserName = null;
+        let urgentSession = null;
+        let urgentCountdownInterval = null;
+
+        // ======================== Urgent Session Functions ========================
+
+        function updateUrgentBanner() {
+            const banner = document.getElementById('urgentBanner');
+
+            if (urgentSession && urgentSession.active) {
+                banner.classList.add('active');
+
+                // Update stats
+                document.getElementById('urgentResponded').textContent = urgentSession.respondedCount || 0;
+                document.getElementById('urgentTotal').textContent = urgentSession.totalMembers || 0;
+
+                // Update message
+                const messageEl = document.getElementById('urgentMessage');
+                if (urgentSession.message) {
+                    messageEl.textContent = '💬 ' + urgentSession.message;
+                    messageEl.style.display = 'block';
+                } else {
+                    messageEl.style.display = 'none';
+                }
+
+                // Update requester info
+                if (urgentSession.requestedByUserName && urgentSession.requestedAt) {
+                    const requestedTime = new Date(urgentSession.requestedAt).toLocaleTimeString('uk-UA', {
+                        hour: '2-digit',
+                        minute: '2-digit'
+                    });
+                    document.getElementById('urgentRequester').textContent =
+                        `Запит від: ${urgentSession.requestedByUserName} о ${requestedTime}`;
+                }
+
+                // Start countdown
+                startUrgentCountdown();
+            } else {
+                banner.classList.remove('active');
+                stopUrgentCountdown();
+            }
+        }
+
+        function startUrgentCountdown() {
+            stopUrgentCountdown();
+
+            updateCountdownDisplay();
+            urgentCountdownInterval = setInterval(updateCountdownDisplay, 1000);
+        }
+
+        function stopUrgentCountdown() {
+            if (urgentCountdownInterval) {
+                clearInterval(urgentCountdownInterval);
+                urgentCountdownInterval = null;
+            }
+        }
+
+        function updateCountdownDisplay() {
+            if (!urgentSession || !urgentSession.expiresAt) {
+                document.getElementById('urgentCountdown').textContent = '--:--';
+                return;
+            }
+
+            const expiresAt = new Date(urgentSession.expiresAt);
+            const now = new Date();
+            let remainingSeconds = Math.floor((expiresAt - now) / 1000);
+
+            if (remainingSeconds <= 0) {
+                document.getElementById('urgentCountdown').textContent = '00:00';
+                stopUrgentCountdown();
+                // Reload to update status
+                setTimeout(loadReports, 2000);
+                return;
+            }
+
+            const minutes = Math.floor(remainingSeconds / 60);
+            const seconds = remainingSeconds % 60;
+            document.getElementById('urgentCountdown').textContent =
+                `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+        }
+
+        function confirmEndUrgentSession() {
+            if (confirm('Ви впевнені, що хочете завершити терміновий збір?')) {
+                endUrgentSession();
+            }
+        }
+
+        async function endUrgentSession() {
+            try {
+                const response = await fetch(`/api/v1/reports/urgent/${groupId}`, {
+                    method: 'DELETE',
+                    headers: {
+                        'X-Session-Token': sessionToken
+                    }
+                });
+
+                if (!response.ok) {
+                    throw new Error('Failed to end urgent session');
+                }
+
+                alert('Терміновий збір завершено');
+                loadReports();
+
+            } catch (error) {
+                console.error('Error ending urgent session:', error);
+                alert('Помилка завершення термінового збору');
+            }
+        }
+
+        // ======================== Data Loading ========================
 
         async function loadReports() {
             try {
@@ -493,6 +725,10 @@
                 // Handle ApiResponse wrapper - extract users from data.users or data array
                 const users = result.data?.users || result.users || (Array.isArray(result.data) ? result.data : result);
                 allUsers = users;
+
+                // Handle urgent session
+                urgentSession = result.data?.urgentSession || null;
+                updateUrgentBanner();
 
                 // Update stats
                 updateStats(users);
