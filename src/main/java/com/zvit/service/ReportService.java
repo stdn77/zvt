@@ -43,6 +43,7 @@ public class ReportService {
     private final UrgentResponseRepository urgentResponseRepository;
     private final EncryptionService encryptionService;
     private final FirebaseService firebaseService;
+    private final RSAKeyService rsaKeyService;
 
     private static final int REPORT_WINDOW_HOURS = 24;
 
@@ -57,12 +58,15 @@ public class ReportService {
         groupMemberRepository.findByGroupIdAndUserId(request.getGroupId(), userId)
                 .orElseThrow(() -> new RuntimeException("Ви не є учасником цієї групи"));
 
+        // Дешифруємо коментар
+        String comment = rsaKeyService.decryptIfEncrypted(request.getComment());
+
         Report report = Report.builder()
                 .group(group)
                 .user(user)
                 .reportType(Report.ReportType.SIMPLE)
                 .simpleResponse(request.getSimpleResponse())
-                .comment(request.getComment())
+                .comment(comment)
                 .build();
 
         reportRepository.save(report);
@@ -84,16 +88,24 @@ public class ReportService {
         groupMemberRepository.findByGroupIdAndUserId(request.getGroupId(), userId)
                 .orElseThrow(() -> new RuntimeException("Ви не є учасником цієї групи"));
 
+        // Дешифруємо всі текстові поля
+        String field1 = rsaKeyService.decryptIfEncrypted(request.getField1());
+        String field2 = rsaKeyService.decryptIfEncrypted(request.getField2());
+        String field3 = rsaKeyService.decryptIfEncrypted(request.getField3());
+        String field4 = rsaKeyService.decryptIfEncrypted(request.getField4());
+        String field5 = rsaKeyService.decryptIfEncrypted(request.getField5());
+        String comment = rsaKeyService.decryptIfEncrypted(request.getComment());
+
         Report report = Report.builder()
                 .group(group)
                 .user(user)
                 .reportType(Report.ReportType.EXTENDED)
-                .field1Value(request.getField1())
-                .field2Value(request.getField2())
-                .field3Value(request.getField3())
-                .field4Value(request.getField4())
-                .field5Value(request.getField5())
-                .comment(request.getComment())
+                .field1Value(field1)
+                .field2Value(field2)
+                .field3Value(field3)
+                .field4Value(field4)
+                .field5Value(field5)
+                .comment(comment)
                 .build();
 
         reportRepository.save(report);
@@ -209,6 +221,9 @@ public class ReportService {
             throw new RuntimeException("Вже є активний терміновий збір");
         }
 
+        // Дешифруємо повідомлення
+        String message = rsaKeyService.decryptIfEncrypted(request.getMessage());
+
         // Створюємо нову термінову сесію
         LocalDateTime now = LocalDateTime.now();
         String sessionId = UUID.randomUUID().toString();
@@ -218,7 +233,7 @@ public class ReportService {
         group.setUrgentRequestedAt(now);
         group.setUrgentExpiresAt(now.plusMinutes(deadlineMinutes));
         group.setUrgentRequestedBy(userId);
-        group.setUrgentMessage(request.getMessage());
+        group.setUrgentMessage(message);
         groupRepository.save(group);
 
         log.info("Urgent session created: {} for group {}", sessionId, group.getExternalName());
@@ -240,7 +255,7 @@ public class ReportService {
 
         // Формуємо повідомлення
         String title = "Терміновий звіт: " + group.getExternalName();
-        String body = request.getMessage();
+        String body = message;
 
         // Додаткові дані для обробки в додатку
         java.util.Map<String, String> data = new java.util.HashMap<>();
