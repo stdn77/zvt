@@ -42,12 +42,14 @@ public class AuthService {
         // Дешифруємо RSA-зашифровані дані (якщо вони зашифровані)
         String phone = rsaKeyService.decryptIfEncrypted(request.getPhone());
         String password = rsaKeyService.decryptIfEncrypted(request.getPassword());
+        String name = rsaKeyService.decryptIfEncrypted(request.getName());
         String email = request.getEmail() != null
                 ? rsaKeyService.decryptIfEncrypted(request.getEmail())
                 : null;
 
         log.info("   ✅ Decrypted phone: {}", phone);
         log.info("   ✅ Decrypted password length: {}", password.length());
+        log.info("   ✅ Decrypted name: {}", name);
         log.info("   ✅ Decrypted email: {}", email != null ? email : "null");
 
         if (!isValidPhone(phone)) {
@@ -78,7 +80,7 @@ public class AuthService {
                 .emailHash(emailHash)
                 .emailEncrypted(emailEncrypted)
                 .passwordHash(passwordEncoder.encode(password))
-                .name(request.getName())
+                .name(name)
                 .phoneVerified(false)
                 .emailVerified(false)
                 .active(true)

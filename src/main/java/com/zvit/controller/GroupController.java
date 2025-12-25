@@ -10,6 +10,7 @@ import com.zvit.dto.response.GroupResponse;
 import com.zvit.entity.GroupMember;
 import com.zvit.service.GroupService;
 import com.zvit.service.ResponseEncryptionService;
+import com.zvit.service.RSAKeyService;
 import com.zvit.dto.response.ApiResponse;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -33,6 +34,7 @@ public class GroupController {
 
     private final GroupService groupService;
     private final ResponseEncryptionService encryptionService;
+    private final RSAKeyService rsaKeyService;
 
     @PostMapping
     public ResponseEntity<ApiResponse<GroupResponse>> createGroup(
@@ -40,6 +42,11 @@ public class GroupController {
             Authentication authentication
     ) {
         String userId = authentication.getName(); // Отримуємо з JWT
+
+        // Дешифруємо назву групи якщо вона зашифрована
+        String decryptedGroupName = rsaKeyService.decryptIfEncrypted(request.getExternalName());
+        request.setExternalName(decryptedGroupName);
+
         GroupResponse response = groupService.createGroup(request, userId);
         return ResponseEntity
                 .status(HttpStatus.CREATED)
