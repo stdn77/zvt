@@ -105,10 +105,16 @@ public class RSAKeyService {
      * Дешифрує значення якщо воно зашифроване, інакше повертає як є.
      * Це дозволяє підтримувати як зашифровані, так і незашифровані запити
      * (для зворотної сумісності).
+     * Якщо дешифрування не вдається (наприклад, ключі не співпадають) - повертає оригінальне значення.
      */
     public String decryptIfEncrypted(String value) {
         if (isEncrypted(value)) {
-            return decrypt(value);
+            try {
+                return decrypt(value);
+            } catch (Exception e) {
+                log.warn("Failed to decrypt value, returning as-is. Client may need to refresh public key.");
+                return value;
+            }
         }
         return value;
     }
