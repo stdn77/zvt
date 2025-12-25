@@ -37,7 +37,7 @@ public class GroupController {
     private final RSAKeyService rsaKeyService;
 
     @PostMapping
-    public ResponseEntity<ApiResponse<GroupResponse>> createGroup(
+    public ResponseEntity<ApiResponse<EncryptedData>> createGroup(
             @Valid @RequestBody CreateGroupRequest request,
             Authentication authentication
     ) {
@@ -48,9 +48,10 @@ public class GroupController {
         request.setExternalName(decryptedGroupName);
 
         GroupResponse response = groupService.createGroup(request, userId);
+        String encryptedPayload = encryptionService.encryptObject(response);
         return ResponseEntity
                 .status(HttpStatus.CREATED)
-                .body(ApiResponse.success("Групу створено", response));
+                .body(ApiResponse.success("Групу створено", EncryptedData.of(encryptedPayload)));
     }
 
     @GetMapping
