@@ -489,7 +489,9 @@
                     throw new Error('Failed to load reports');
                 }
 
-                const users = await response.json();
+                const result = await response.json();
+                // Handle ApiResponse wrapper - extract users from data.users or data array
+                const users = result.data?.users || result.users || (Array.isArray(result.data) ? result.data : result);
                 allUsers = users;
 
                 // Update stats
@@ -674,9 +676,11 @@
                     throw new Error('Failed to load user reports');
                 }
 
-                const reports = await response.json();
+                const reportsResult = await response.json();
+                // Handle ApiResponse wrapper
+                const reports = reportsResult.data || reportsResult;
 
-                if (reports.length === 0) {
+                if (!reports || reports.length === 0) {
                     document.getElementById('modalReports').innerHTML = `
                         <div class="no-reports">
                             <p>📭 Звіти відсутні</p>
@@ -816,7 +820,9 @@
                     }
                 });
                 if (response.ok) {
-                    groupInfo = await response.json();
+                    const groupResult = await response.json();
+                    // Handle ApiResponse wrapper
+                    groupInfo = groupResult.data || groupResult;
                     document.getElementById('groupName').textContent = `Група: ${groupInfo.externalName}`;
                 }
             } catch (error) {
