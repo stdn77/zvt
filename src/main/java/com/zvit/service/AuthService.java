@@ -56,6 +56,10 @@ public class AuthService {
             throw new BusinessException("Невірний формат телефону");
         }
 
+        if (!isValidName(name)) {
+            throw new BusinessException("Ім'я має бути від 2 до 100 символів");
+        }
+
         if (email != null && !isValidEmail(email)) {
             throw new BusinessException("Невірний формат email");
         }
@@ -252,5 +256,9 @@ public class AuthService {
 
     private boolean isValidEmail(String email) {
         return email != null && email.matches("^[A-Za-z0-9+_.-]+@[A-Za-z0-9.-]+\\.[A-Za-z]{2,}$");
+    }
+
+    private boolean isValidName(String name) {
+        return name != null && name.length() >= 2 && name.length() <= 100;
     }
 }

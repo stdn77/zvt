@@ -6,7 +6,7 @@ import lombok.Data;
 
 /**
  * Запит на реєстрацію.
- * Поля phone, email та password можуть бути RSA-зашифрованими.
+ * Поля phone, email, password та name можуть бути RSA-зашифрованими.
  * Валідація формату відбувається після дешифрування в AuthService.
  */
 @Data
@@ -21,6 +21,5 @@ public class RegisterRequest {
     private String password;
 
     @NotBlank(message = "Ім'я не може бути порожнім")
-    @Size(min = 2, max = 100, message = "Ім'я має бути від 2 до 100 символів")
-    private String name;
+    private String name; // Валідація розміру після дешифрування в AuthService
 }
