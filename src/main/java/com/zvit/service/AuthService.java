@@ -5,6 +5,7 @@ import com.zvit.dto.request.RegisterRequest;
 import com.zvit.dto.response.LoginResponse;
 import com.zvit.dto.response.RegisterResponse;
 import com.zvit.entity.User;
+import com.zvit.exception.BusinessException;
 import com.zvit.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -48,11 +49,11 @@ public class AuthService {
         log.info("   ✅ Decrypted email: {}", email != null ? email : "null");
 
         if (!isValidPhone(phone)) {
-            throw new RuntimeException("Невірний формат телефону");
+            throw new BusinessException("Невірний формат телефону");
         }
 
         if (email != null && !isValidEmail(email)) {
-            throw new RuntimeException("Невірний формат email");
+            throw new BusinessException("Невірний формат email");
         }
 
         String phoneHash = hashPhone(phone);
@@ -61,11 +62,11 @@ public class AuthService {
         String emailEncrypted = email != null ? encryptionService.encrypt(email) : null;
 
         if (userRepository.existsByPhoneHash(phoneHash)) {
-            throw new RuntimeException("Користувач з таким телефоном вже існує");
+            throw new BusinessException("Користувач з таким телефоном вже існує");
         }
 
         if (emailHash != null && userRepository.existsByEmailHash(emailHash)) {
-            throw new RuntimeException("Користувач з таким email вже існує");
+            throw new BusinessException("Користувач з таким email вже існує");
         }
 
         User user = User.builder()
@@ -113,20 +114,20 @@ public class AuthService {
         User user = userRepository.findByPhoneHash(phoneHash)
                 .orElseThrow(() -> {
                     log.error("   ❌ User not found for phone hash");
-                    return new RuntimeException("Невірний телефон або пароль");
+                    return new BusinessException("Невірний телефон або пароль");
                 });
 
         log.info("   ✅ User found: {}, name: {}", user.getId(), user.getName());
 
         if (!passwordEncoder.matches(password, user.getPasswordHash())) {
             log.error("   ❌ Password mismatch!");
-            throw new RuntimeException("Невірний телефон або пароль");
+            throw new BusinessException("Невірний телефон або пароль");
         }
 
         log.info("   ✅ Password verified successfully");
 
         if (!user.isActive()) {
-            throw new RuntimeException("Обліковий запис деактивовано");
+            throw new BusinessException("Обліковий запис деактивовано");
         }
 
         user.setLastLoginAt(LocalDateTime.now());
