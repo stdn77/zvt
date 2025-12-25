@@ -32,6 +32,7 @@ public class SecurityConfig {
                 .requestMatchers("/api/health").permitAll() // Health check endpoint
                 .requestMatchers("/api/v1/auth/register").permitAll()
                 .requestMatchers("/api/v1/auth/login").permitAll()
+                .requestMatchers("/api/v1/auth/reset-password").permitAll()
                 .requestMatchers("/api/v1/auth/test").permitAll()
                 .requestMatchers("/api/v1/auth/public-key").permitAll()
                 .requestMatchers("/error").permitAll()

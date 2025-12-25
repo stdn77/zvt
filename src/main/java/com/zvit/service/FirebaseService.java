@@ -1,6 +1,9 @@
 package com.zvit.service;
 
 import com.google.firebase.FirebaseApp;
+import com.google.firebase.auth.FirebaseAuth;
+import com.google.firebase.auth.FirebaseAuthException;
+import com.google.firebase.auth.FirebaseToken;
 import com.google.firebase.messaging.*;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -148,6 +151,36 @@ public class FirebaseService {
         } catch (FirebaseMessagingException e) {
             log.error("Failed to send batch push notifications: {}", e.getMessage());
             return 0;
+        }
+    }
+
+    /**
+     * Верифікує Firebase ID токен та повертає номер телефону
+     * @param idToken Firebase ID токен від клієнта
+     * @return номер телефону або null якщо токен невалідний
+     */
+    public String verifyIdTokenAndGetPhone(String idToken) {
+        if (!isFirebaseInitialized()) {
+            log.warn("Firebase not initialized - cannot verify ID token");
+            return null;
+        }
+
+        try {
+            FirebaseToken decodedToken = FirebaseAuth.getInstance().verifyIdToken(idToken);
+            String phoneNumber = decodedToken.getClaims().get("phone_number") != null
+                    ? decodedToken.getClaims().get("phone_number").toString()
+                    : null;
+
+            if (phoneNumber != null) {
+                log.info("Firebase ID token verified for phone: {}", phoneNumber);
+            } else {
+                log.warn("Firebase ID token valid but no phone_number claim found");
+            }
+
+            return phoneNumber;
+        } catch (FirebaseAuthException e) {
+            log.error("Failed to verify Firebase ID token: {}", e.getMessage());
+            return null;
         }
     }
 }

@@ -3,6 +3,7 @@ package com.zvit.controller;
 import com.zvit.dto.request.FcmTokenRequest;
 import com.zvit.dto.request.LoginRequest;
 import com.zvit.dto.request.RegisterRequest;
+import com.zvit.dto.request.ResetPasswordRequest;
 import com.zvit.dto.response.EncryptedData;
 import com.zvit.dto.response.LoginResponse;
 import com.zvit.dto.response.PublicKeyResponse;
@@ -93,6 +94,21 @@ public class AuthController {
                 .keySize(2048)
                 .build();
         return ResponseEntity.ok(ApiResponse.success("Публічний ключ", response));
+    }
+
+    /**
+     * Скидання паролю через SMS верифікацію
+     */
+    @PostMapping("/reset-password")
+    public ResponseEntity<ApiResponse<Void>> resetPassword(@Valid @RequestBody ResetPasswordRequest request) {
+        log.info("🔑 RESET PASSWORD request received");
+        log.info("   Phone (encrypted?): {} (length: {})",
+            request.getPhone().length() > 50 ? request.getPhone().substring(0, 50) + "..." : request.getPhone(),
+            request.getPhone().length());
+
+        authService.resetPassword(request);
+        log.info("✅ RESET PASSWORD successful");
+        return ResponseEntity.ok(ApiResponse.success("Пароль успішно змінено", null));
     }
 
     /**

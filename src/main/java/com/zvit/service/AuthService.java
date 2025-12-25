@@ -2,6 +2,7 @@ package com.zvit.service;
 
 import com.zvit.dto.request.LoginRequest;
 import com.zvit.dto.request.RegisterRequest;
+import com.zvit.dto.request.ResetPasswordRequest;
 import com.zvit.dto.response.LoginResponse;
 import com.zvit.dto.response.RegisterResponse;
 import com.zvit.entity.User;
@@ -30,6 +31,7 @@ public class AuthService {
     private final EncryptionService encryptionService;
     private final RSAKeyService rsaKeyService;
     private final ResponseEncryptionService responseEncryptionService;
+    private final FirebaseService firebaseService;
 
     @Transactional
     public RegisterResponse register(RegisterRequest request) {
@@ -157,6 +159,61 @@ public class AuthService {
 
     public String test() {
         return "Auth API працює! Версія: 1.3 (JWT)";
+    }
+
+    /**
+     * Скидання паролю через верифікацію Firebase
+     */
+    @Transactional
+    public void resetPassword(ResetPasswordRequest request) {
+        log.info("🔑 AuthService.resetPassword - Starting password reset...");
+
+        // Дешифруємо RSA-зашифровані дані
+        String phone = rsaKeyService.decryptIfEncrypted(request.getPhone());
+        String newPassword = rsaKeyService.decryptIfEncrypted(request.getNewPassword());
+
+        log.info("   Phone: {}", phone);
+        log.info("   New password length: {}", newPassword.length());
+
+        // Перевіряємо формат телефону
+        if (!isValidPhone(phone)) {
+            throw new BusinessException("Невірний формат телефону");
+        }
+
+        // Перевіряємо пароль
+        if (newPassword == null || newPassword.length() < 6) {
+            throw new BusinessException("Пароль повинен містити мінімум 6 символів");
+        }
+
+        // Верифікуємо Firebase токен
+        String verifiedPhone = firebaseService.verifyIdTokenAndGetPhone(request.getFirebaseIdToken());
+        if (verifiedPhone == null) {
+            log.error("   ❌ Firebase token verification failed");
+            throw new BusinessException("Не вдалося підтвердити номер телефону. Спробуйте ще раз.");
+        }
+
+        // Перевіряємо що телефон з токена співпадає з наданим
+        if (!verifiedPhone.equals(phone)) {
+            log.error("   ❌ Phone mismatch: token={}, request={}", verifiedPhone, phone);
+            throw new BusinessException("Номер телефону не співпадає з верифікованим");
+        }
+
+        log.info("   ✅ Firebase verification successful for: {}", verifiedPhone);
+
+        // Знаходимо користувача
+        String phoneHash = hashPhone(phone);
+        User user = userRepository.findByPhoneHash(phoneHash)
+                .orElseThrow(() -> {
+                    log.error("   ❌ User not found for phone: {}", phone);
+                    return new BusinessException("Користувача з таким номером не знайдено");
+                });
+
+        // Оновлюємо пароль
+        user.setPasswordHash(passwordEncoder.encode(newPassword));
+        user.setUpdatedAt(LocalDateTime.now());
+        userRepository.save(user);
+
+        log.info("   ✅ Password reset successful for user: {}", user.getId());
     }
 
     private String hashPhone(String phone) {
