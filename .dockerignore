@@ -1,0 +1,49 @@
+# Git
+.git
+.gitignore
+
+# Gradle
+.gradle
+build
+!build/libs/*.jar
+
+# IDE
+.idea
+*.iml
+.vscode
+*.swp
+*.swo
+
+# Documentation
+*.md
+!README.md
+
+# Logs
+*.log
+logs/
+
+# Environment files (secrets)
+.env
+.env.*
+*.env
+
+# Docker files (не копіювати в образ)
+docker-compose*.yml
+Dockerfile*
+
+# Temporary files
+tmp/
+temp/
+*.tmp
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Test files
+src/test/
+
+# Firebase credentials (sensitive)
+*firebase*.json
+*credentials*.json
+*service-account*.json

@@ -1,16 +1,56 @@
+version: '3.8'
+
 services:
-  mysql:
-    image: mysql:8.0
-    container_name: zvit-mysql
-    environment:
-      MYSQL_ROOT_PASSWORD: zvitpass123
-      MYSQL_DATABASE: zvit_db
-      MYSQL_USER: zvituser
-      MYSQL_PASSWORD: zvitpass123
+  backend:
+    build: .
+    container_name: zvit-backend
     ports:
-      - "3307:3306"  # ← Змінили 3306 на 3307
+      - "8080:8080"
+    environment:
+      - SPRING_PROFILES_ACTIVE=prod
+      - DATABASE_URL=jdbc:postgresql://postgres:5432/zvit
+      - DATABASE_USERNAME=zvit
+      - DATABASE_PASSWORD=${DATABASE_PASSWORD:-zvit_secret}
+      - JWT_SECRET=${JWT_SECRET:-your_jwt_secret_key_min_256_bits_long_string}
+      - ENCRYPTION_KEY=${ENCRYPTION_KEY:-your_encryption_key_here}
     volumes:
-      - mysql-data:/var/lib/mysql
+      - ./logs:/app/logs
+    depends_on:
+      postgres:
+        condition: service_healthy
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "wget", "--spider", "-q", "http://localhost:8080/actuator/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
+    networks:
+      - zvit-network
+
+  postgres:
+    image: postgres:15-alpine
+    container_name: zvit-postgres
+    environment:
+      POSTGRES_DB: zvit
+      POSTGRES_USER: zvit
+      POSTGRES_PASSWORD: ${DATABASE_PASSWORD:-zvit_secret}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U zvit -d zvit"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - zvit-network
 
 volumes:
-  mysql-data:
+  postgres_data:
+
+networks:
+  zvit-network:
+    driver: bridge
