@@ -6,6 +6,7 @@ import com.google.zxing.client.j2se.MatrixToImageWriter;
 import com.google.zxing.common.BitMatrix;
 import com.google.zxing.qrcode.QRCodeWriter;
 import com.zvit.dto.response.GroupMemberResponse;
+import com.zvit.dto.response.GroupStatusesResponse;
 import com.zvit.dto.response.UserStatusResponse;
 import com.zvit.entity.GroupMember;
 import com.zvit.repository.GroupMemberRepository;
@@ -73,20 +74,20 @@ public class AdminService {
         return token;
     }
 
-    public List<UserStatusResponse> getDashboardByToken(String token) {
+    public GroupStatusesResponse getDashboardByToken(String token) {
         DashboardToken dashboardToken = dashboardTokens.get(token);
-        
+
         if (dashboardToken == null) {
             throw new RuntimeException("Невалідний токен");
         }
-        
+
         if (dashboardToken.expiresAt.isBefore(LocalDateTime.now())) {
             dashboardTokens.remove(token);
             throw new RuntimeException("Токен закінчився");
         }
-        
+
         return reportService.getGroupStatuses(
-            dashboardToken.groupId, 
+            dashboardToken.groupId,
             dashboardToken.userId
         );
     }

@@ -1,5 +1,6 @@
 package com.zvit.controller;
 
+import com.zvit.dto.response.GroupStatusesResponse;
 import com.zvit.dto.response.ReportResponse;
 import com.zvit.dto.response.UserStatusResponse;
 import com.zvit.entity.Group;
@@ -36,7 +37,7 @@ public class WebReportController {
      * Використовує session token замість JWT
      */
     @GetMapping("/reports/{groupId}/statuses")
-    public ResponseEntity<List<UserStatusResponse>> getGroupStatuses(
+    public ResponseEntity<GroupStatusesResponse> getGroupStatuses(
             @PathVariable String groupId,
             @RequestHeader("X-Session-Token") String sessionToken) {
 
@@ -50,8 +51,8 @@ public class WebReportController {
             return ResponseEntity.status(403).build();
         }
 
-        // Отримати статуси учасників
-        List<UserStatusResponse> statuses = reportService.getGroupStatuses(groupId, session.getUserId());
+        // Отримати статуси учасників з терміновим збором
+        GroupStatusesResponse statuses = reportService.getGroupStatuses(groupId, session.getUserId());
 
         return ResponseEntity.ok(statuses);
     }
