@@ -224,6 +224,11 @@ public class ReportService {
         // Дешифруємо повідомлення
         String message = rsaKeyService.decryptIfEncrypted(request.getMessage());
 
+        // Валідуємо довжину після дешифрування
+        if (message != null && message.length() > 200) {
+            throw new IllegalArgumentException("Повідомлення максимум 200 символів");
+        }
+
         // Створюємо нову термінову сесію
         LocalDateTime now = LocalDateTime.now();
         String sessionId = UUID.randomUUID().toString();

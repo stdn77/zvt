@@ -16,6 +16,6 @@ public class UrgentReportRequest {
     @Max(value = 120, message = "Максимум 120 хвилин")
     private int deadlineMinutes;
 
-    @Size(max = 200, message = "Повідомлення максимум 200 символів")
+    // Валідація довжини відбувається після дешифрування в сервісі
     private String message;
 }
