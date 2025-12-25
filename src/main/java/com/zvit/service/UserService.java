@@ -1,20 +1,30 @@
 package com.zvit.service;
 
+import com.zvit.dto.request.UpdateProfileRequest;
 import com.zvit.entity.User;
+import com.zvit.exception.BusinessException;
 import com.zvit.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.nio.charset.StandardCharsets;
+import java.security.MessageDigest;
+import java.time.LocalDateTime;
+
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class UserService {
 
     private final UserRepository userRepository;
+    private final RSAKeyService rsaKeyService;
+    private final EncryptionService encryptionService;
 
     public User getUserById(String userId) {
         return userRepository.findById(userId)
-                .orElseThrow(() -> new RuntimeException("Користувача не знайдено"));
+                .orElseThrow(() -> new BusinessException("Користувача не знайдено"));
     }
 
     @Transactional
@@ -29,5 +39,81 @@ public class UserService {
         User user = getUserById(userId);
         user.setFcmToken(null);
         userRepository.save(user);
+    }
+
+    /**
+     * Оновлення профілю користувача (ім'я та/або email)
+     */
+    @Transactional
+    public void updateProfile(String userId, UpdateProfileRequest request) {
+        log.info("📝 Updating profile for user: {}", userId);
+
+        User user = getUserById(userId);
+
+        // Оновлення імені
+        if (request.getName() != null && !request.getName().trim().isEmpty()) {
+            String newName = request.getName().trim();
+            if (newName.length() < 2 || newName.length() > 100) {
+                throw new BusinessException("Ім'я повинно бути від 2 до 100 символів");
+            }
+            log.info("   Updating name: {} -> {}", user.getName(), newName);
+            user.setName(newName);
+        }
+
+        // Оновлення email
+        if (request.getEmail() != null) {
+            String email = rsaKeyService.decryptIfEncrypted(request.getEmail());
+
+            if (email.trim().isEmpty()) {
+                // Видалення email
+                log.info("   Removing email");
+                user.setEmailHash(null);
+                user.setEmailEncrypted(null);
+                user.setEmailVerified(false);
+            } else {
+                // Валідація email
+                if (!isValidEmail(email)) {
+                    throw new BusinessException("Невірний формат email");
+                }
+
+                String emailHash = hashValue(email.toLowerCase());
+
+                // Перевірка унікальності (якщо email змінився)
+                if (user.getEmailHash() == null || !user.getEmailHash().equals(emailHash)) {
+                    if (userRepository.existsByEmailHash(emailHash)) {
+                        throw new BusinessException("Цей email вже використовується");
+                    }
+
+                    log.info("   Updating email");
+                    user.setEmailHash(emailHash);
+                    user.setEmailEncrypted(encryptionService.encrypt(email));
+                    user.setEmailVerified(false); // Потребує повторної верифікації
+                }
+            }
+        }
+
+        user.setUpdatedAt(LocalDateTime.now());
+        userRepository.save(user);
+        log.info("   ✅ Profile updated successfully");
+    }
+
+    private boolean isValidEmail(String email) {
+        return email != null && email.matches("^[A-Za-z0-9+_.-]+@(.+)$");
+    }
+
+    private String hashValue(String value) {
+        try {
+            MessageDigest digest = MessageDigest.getInstance("SHA-256");
+            byte[] hash = digest.digest(value.getBytes(StandardCharsets.UTF_8));
+            StringBuilder hexString = new StringBuilder();
+            for (byte b : hash) {
+                String hex = Integer.toHexString(0xff & b);
+                if (hex.length() == 1) hexString.append('0');
+                hexString.append(hex);
+            }
+            return hexString.toString();
+        } catch (Exception e) {
+            throw new RuntimeException("Помилка хешування", e);
+        }
     }
 }
