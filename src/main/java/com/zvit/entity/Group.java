@@ -83,6 +83,22 @@ public class Group {
     @Column(name = "updated_at")
     private LocalDateTime updatedAt;
 
+    // Терміновий збір - активна сесія
+    @Column(name = "urgent_session_id", length = 36)
+    private String urgentSessionId;  // UUID активної термінової сесії (null = немає активної)
+
+    @Column(name = "urgent_requested_at")
+    private LocalDateTime urgentRequestedAt;  // Коли було надіслано запит
+
+    @Column(name = "urgent_expires_at")
+    private LocalDateTime urgentExpiresAt;  // Коли закінчується збір
+
+    @Column(name = "urgent_requested_by", length = 36)
+    private String urgentRequestedBy;  // ID адміна який запросив
+
+    @Column(name = "urgent_message", length = 500)
+    private String urgentMessage;  // Повідомлення термінового запиту
+
     public enum ReportType {
         SIMPLE,    // Простий: ОК/Проблема + коментар
         EXTENDED,  // Розгорнутий: 5 полів

@@ -31,4 +31,7 @@ public class UserStatusResponse {
     private String timezone;                      // Часова зона сервера
 
     private String phoneNumber; // Тільки для адміністраторів
+
+    // Терміновий збір
+    private LocalDateTime urgentRespondedAt;  // Коли відповів на терміновий (null = не відповів)
 }

@@ -4,8 +4,8 @@ import com.zvit.dto.request.ExtendedReportRequest;
 import com.zvit.dto.request.SimpleReportRequest;
 import com.zvit.dto.request.UrgentReportRequest;
 import com.zvit.dto.response.EncryptedData;
+import com.zvit.dto.response.GroupStatusesResponse;
 import com.zvit.dto.response.ReportResponse;
-import com.zvit.dto.response.UserStatusResponse;
 import com.zvit.service.ReportService;
 import com.zvit.service.ResponseEncryptionService;
 import com.zvit.dto.response.ApiResponse;
@@ -94,9 +94,19 @@ public class ReportController {
             Authentication authentication
     ) {
         String userId = authentication.getName();
-        List<UserStatusResponse> statuses = reportService.getGroupStatuses(groupId, userId);
+        GroupStatusesResponse statuses = reportService.getGroupStatuses(groupId, userId);
         String encryptedPayload = encryptionService.encryptObject(statuses);
         return ResponseEntity.ok(ApiResponse.success("Статуси отримано", EncryptedData.of(encryptedPayload)));
+    }
+
+    @DeleteMapping("/urgent/{groupId}")
+    public ResponseEntity<ApiResponse<Void>> endUrgentSession(
+            @PathVariable String groupId,
+            Authentication authentication
+    ) {
+        String userId = authentication.getName();
+        reportService.endUrgentSession(groupId, userId);
+        return ResponseEntity.ok(ApiResponse.success("Терміновий збір завершено", null));
     }
 
     @PostMapping("/urgent")
