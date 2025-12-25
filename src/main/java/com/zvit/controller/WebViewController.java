@@ -13,7 +13,6 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 
 @Controller
-@RequestMapping("/web")
 @RequiredArgsConstructor
 @Slf4j
 public class WebViewController {
@@ -22,10 +21,18 @@ public class WebViewController {
     private final ReportService reportService;
 
     /**
+     * GET / - редирект на /web/start
+     */
+    @GetMapping("/")
+    public String redirectToStart() {
+        return "redirect:/web/start";
+    }
+
+    /**
      * GET /web/start
      * Початкова сторінка - створює QR сесію та показує QR код
      */
-    @GetMapping("/start")
+    @GetMapping("/web/start")
     public String startWebSession(Model model) {
         QrSessionResponse session = qrSessionService.createSession();
         model.addAttribute("sessionToken", session.getSessionToken());
@@ -40,7 +47,7 @@ public class WebViewController {
      * Якщо відкрито на мобільному з додатком - додаток перехопить URL
      * Якщо відкрито в браузері - покаже інструкцію
      */
-    @GetMapping("/auth")
+    @GetMapping("/web/auth")
     public String authRedirect(@RequestParam String token, Model model) {
         model.addAttribute("token", token);
         return "qr-redirect"; // qr-redirect.html template
@@ -50,7 +57,7 @@ public class WebViewController {
      * GET /web/reports?token=xxx
      * Сторінка з відображенням звітів (після авторизації)
      */
-    @GetMapping("/reports")
+    @GetMapping("/web/reports")
     public String showReports(@RequestParam String token, Model model) {
         QrSession session = qrSessionService.getAuthorizedSession(token);
 
