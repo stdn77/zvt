@@ -222,10 +222,13 @@ public class ReportService {
         }
 
         // Дешифруємо повідомлення
-        String message = rsaKeyService.decryptIfEncrypted(request.getMessage());
+        String originalMessage = request.getMessage();
+        String message = rsaKeyService.decryptIfEncrypted(originalMessage);
 
-        // Валідуємо довжину після дешифрування
-        if (message != null && message.length() > 200) {
+        // Валідуємо довжину тільки якщо повідомлення було дешифровано
+        // (якщо дешифрування не вдалось, message == originalMessage, і це зашифрований текст)
+        boolean wasDecrypted = !message.equals(originalMessage) || !rsaKeyService.isEncrypted(originalMessage);
+        if (wasDecrypted && message != null && message.length() > 200) {
             throw new IllegalArgumentException("Повідомлення максимум 200 символів");
         }
 
