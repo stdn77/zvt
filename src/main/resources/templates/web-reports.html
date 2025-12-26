@@ -643,7 +643,7 @@
 
         async function endUrgentSession() {
             try {
-                const response = await fetch(`/api/v1/reports/urgent/${groupId}`, {
+                const response = await fetch(`/api/web/reports/${groupId}/urgent`, {
                     method: 'DELETE',
                     headers: {
                         'X-Session-Token': sessionToken

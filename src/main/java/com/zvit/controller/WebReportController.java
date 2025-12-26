@@ -115,4 +115,30 @@ public class WebReportController {
 
         return ResponseEntity.ok(reports);
     }
+
+    /**
+     * DELETE /api/web/reports/{groupId}/urgent
+     * Завершити терміновий збір (для веб інтерфейсу)
+     * Використовує session token замість JWT
+     */
+    @DeleteMapping("/reports/{groupId}/urgent")
+    public ResponseEntity<Map<String, String>> endUrgentSession(
+            @PathVariable String groupId,
+            @RequestHeader("X-Session-Token") String sessionToken) {
+
+        // Перевірити та отримати авторизовану сесію
+        QrSession session = qrSessionService.getAuthorizedSession(sessionToken);
+
+        // Перевірити що сесія для цієї групи
+        if (!session.getGroupId().equals(groupId)) {
+            log.warn("Session token {} is for group {}, but requesting group {}",
+                     sessionToken, session.getGroupId(), groupId);
+            return ResponseEntity.status(403).build();
+        }
+
+        // Завершити терміновий збір
+        reportService.endUrgentSession(groupId, session.getUserId());
+
+        return ResponseEntity.ok(Map.of("message", "Терміновий збір завершено"));
+    }
 }
