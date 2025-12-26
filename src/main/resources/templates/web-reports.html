@@ -976,8 +976,10 @@
 
                 // Визначаємо клас для термінового збору
                 let urgentClass = '';
+                console.log(`Urgent check: session=${!!urgentSession}, active=${urgentSession?.active}, role=${user.role}`);
                 if (urgentSession && urgentSession.active && user.role !== 'ADMIN') {
                     urgentClass = user.urgentRespondedAt ? 'urgent-responded' : 'urgent-not-responded';
+                    console.log(`User ${user.userName}: responded=${user.urgentRespondedAt}, class=${urgentClass}`);
                 }
 
                 // Формуємо номер телефону з можливістю дзвінка
