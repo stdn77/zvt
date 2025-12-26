@@ -50,6 +50,15 @@
             font-size: 14px;
         }
 
+        .group-line {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 15px;
+            font-size: 14px;
+            opacity: 0.9;
+        }
+
         .header-stats {
             display: flex;
             gap: 15px;
@@ -368,18 +377,16 @@
             box-shadow: 0 3px 6px rgba(220, 38, 38, 0.5);
         }
 
-        /* Urgent info in header - inline with title */
+        /* Urgent info in header - inline with group name */
         .urgent-info-inline {
             display: inline-flex;
             align-items: center;
-            gap: 12px;
-            margin-left: 15px;
-            font-size: 14px;
+            gap: 10px;
         }
 
         .urgent-info-inline span {
             color: #ffcccc;
-            font-weight: 500;
+            font-weight: 600;
         }
 
         .btn-end-urgent-small {
@@ -432,13 +439,15 @@
                         <polyline points="440,512 492,564 584,460" fill="none" stroke="white" stroke-width="36" stroke-linecap="round" stroke-linejoin="round"/>
                     </svg>
                     ZVIT - Звіти учасників
+                </h1>
+                <div class="group-line">
+                    <span id="groupName">Завантаження...</span>
                     <!-- Urgent session info inline -->
                     <div id="urgentInfoLine" class="urgent-info-inline" style="display: none;">
                         <span id="urgentInfoText"></span>
                         <button class="btn-end-urgent-small" onclick="confirmEndUrgentSession()">Завершити збір</button>
                     </div>
-                </h1>
-                <p id="groupName">Завантаження...</p>
+                </div>
             </div>
             <div class="header-stats">
                 <div class="header-stat" style="color: #1a1a1a;">
