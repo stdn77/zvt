@@ -36,6 +36,7 @@
             display: flex;
             align-items: center;
             gap: 10px;
+            flex-wrap: wrap;
         }
 
         .header-left h1 svg {
@@ -367,104 +368,17 @@
             box-shadow: 0 3px 6px rgba(220, 38, 38, 0.5);
         }
 
-        /* Urgent session card styles */
-        .user-card.urgent-not-responded {
-            animation: urgentCardPulse 1.5s ease-in-out infinite;
-            border: 3px solid #dc2626 !important;
-            position: relative;
-        }
-
-        .user-card.urgent-responded {
-            border: 3px solid #22c55e !important;
-            position: relative;
-        }
-
-        .user-card.urgent-responded::after {
-            content: '✓';
-            position: absolute;
-            top: 5px;
-            right: 5px;
-            background: #22c55e;
-            color: white;
-            width: 20px;
-            height: 20px;
-            border-radius: 50%;
-            display: flex;
+        /* Urgent info in header - inline with title */
+        .urgent-info-inline {
+            display: inline-flex;
             align-items: center;
-            justify-content: center;
-            font-size: 12px;
-            font-weight: bold;
-        }
-
-        .user-card.urgent-not-responded::after {
-            content: '!';
-            position: absolute;
-            top: 5px;
-            right: 5px;
-            background: #dc2626;
-            color: white;
-            width: 20px;
-            height: 20px;
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 14px;
-            font-weight: bold;
-            animation: urgentIconPulse 1s ease-in-out infinite;
-        }
-
-        @keyframes urgentCardPulse {
-            0%, 100% {
-                box-shadow: 0 0 5px rgba(220, 38, 38, 0.5);
-            }
-            50% {
-                box-shadow: 0 0 20px rgba(220, 38, 38, 0.8);
-            }
-        }
-
-        @keyframes urgentIconPulse {
-            0%, 100% { transform: scale(1); }
-            50% { transform: scale(1.2); }
-        }
-
-        /* Phone number styles */
-        .user-phone {
-            font-size: 11px;
-            margin-top: 4px;
-            display: flex;
-            align-items: center;
-            gap: 4px;
-        }
-
-        .user-phone a {
-            color: inherit;
-            text-decoration: none;
-            display: flex;
-            align-items: center;
-            gap: 4px;
-        }
-
-        .user-phone a:hover {
-            text-decoration: underline;
-        }
-
-        .call-icon {
+            gap: 12px;
+            margin-left: 15px;
             font-size: 14px;
         }
 
-        /* Urgent info in header */
-        .urgent-info-line {
-            display: flex;
-            align-items: center;
-            gap: 15px;
-            margin-top: 8px;
-            flex-wrap: wrap;
-        }
-
-        .urgent-info-line span {
-            color: #ff4444;
-            font-size: 14px;
+        .urgent-info-inline span {
+            color: #ffcccc;
             font-weight: 500;
         }
 
@@ -472,11 +386,11 @@
             background: #dc2626;
             color: white;
             border: none;
-            padding: 6px 12px;
-            border-radius: 5px;
+            padding: 5px 10px;
+            border-radius: 4px;
             cursor: pointer;
             font-weight: 600;
-            font-size: 12px;
+            font-size: 11px;
             transition: all 0.2s;
         }
 
@@ -518,13 +432,13 @@
                         <polyline points="440,512 492,564 584,460" fill="none" stroke="white" stroke-width="36" stroke-linecap="round" stroke-linejoin="round"/>
                     </svg>
                     ZVIT - Звіти учасників
+                    <!-- Urgent session info inline -->
+                    <div id="urgentInfoLine" class="urgent-info-inline" style="display: none;">
+                        <span id="urgentInfoText"></span>
+                        <button class="btn-end-urgent-small" onclick="confirmEndUrgentSession()">Завершити збір</button>
+                    </div>
                 </h1>
                 <p id="groupName">Завантаження...</p>
-                <!-- Urgent session info line -->
-                <div id="urgentInfoLine" class="urgent-info-line" style="display: none;">
-                    <span id="urgentInfoText"></span>
-                    <button class="btn-end-urgent-small" onclick="confirmEndUrgentSession()">Завершити збір</button>
-                </div>
             </div>
             <div class="header-stats">
                 <div class="header-stat" style="color: #1a1a1a;">
@@ -645,8 +559,8 @@
                     infoText += `  💬 "${urgentSession.message}"`;
                 }
 
-                // Показуємо urgent info line
-                urgentInfoLine.style.display = 'flex';
+                // Показуємо urgent info line (inline з заголовком)
+                urgentInfoLine.style.display = 'inline-flex';
                 urgentInfoText.textContent = infoText;
 
                 // Змінюємо таймер на червоний
@@ -909,33 +823,20 @@
                     }
                 }
 
-                // Визначаємо клас для термінового збору
-                let urgentClass = '';
-                console.log(`Urgent check: session=${!!urgentSession}, active=${urgentSession?.active}, role=${user.role}`);
+                // Для термінового збору змінюємо колір картки (червоний/зелений)
                 if (urgentSession && urgentSession.active && user.role !== 'ADMIN') {
-                    urgentClass = user.urgentRespondedAt ? 'urgent-responded' : 'urgent-not-responded';
-                    console.log(`User ${user.userName}: responded=${user.urgentRespondedAt}, class=${urgentClass}`);
-                }
-
-                // Формуємо номер телефону з можливістю дзвінка
-                let phoneHtml = '';
-                if (user.phoneNumber && urgentSession && urgentSession.active) {
-                    phoneHtml = `
-                        <div class="user-phone">
-                            <a href="tel:${escapeHtml(user.phoneNumber)}" onclick="event.stopPropagation();">
-                                <span class="call-icon">📞</span>
-                                ${escapeHtml(user.phoneNumber)}
-                            </a>
-                        </div>
-                    `;
+                    if (user.urgentRespondedAt) {
+                        bgColor = '#81C784'; // Зелений - відповів
+                    } else {
+                        bgColor = '#E57373'; // Червоний - не відповів
+                    }
                 }
 
                 return `
-                    <div class="user-card ${urgentClass}" style="background-color: ${bgColor}; color: ${textColor}"
+                    <div class="user-card" style="background-color: ${bgColor}; color: ${textColor}"
                          onclick="showUserDetails('${escapeHtml(user.userId)}', '${escapeHtml(user.userName)}', '${escapeHtml(user.phoneNumber || 'Не вказано')}')">
                         <div class="user-name">${escapeHtml(user.userName)}</div>
                         <div class="user-time" style="color: ${textColor}">${timeText}</div>
-                        ${phoneHtml}
                     </div>
                 `;
             }).join('');
