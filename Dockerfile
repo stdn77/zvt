@@ -1,29 +1,25 @@
 # ===== ZVIT Backend Dockerfile =====
 # Multi-stage build for optimized image size
 
-# Stage 1: Build
+# Stage 1: Build with Maven
 FROM eclipse-temurin:17-jdk-alpine AS builder
 
 WORKDIR /app
 
-# Install required tools
-RUN apk add --no-cache bash
+# Install Maven
+RUN apk add --no-cache maven
 
-# Copy gradle files for dependency caching
-COPY gradle gradle
-COPY gradlew .
-COPY build.gradle .
-COPY settings.gradle .
+# Copy pom.xml first for dependency caching
+COPY pom.xml .
 
-# Make gradlew executable and download dependencies
-RUN chmod +x ./gradlew && \
-    ./gradlew dependencies --no-daemon || true
+# Download dependencies (this layer will be cached)
+RUN mvn dependency:go-offline -B
 
 # Copy source code
 COPY src src
 
 # Build the application (skip tests for faster builds)
-RUN ./gradlew bootJar --no-daemon -x test
+RUN mvn package -DskipTests -B
 
 # Stage 2: Runtime
 FROM eclipse-temurin:17-jre-alpine
@@ -41,8 +37,8 @@ RUN addgroup -g 1001 -S appgroup && \
 RUN mkdir -p /app/logs /app/config && \
     chown -R appuser:appgroup /app
 
-# Copy JAR from builder
-COPY --from=builder /app/build/libs/*.jar app.jar
+# Copy JAR from builder (Maven puts it in target/)
+COPY --from=builder /app/target/*.jar app.jar
 RUN chown appuser:appgroup app.jar
 
 # Switch to non-root user
@@ -53,7 +49,7 @@ EXPOSE 8080
 
 # Health check
 HEALTHCHECK --interval=30s --timeout=10s --start-period=60s --retries=3 \
-    CMD wget --no-verbose --tries=1 --spider http://localhost:8080/actuator/health || exit 1
+    CMD wget --no-verbose --tries=1 --spider http://localhost:8080/api/health || exit 1
 
 # JVM options for containers
 ENV JAVA_OPTS="-XX:+UseContainerSupport \

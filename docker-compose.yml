@@ -8,49 +8,27 @@ services:
       - "8080:8080"
     environment:
       - SPRING_PROFILES_ACTIVE=prod
-      - DATABASE_URL=jdbc:postgresql://postgres:5432/zvit
-      - DATABASE_USERNAME=zvit
-      - DATABASE_PASSWORD=${DATABASE_PASSWORD:-zvit_secret}
-      - JWT_SECRET=${JWT_SECRET:-your_jwt_secret_key_min_256_bits_long_string}
+      # Підключення до існуючого MySQL контейнера (zvit-mysql на порті 3307)
+      - SPRING_DATASOURCE_URL=jdbc:mysql://host.docker.internal:3307/zvit_db?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC
+      - SPRING_DATASOURCE_USERNAME=zvituser
+      - SPRING_DATASOURCE_PASSWORD=zvitpass123
+      - SPRING_DATASOURCE_DRIVER_CLASS_NAME=com.mysql.cj.jdbc.Driver
+      - SPRING_JPA_DATABASE_PLATFORM=org.hibernate.dialect.MySQLDialect
+      - SPRING_JPA_HIBERNATE_DDL_AUTO=update
+      # JWT та шифрування
+      - JWT_SECRET=${JWT_SECRET:-your_jwt_secret_key_min_256_bits_long_string_here_12345}
       - ENCRYPTION_KEY=${ENCRYPTION_KEY:-your_encryption_key_here}
+      # Firebase (якщо потрібно)
+      - GOOGLE_APPLICATION_CREDENTIALS=/app/config/firebase-service-account.json
     volumes:
       - ./logs:/app/logs
-    depends_on:
-      postgres:
-        condition: service_healthy
+      - ./config:/app/config
     restart: unless-stopped
     healthcheck:
-      test: ["CMD", "wget", "--spider", "-q", "http://localhost:8080/actuator/health"]
+      test: ["CMD", "wget", "--spider", "-q", "http://localhost:8080/api/health"]
       interval: 30s
       timeout: 10s
       retries: 3
       start_period: 60s
-    networks:
-      - zvit-network
-
-  postgres:
-    image: postgres:15-alpine
-    container_name: zvit-postgres
-    environment:
-      POSTGRES_DB: zvit
-      POSTGRES_USER: zvit
-      POSTGRES_PASSWORD: ${DATABASE_PASSWORD:-zvit_secret}
-    volumes:
-      - postgres_data:/var/lib/postgresql/data
-    ports:
-      - "5432:5432"
-    restart: unless-stopped
-    healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U zvit -d zvit"]
-      interval: 10s
-      timeout: 5s
-      retries: 5
-    networks:
-      - zvit-network
-
-volumes:
-  postgres_data:
-
-networks:
-  zvit-network:
-    driver: bridge
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
