@@ -8,7 +8,7 @@ spring:
   datasource:
     url: jdbc:mysql://localhost:3307/zvit_db?useSSL=false&serverTimezone=UTC&allowPublicKeyRetrieval=true&characterEncoding=UTF-8
     username: zvituser
-    password: zvitpass123
+    password: 7ef3c0b5d644b99f
     driver-class-name: com.mysql.cj.jdbc.Driver
 
   jpa:
@@ -24,7 +24,7 @@ spring:
   security:
     user:
       name: admin
-      password: admin
+      password: c175eff5659ed6d9
 
   # Jackson JSON encoding
   jackson:
@@ -42,7 +42,7 @@ server:
       force-response: true
 
 jwt:
-  secret: eW91ci1zZWNyZXQta2V5LWNoYW5nZS1pbi1wcm9kdWN0aW9uLW1pbi0yNTYtYml0cy1sb25nLWZvci1zZWN1cml0eQ==
+  secret: v4RqtUyz/NhePzEBUkAs3PeGi9gwD8cmWuH3ccn6bRNhIF4Ui11ZkhK8Wfxnh8dv
   expiration: 86400000
 
 # Firebase Cloud Messaging
@@ -65,7 +65,7 @@ logging:
 app:
   timezone: Europe/Kiev
   version: "1.0.0"
-  base-url: http://localhost:8080
+  base-url: http://195.201.92.149:8080
 
 # Rate Limiting
 rate-limit:
@@ -86,7 +86,7 @@ crypto:
     encrypted-data-size: 256
   aes:
     algorithm: AES
-    key: MySecretKey12345MySecretKey12345
+    key: slg9Y22tMdVV5zrNs07NXDiGym2JIxEn
 
 # QR Sessions
 qr-session:
