@@ -29,7 +29,8 @@ public class SecurityConfig {
                 session.sessionCreationPolicy(SessionCreationPolicy.STATELESS)
             )
             .authorizeHttpRequests(auth -> auth
-                .requestMatchers("/").permitAll() // Root redirect
+                .requestMatchers("/").permitAll() // Landing page
+                .requestMatchers("/admin/**").permitAll() // Admin QR access (з rate limiting в контролері)
                 .requestMatchers("/api/health").permitAll() // Health check endpoint
                 .requestMatchers("/api/v1/auth/register").permitAll()
                 .requestMatchers("/api/v1/auth/login").permitAll()

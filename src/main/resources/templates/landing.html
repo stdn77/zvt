@@ -1,0 +1,356 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ZVIT - Система звітування</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
+            min-height: 100vh;
+            color: #ffffff;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        /* Hero Section */
+        .hero {
+            text-align: center;
+            padding: 60px 20px;
+        }
+
+        .logo {
+            width: 120px;
+            height: 120px;
+            margin: 0 auto 30px;
+        }
+
+        .logo svg {
+            width: 100%;
+            height: 100%;
+        }
+
+        h1 {
+            font-size: 3rem;
+            font-weight: 700;
+            margin-bottom: 15px;
+            background: linear-gradient(135deg, #4ade80 0%, #22c55e 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .tagline {
+            font-size: 1.3rem;
+            color: #94a3b8;
+            margin-bottom: 40px;
+        }
+
+        /* Features */
+        .features {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 25px;
+            margin: 50px 0;
+        }
+
+        .feature-card {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 16px;
+            padding: 30px;
+            text-align: center;
+            transition: transform 0.3s, box-shadow 0.3s;
+        }
+
+        .feature-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
+        }
+
+        .feature-icon {
+            font-size: 3rem;
+            margin-bottom: 20px;
+        }
+
+        .feature-card h3 {
+            font-size: 1.2rem;
+            margin-bottom: 10px;
+            color: #4ade80;
+        }
+
+        .feature-card p {
+            color: #94a3b8;
+            line-height: 1.6;
+        }
+
+        /* Download Section */
+        .download-section {
+            background: rgba(255, 255, 255, 0.03);
+            border-radius: 24px;
+            padding: 50px 30px;
+            margin: 60px 0;
+            text-align: center;
+        }
+
+        .download-section h2 {
+            font-size: 2rem;
+            margin-bottom: 10px;
+        }
+
+        .download-section .subtitle {
+            color: #94a3b8;
+            margin-bottom: 40px;
+        }
+
+        .download-cards {
+            display: flex;
+            justify-content: center;
+            gap: 40px;
+            flex-wrap: wrap;
+        }
+
+        .download-card {
+            background: rgba(255, 255, 255, 0.08);
+            border-radius: 16px;
+            padding: 30px;
+            text-align: center;
+            min-width: 250px;
+        }
+
+        .download-card h4 {
+            margin-bottom: 20px;
+            font-size: 1.1rem;
+        }
+
+        .qr-placeholder {
+            width: 180px;
+            height: 180px;
+            background: #ffffff;
+            border-radius: 12px;
+            margin: 0 auto 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #333;
+            font-size: 0.9rem;
+            padding: 15px;
+        }
+
+        .store-badge {
+            display: inline-block;
+            padding: 12px 24px;
+            background: linear-gradient(135deg, #4ade80 0%, #22c55e 100%);
+            color: #000;
+            text-decoration: none;
+            border-radius: 8px;
+            font-weight: 600;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+
+        .store-badge:hover {
+            transform: scale(1.05);
+            box-shadow: 0 10px 30px rgba(74, 222, 128, 0.3);
+        }
+
+        .store-badge.apple {
+            background: linear-gradient(135deg, #333 0%, #000 100%);
+            color: #fff;
+        }
+
+        /* Admin Section */
+        .admin-section {
+            text-align: center;
+            margin: 60px 0;
+            padding: 40px;
+            background: linear-gradient(135deg, rgba(74, 222, 128, 0.1) 0%, rgba(34, 197, 94, 0.05) 100%);
+            border-radius: 24px;
+            border: 1px solid rgba(74, 222, 128, 0.2);
+        }
+
+        .admin-section h2 {
+            font-size: 1.8rem;
+            margin-bottom: 15px;
+        }
+
+        .admin-section p {
+            color: #94a3b8;
+            margin-bottom: 25px;
+            max-width: 600px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+
+        .admin-btn {
+            display: inline-block;
+            padding: 15px 40px;
+            background: linear-gradient(135deg, #4ade80 0%, #22c55e 100%);
+            color: #000;
+            text-decoration: none;
+            border-radius: 12px;
+            font-weight: 600;
+            font-size: 1.1rem;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+
+        .admin-btn:hover {
+            transform: scale(1.05);
+            box-shadow: 0 15px 40px rgba(74, 222, 128, 0.4);
+        }
+
+        .admin-note {
+            margin-top: 15px;
+            font-size: 0.85rem;
+            color: #64748b;
+        }
+
+        /* Footer */
+        footer {
+            text-align: center;
+            padding: 40px 20px;
+            color: #64748b;
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+            margin-top: 60px;
+        }
+
+        footer a {
+            color: #4ade80;
+            text-decoration: none;
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            h1 {
+                font-size: 2rem;
+            }
+
+            .tagline {
+                font-size: 1rem;
+            }
+
+            .download-cards {
+                flex-direction: column;
+                align-items: center;
+            }
+
+            .features {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Hero -->
+        <section class="hero">
+            <div class="logo">
+                <svg viewBox="0 0 1024 1024" xmlns="http://www.w3.org/2000/svg">
+                    <defs>
+                        <linearGradient id="logoGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+                            <stop offset="0%" stop-color="#4ade80" />
+                            <stop offset="100%" stop-color="#22c55e" />
+                        </linearGradient>
+                    </defs>
+                    <circle cx="512" cy="512" r="450" fill="none" stroke="url(#logoGrad)" stroke-width="40" opacity="0.3"/>
+                    <circle cx="512" cy="512" r="350" fill="none" stroke="url(#logoGrad)" stroke-width="30" opacity="0.5"/>
+                    <circle cx="512" cy="512" r="250" fill="none" stroke="url(#logoGrad)" stroke-width="25" opacity="0.7"/>
+                    <circle cx="512" cy="512" r="180" fill="url(#logoGrad)"/>
+                    <polyline points="430,512 490,572 594,456" fill="none" stroke="white" stroke-width="45" stroke-linecap="round" stroke-linejoin="round"/>
+                </svg>
+            </div>
+            <h1>ZVIT</h1>
+            <p class="tagline">Сучасна система звітування для команд та організацій</p>
+        </section>
+
+        <!-- Features -->
+        <section class="features">
+            <div class="feature-card">
+                <div class="feature-icon">📊</div>
+                <h3>Швидкі звіти</h3>
+                <p>Надсилайте звіти в один дотик. Простий або розширений формат на ваш вибір.</p>
+            </div>
+            <div class="feature-card">
+                <div class="feature-icon">⚡</div>
+                <h3>Терміновий збір</h3>
+                <p>Миттєве сповіщення всіх учасників з таймером та статусом відповідей.</p>
+            </div>
+            <div class="feature-card">
+                <div class="feature-icon">🔔</div>
+                <h3>Push-сповіщення</h3>
+                <p>Автоматичні нагадування про час звітування та термінові запити.</p>
+            </div>
+            <div class="feature-card">
+                <div class="feature-icon">📱</div>
+                <h3>Веб-доступ</h3>
+                <p>Перегляд звітів через QR-код без встановлення додатку.</p>
+            </div>
+            <div class="feature-card">
+                <div class="feature-icon">🔒</div>
+                <h3>Безпека</h3>
+                <p>Шифрування даних та захищена передача інформації.</p>
+            </div>
+            <div class="feature-card">
+                <div class="feature-icon">👥</div>
+                <h3>Групи</h3>
+                <p>Керуйте кількома групами з різними налаштуваннями звітування.</p>
+            </div>
+        </section>
+
+        <!-- Download -->
+        <section class="download-section">
+            <h2>Завантажити додаток</h2>
+            <p class="subtitle">Доступно для Android та iOS</p>
+
+            <div class="download-cards">
+                <div class="download-card">
+                    <h4>Android</h4>
+                    <div class="qr-placeholder" id="qr-android">
+                        <!-- QR code буде тут -->
+                        QR-код<br>Play Market<br><small>(скоро)</small>
+                    </div>
+                    <a href="#" class="store-badge">Google Play</a>
+                </div>
+                <div class="download-card">
+                    <h4>iOS</h4>
+                    <div class="qr-placeholder" id="qr-ios">
+                        <!-- QR code буде тут -->
+                        QR-код<br>App Store<br><small>(скоро)</small>
+                    </div>
+                    <a href="#" class="store-badge apple">App Store</a>
+                </div>
+            </div>
+        </section>
+
+        <!-- Admin Access -->
+        <section class="admin-section">
+            <h2>Для адміністраторів груп</h2>
+            <p>Увійдіть щоб згенерувати QR-код для швидкого доступу до звітів вашої групи через веб-інтерфейс.</p>
+            <a href="/admin/qr-access" class="admin-btn">Увійти як адміністратор</a>
+            <p class="admin-note">* Доступ обмежено: не частіше 1 разу на 5 хвилин</p>
+        </section>
+
+        <!-- Footer -->
+        <footer>
+            <p>&copy; 2024 ZVIT. Усі права захищено.</p>
+            <p style="margin-top: 10px;">
+                <a href="#">Політика конфіденційності</a> |
+                <a href="#">Умови використання</a> |
+                <a href="mailto:support@zvit.app">Підтримка</a>
+            </p>
+        </footer>
+    </div>
+</body>
+</html>
