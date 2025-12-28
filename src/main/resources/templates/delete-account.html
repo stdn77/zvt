@@ -1,0 +1,186 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Видалення облікового запису - ZVIT</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif;
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+            color: #e0e0e0;
+            min-height: 100vh;
+            padding: 20px;
+            line-height: 1.6;
+        }
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 16px;
+            padding: 40px;
+            backdrop-filter: blur(10px);
+        }
+        h1 {
+            color: #ff6b6b;
+            margin-bottom: 10px;
+            font-size: 2em;
+        }
+        .app-name {
+            color: #4ecdc4;
+            font-size: 0.9em;
+            margin-bottom: 30px;
+        }
+        h2 {
+            color: #ffd93d;
+            margin-top: 30px;
+            margin-bottom: 15px;
+            font-size: 1.3em;
+        }
+        p {
+            margin-bottom: 15px;
+            color: #b0b0b0;
+        }
+        .warning-box {
+            background: rgba(255, 107, 107, 0.1);
+            border: 1px solid #ff6b6b;
+            border-radius: 12px;
+            padding: 20px;
+            margin: 25px 0;
+        }
+        .warning-box h3 {
+            color: #ff6b6b;
+            margin-bottom: 10px;
+        }
+        .steps {
+            background: rgba(78, 205, 196, 0.1);
+            border-radius: 12px;
+            padding: 25px;
+            margin: 25px 0;
+        }
+        .steps ol {
+            margin-left: 20px;
+        }
+        .steps li {
+            margin-bottom: 15px;
+            color: #e0e0e0;
+        }
+        .steps li strong {
+            color: #4ecdc4;
+        }
+        .data-list {
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 12px;
+            padding: 20px;
+            margin: 20px 0;
+        }
+        .data-list h3 {
+            color: #ffd93d;
+            margin-bottom: 15px;
+        }
+        .data-list ul {
+            margin-left: 20px;
+        }
+        .data-list li {
+            margin-bottom: 8px;
+            color: #b0b0b0;
+        }
+        .contact-box {
+            background: rgba(78, 205, 196, 0.1);
+            border: 1px solid #4ecdc4;
+            border-radius: 12px;
+            padding: 20px;
+            margin-top: 30px;
+        }
+        .contact-box h3 {
+            color: #4ecdc4;
+            margin-bottom: 10px;
+        }
+        a {
+            color: #4ecdc4;
+            text-decoration: none;
+        }
+        a:hover {
+            text-decoration: underline;
+        }
+        .retention-info {
+            background: rgba(255, 217, 61, 0.1);
+            border: 1px solid #ffd93d;
+            border-radius: 12px;
+            padding: 20px;
+            margin: 25px 0;
+        }
+        .retention-info h3 {
+            color: #ffd93d;
+            margin-bottom: 10px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Видалення облікового запису</h1>
+        <p class="app-name">Додаток ZVIT</p>
+
+        <p>На цій сторінці описано, як видалити ваш обліковий запис у додатку ZVIT та які дані будуть видалені.</p>
+
+        <h2>Як видалити обліковий запис</h2>
+
+        <div class="steps">
+            <ol>
+                <li><strong>Відкрийте додаток ZVIT</strong> на вашому пристрої</li>
+                <li>Перейдіть до <strong>Профіль</strong> (іконка в нижньому меню)</li>
+                <li>Натисніть <strong>"Видалити акаунт"</strong></li>
+                <li>Підтвердіть видалення, ввівши ваш пароль</li>
+                <li>Ваш обліковий запис буде видалено назавжди</li>
+            </ol>
+        </div>
+
+        <div class="warning-box">
+            <h3>Увага!</h3>
+            <p>Видалення облікового запису є <strong>незворотним</strong>. Після видалення ви не зможете відновити свої дані.</p>
+        </div>
+
+        <h2>Які дані будуть видалені</h2>
+
+        <div class="data-list">
+            <h3>Повністю видаляються:</h3>
+            <ul>
+                <li>Ваш профіль (ім'я, номер телефону)</li>
+                <li>Усі ваші звіти</li>
+                <li>Історія активності</li>
+                <li>Токени автентифікації</li>
+                <li>Push-токени для сповіщень</li>
+                <li>Членство в групах</li>
+            </ul>
+        </div>
+
+        <div class="retention-info">
+            <h3>Період збереження даних</h3>
+            <p>Після запиту на видалення всі ваші дані видаляються <strong>негайно</strong> з наших серверів. Резервні копії автоматично видаляються протягом <strong>30 днів</strong>.</p>
+        </div>
+
+        <h2>Альтернативний спосіб</h2>
+        <p>Якщо ви не можете видалити акаунт через додаток, надішліть запит на електронну пошту:</p>
+
+        <div class="contact-box">
+            <h3>Контакт для видалення</h3>
+            <p>Email: <a href="mailto:zvit.sup@gmail.com">zvit.sup@gmail.com</a></p>
+            <p>У листі вкажіть:</p>
+            <ul style="margin-left: 20px; margin-top: 10px;">
+                <li>Номер телефону, пов'язаний з акаунтом</li>
+                <li>Причину видалення (необов'язково)</li>
+            </ul>
+            <p style="margin-top: 15px;">Ми обробимо ваш запит протягом <strong>7 робочих днів</strong>.</p>
+        </div>
+
+        <p style="margin-top: 40px; text-align: center; color: #666;">
+            &copy; 2024 ZVIT. Усі права захищено.
+        </p>
+    </div>
+</body>
+</html>

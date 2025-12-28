@@ -53,6 +53,14 @@ public class WebViewController {
     }
 
     /**
+     * GET /delete-account - Інструкції для видалення облікового запису
+     */
+    @GetMapping("/delete-account")
+    public String deleteAccount() {
+        return "delete-account";
+    }
+
+    /**
      * GET /admin/qr-access
      * Сторінка для адміністраторів з rate limiting (1 раз на 5 хв)
      */
