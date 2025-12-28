@@ -37,6 +37,22 @@ public class WebViewController {
     }
 
     /**
+     * GET /privacy-policy - Політика конфіденційності
+     */
+    @GetMapping("/privacy-policy")
+    public String privacyPolicy() {
+        return "privacy-policy";
+    }
+
+    /**
+     * GET /terms - Умови використання
+     */
+    @GetMapping("/terms")
+    public String termsOfService() {
+        return "terms";
+    }
+
+    /**
      * GET /admin/qr-access
      * Сторінка для адміністраторів з rate limiting (1 раз на 5 хв)
      */
