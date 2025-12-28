@@ -30,6 +30,8 @@ public class SecurityConfig {
             )
             .authorizeHttpRequests(auth -> auth
                 .requestMatchers("/").permitAll() // Landing page
+                .requestMatchers("/privacy-policy").permitAll() // Privacy policy
+                .requestMatchers("/terms").permitAll() // Terms of service
                 .requestMatchers("/admin/**").permitAll() // Admin QR access (з rate limiting в контролері)
                 .requestMatchers("/api/health").permitAll() // Health check endpoint
                 .requestMatchers("/api/v1/auth/register").permitAll()
