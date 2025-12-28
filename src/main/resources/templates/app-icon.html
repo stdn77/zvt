@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ZVIT App Icon 512x512</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            background: #333;
+            padding: 20px;
+        }
+
+        .icon {
+            width: 512px;
+            height: 512px;
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+            border-radius: 100px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .icon::before {
+            content: '';
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            background: radial-gradient(circle at 30% 30%, rgba(74, 222, 128, 0.2) 0%, transparent 50%);
+        }
+
+        .logo {
+            width: 380px;
+            height: 380px;
+            z-index: 1;
+        }
+    </style>
+</head>
+<body>
+    <div class="icon">
+        <svg class="logo" viewBox="0 0 1024 1024" xmlns="http://www.w3.org/2000/svg">
+            <defs>
+                <linearGradient id="logoGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+                    <stop offset="0%" stop-color="#4ade80" />
+                    <stop offset="100%" stop-color="#22c55e" />
+                </linearGradient>
+            </defs>
+            <circle cx="512" cy="512" r="420" fill="none" stroke="url(#logoGrad)" stroke-width="35" opacity="0.4"/>
+            <circle cx="512" cy="512" r="320" fill="none" stroke="url(#logoGrad)" stroke-width="30" opacity="0.6"/>
+            <circle cx="512" cy="512" r="220" fill="url(#logoGrad)"/>
+            <polyline points="400,512 480,592 624,436" fill="none" stroke="white" stroke-width="55" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+    </div>
+</body>
+</html>

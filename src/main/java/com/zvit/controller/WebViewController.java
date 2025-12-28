@@ -61,6 +61,22 @@ public class WebViewController {
     }
 
     /**
+     * GET /feature-graphic - Банер для Google Play (1024x500)
+     */
+    @GetMapping("/feature-graphic")
+    public String featureGraphic() {
+        return "feature-graphic";
+    }
+
+    /**
+     * GET /app-icon - Іконка для Google Play (512x512)
+     */
+    @GetMapping("/app-icon")
+    public String appIcon() {
+        return "app-icon";
+    }
+
+    /**
      * GET /admin/qr-access
      * Сторінка для адміністраторів з rate limiting (1 раз на 5 хв)
      */

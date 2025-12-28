@@ -33,6 +33,8 @@ public class SecurityConfig {
                 .requestMatchers("/privacy-policy").permitAll() // Privacy policy
                 .requestMatchers("/terms").permitAll() // Terms of service
                 .requestMatchers("/delete-account").permitAll() // Account deletion instructions
+                .requestMatchers("/feature-graphic").permitAll() // Feature graphic for Play Store
+                .requestMatchers("/app-icon").permitAll() // App icon for Play Store
                 .requestMatchers("/admin/**").permitAll() // Admin QR access (з rate limiting в контролері)
                 .requestMatchers("/api/health").permitAll() // Health check endpoint
                 .requestMatchers("/api/v1/auth/register").permitAll()
