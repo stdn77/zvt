@@ -5,6 +5,7 @@ import com.zvit.dto.request.JoinGroupRequest;
 import com.zvit.dto.request.LoginRequest;
 import com.zvit.dto.request.RegisterRequest;
 import com.zvit.dto.request.SimpleReportRequest;
+import com.zvit.dto.request.UpdateProfileRequest;
 import com.zvit.dto.response.ApiResponse;
 import com.zvit.dto.response.GroupResponse;
 import com.zvit.dto.response.LoginResponse;
@@ -13,6 +14,7 @@ import com.zvit.dto.response.ReportResponse;
 import com.zvit.service.AuthService;
 import com.zvit.service.GroupService;
 import com.zvit.service.ReportService;
+import com.zvit.service.UserService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -36,6 +38,7 @@ public class PwaController {
     private final GroupService groupService;
     private final ReportService reportService;
     private final AuthService authService;
+    private final UserService userService;
 
     /**
      * PWA Login - без шифрування
@@ -160,5 +163,33 @@ public class PwaController {
         String userId = authentication.getName();
         List<ReportResponse> reports = reportService.getAllMyReports(userId);
         return ResponseEntity.ok(ApiResponse.success("Звіти отримано", reports));
+    }
+
+    /**
+     * Вийти з групи (без шифрування)
+     */
+    @DeleteMapping("/groups/{groupId}/leave")
+    public ResponseEntity<ApiResponse<Void>> leaveGroup(
+            @PathVariable String groupId,
+            Authentication authentication
+    ) {
+        String userId = authentication.getName();
+        log.info("PWA: User {} leaving group: {}", userId, groupId);
+        groupService.leaveGroup(groupId, userId);
+        return ResponseEntity.ok(ApiResponse.success("Ви вийшли з групи", null));
+    }
+
+    /**
+     * Оновити профіль (без шифрування)
+     */
+    @PutMapping("/profile")
+    public ResponseEntity<ApiResponse<Void>> updateProfile(
+            @RequestBody UpdateProfileRequest request,
+            Authentication authentication
+    ) {
+        String userId = authentication.getName();
+        log.info("PWA: Updating profile for user: {}", userId);
+        userService.updateProfile(userId, request);
+        return ResponseEntity.ok(ApiResponse.success("Профіль оновлено", null));
     }
 }

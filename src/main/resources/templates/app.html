@@ -888,6 +888,11 @@
                 </div>
                 <h1 class="header-title" id="groupTitle">Група</h1>
             </div>
+            <div class="header-icon" onclick="showLeaveGroupConfirm()" title="Вийти з групи" style="color: var(--danger);">
+                <svg viewBox="0 0 24 24" fill="currentColor" width="24" height="24">
+                    <path d="M10.09 15.59L11.5 17l5-5-5-5-1.41 1.41L12.67 11H3v2h9.67l-2.58 2.59zM19 3H5c-1.11 0-2 .9-2 2v4h2V5h14v14H5v-4H3v4c0 1.1.89 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2z"/>
+                </svg>
+            </div>
         </div>
 
         <div id="reportsList">
@@ -915,13 +920,33 @@
     <!-- Settings Screen -->
     <div id="settingsScreen" class="screen">
         <div class="header">
-            <div style="display: flex; align-items: center; gap: 12px;">
-                <div class="header-icon" onclick="showScreen('mainScreen')">
-                    <svg viewBox="0 0 24 24" fill="currentColor" width="24" height="24">
-                        <path d="M20 11H7.83l5.59-5.59L12 4l-8 8 8 8 1.41-1.41L7.83 13H20v-2z"/>
-                    </svg>
+            <h1 class="header-title">Профіль</h1>
+        </div>
+
+        <div class="card">
+            <div class="settings-item" onclick="showEditNameDialog()" style="cursor: pointer;">
+                <div>
+                    <span class="settings-label">Ім'я</span>
+                    <span class="settings-value" id="profileName">-</span>
                 </div>
-                <h1 class="header-title">Налаштування</h1>
+                <svg viewBox="0 0 24 24" fill="currentColor" width="20" height="20" style="opacity: 0.5;">
+                    <path d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zM20.71 7.04c.39-.39.39-1.02 0-1.41l-2.34-2.34c-.39-.39-1.02-.39-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z"/>
+                </svg>
+            </div>
+            <div class="settings-item" onclick="showEditEmailDialog()" style="cursor: pointer;">
+                <div>
+                    <span class="settings-label">Email</span>
+                    <span class="settings-value" id="profileEmail">Не вказано</span>
+                </div>
+                <svg viewBox="0 0 24 24" fill="currentColor" width="20" height="20" style="opacity: 0.5;">
+                    <path d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zM20.71 7.04c.39-.39.39-1.02 0-1.41l-2.34-2.34c-.39-.39-1.02-.39-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z"/>
+                </svg>
+            </div>
+            <div class="settings-item">
+                <div>
+                    <span class="settings-label">Телефон</span>
+                    <span class="settings-value" id="profilePhone">-</span>
+                </div>
             </div>
         </div>
 
@@ -929,14 +954,6 @@
             <div class="settings-item">
                 <span class="settings-label">Push-сповіщення</span>
                 <div class="toggle" id="notificationsToggle" onclick="toggleNotifications()"></div>
-            </div>
-            <div class="settings-item">
-                <span class="settings-label">Профіль</span>
-                <span class="settings-value" id="profileName">-</span>
-            </div>
-            <div class="settings-item">
-                <span class="settings-label">Телефон</span>
-                <span class="settings-value" id="profilePhone">-</span>
             </div>
         </div>
 
@@ -1082,6 +1099,56 @@
             </div>
             <button class="install-banner-btn" onclick="installPWA()">Встановити</button>
             <button class="install-banner-close" onclick="dismissInstallBanner()">&times;</button>
+        </div>
+    </div>
+
+    <!-- Edit Name Modal -->
+    <div class="modal" id="editNameModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>Редагувати ім'я</h2>
+                <button class="modal-close" onclick="closeModal('editNameModal')">&times;</button>
+            </div>
+            <div class="form-group">
+                <label class="form-label">Нове ім'я</label>
+                <input type="text" class="form-input" id="editNameInput" placeholder="Введіть ім'я" maxlength="50">
+            </div>
+            <button class="btn btn-primary" onclick="saveProfileName()">Зберегти</button>
+        </div>
+    </div>
+
+    <!-- Edit Email Modal -->
+    <div class="modal" id="editEmailModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>Редагувати email</h2>
+                <button class="modal-close" onclick="closeModal('editEmailModal')">&times;</button>
+            </div>
+            <p style="margin-bottom: 16px; font-size: 14px; color: var(--text-secondary);">
+                Email використовується для відновлення доступу до акаунта.
+            </p>
+            <div class="form-group">
+                <label class="form-label">Email</label>
+                <input type="email" class="form-input" id="editEmailInput" placeholder="email@example.com">
+            </div>
+            <button class="btn btn-primary" onclick="saveProfileEmail()">Зберегти</button>
+        </div>
+    </div>
+
+    <!-- Leave Group Confirmation Modal -->
+    <div class="modal" id="leaveGroupModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>Вийти з групи?</h2>
+                <button class="modal-close" onclick="closeModal('leaveGroupModal')">&times;</button>
+            </div>
+            <p style="margin-bottom: 20px; color: var(--text-secondary);">
+                Ви впевнені, що хочете вийти з групи "<span id="leaveGroupName"></span>"?
+            </p>
+            <div style="display: flex; gap: 12px;">
+                <button class="btn btn-secondary" style="flex: 1;" onclick="closeModal('leaveGroupModal')">Скасувати</button>
+                <button class="btn" style="flex: 1; background: var(--danger);" onclick="confirmLeaveGroup()">Вийти</button>
+            </div>
         </div>
     </div>
 

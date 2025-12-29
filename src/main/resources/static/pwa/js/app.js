@@ -217,6 +217,7 @@ function updateSettingsScreen() {
     if (currentUser) {
         document.getElementById('profileName').textContent = currentUser.name || '-';
         document.getElementById('profilePhone').textContent = currentUser.phone || '-';
+        document.getElementById('profileEmail').textContent = currentUser.email || 'Не вказано';
     }
     updateNotificationsToggle();
 }
@@ -399,6 +400,78 @@ function logout() {
     showToast('Ви вийшли з акаунту', 'success');
 }
 
+// Profile Editing
+function showEditNameDialog() {
+    const currentName = currentUser?.name || '';
+    document.getElementById('editNameInput').value = currentName;
+    document.getElementById('editNameModal').classList.add('active');
+}
+
+function showEditEmailDialog() {
+    const currentEmail = currentUser?.email || '';
+    document.getElementById('editEmailInput').value = currentEmail;
+    document.getElementById('editEmailModal').classList.add('active');
+}
+
+async function saveProfileName() {
+    const name = document.getElementById('editNameInput').value.trim();
+
+    if (!name) {
+        showToast('Введіть ім\'я', 'error');
+        return;
+    }
+
+    if (name.length < 2) {
+        showToast('Ім\'я має бути мінімум 2 символи', 'error');
+        return;
+    }
+
+    try {
+        const response = await apiRequest('/pwa/profile', 'PUT', { name: name });
+
+        if (response.success) {
+            currentUser.name = name;
+            localStorage.setItem('zvit_user', JSON.stringify(currentUser));
+            document.getElementById('profileName').textContent = name;
+            closeModal('editNameModal');
+            showToast('Ім\'я оновлено', 'success');
+        } else {
+            showToast(response.message || 'Помилка оновлення', 'error');
+        }
+    } catch (error) {
+        showToast(error.message || 'Помилка оновлення', 'error');
+    }
+}
+
+async function saveProfileEmail() {
+    const email = document.getElementById('editEmailInput').value.trim();
+
+    if (email && !isValidEmail(email)) {
+        showToast('Невірний формат email', 'error');
+        return;
+    }
+
+    try {
+        const response = await apiRequest('/pwa/profile', 'PUT', { email: email || null });
+
+        if (response.success) {
+            currentUser.email = email || null;
+            localStorage.setItem('zvit_user', JSON.stringify(currentUser));
+            document.getElementById('profileEmail').textContent = email || 'Не вказано';
+            closeModal('editEmailModal');
+            showToast('Email оновлено', 'success');
+        } else {
+            showToast(response.message || 'Помилка оновлення', 'error');
+        }
+    } catch (error) {
+        showToast(error.message || 'Помилка оновлення', 'error');
+    }
+}
+
+function isValidEmail(email) {
+    return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+}
+
 // Groups
 async function loadGroups() {
     const container = document.getElementById('groupsList');
@@ -562,6 +635,33 @@ async function joinGroup() {
 // Modal helpers
 function closeModal(modalId) {
     document.getElementById(modalId).classList.remove('active');
+}
+
+// Leave Group
+function showLeaveGroupConfirm() {
+    if (!currentGroup) return;
+    document.getElementById('leaveGroupName').textContent = currentGroup.name;
+    document.getElementById('leaveGroupModal').classList.add('active');
+}
+
+async function confirmLeaveGroup() {
+    if (!currentGroup) return;
+
+    try {
+        const response = await apiRequest(`/pwa/groups/${currentGroup.id}/leave`, 'DELETE');
+
+        if (response.success) {
+            closeModal('leaveGroupModal');
+            showToast('Ви вийшли з групи', 'success');
+            currentGroup = null;
+            showScreen('mainScreen');
+            loadGroups();
+        } else {
+            showToast(response.message || 'Помилка виходу з групи', 'error');
+        }
+    } catch (error) {
+        showToast(error.message || 'Помилка виходу з групи', 'error');
+    }
 }
 
 // Reports
