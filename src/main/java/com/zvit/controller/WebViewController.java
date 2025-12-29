@@ -69,6 +69,14 @@ public class WebViewController {
     }
 
     /**
+     * GET /app - PWA додаток
+     */
+    @GetMapping("/app")
+    public String pwaApp() {
+        return "app";
+    }
+
+    /**
      * GET /feature-graphic - Банер для Google Play (1024x500)
      */
     @GetMapping("/feature-graphic")

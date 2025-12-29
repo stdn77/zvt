@@ -34,6 +34,11 @@ public class SecurityConfig {
                 .requestMatchers("/terms").permitAll() // Terms of service
                 .requestMatchers("/delete-account").permitAll() // Account deletion instructions
                 .requestMatchers("/guide").permitAll() // User guide
+                .requestMatchers("/app").permitAll() // PWA application
+                .requestMatchers("/pwa/**").permitAll() // PWA static files
+                .requestMatchers("/icons/**").permitAll() // PWA icons
+                .requestMatchers("/manifest.json").permitAll() // PWA manifest
+                .requestMatchers("/service-worker.js").permitAll() // Service Worker
                 .requestMatchers("/feature-graphic").permitAll() // Feature graphic for Play Store
                 .requestMatchers("/app-icon").permitAll() // App icon for Play Store
                 .requestMatchers("/admin/**").permitAll() // Admin QR access (з rate limiting в контролері)

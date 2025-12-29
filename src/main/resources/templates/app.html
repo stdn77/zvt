@@ -1,0 +1,878 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="theme-color" content="#667eea">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="ZVIT">
+    <meta name="description" content="ZVIT - Швидка система звітування">
+
+    <title>ZVIT</title>
+
+    <!-- PWA -->
+    <link rel="manifest" href="/manifest.json">
+    <link rel="icon" type="image/svg+xml" href="/icons/icon.svg">
+    <link rel="apple-touch-icon" href="/icons/icon.svg">
+
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --primary: #667eea;
+            --primary-dark: #5568d3;
+            --secondary: #764ba2;
+            --success: #4CAF50;
+            --warning: #FFD54F;
+            --danger: #E57373;
+            --bg-dark: #1a1a2e;
+            --bg-card: #16213e;
+            --text-primary: #ffffff;
+            --text-secondary: #a0a0a0;
+            --border-radius: 12px;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif;
+            background: var(--bg-dark);
+            color: var(--text-primary);
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+
+        /* Screens */
+        .screen {
+            display: none;
+            min-height: 100vh;
+            padding: 20px;
+            padding-bottom: 80px;
+        }
+
+        .screen.active {
+            display: block;
+        }
+
+        /* Auth screens */
+        .auth-screen {
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            padding: 40px 20px;
+        }
+
+        .auth-logo {
+            width: 100px;
+            height: 100px;
+            margin-bottom: 20px;
+        }
+
+        .auth-title {
+            font-size: 28px;
+            font-weight: bold;
+            margin-bottom: 8px;
+        }
+
+        .auth-subtitle {
+            color: var(--text-secondary);
+            margin-bottom: 40px;
+        }
+
+        .auth-form {
+            width: 100%;
+            max-width: 360px;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-label {
+            display: block;
+            margin-bottom: 8px;
+            color: var(--text-secondary);
+            font-size: 14px;
+        }
+
+        .form-input {
+            width: 100%;
+            padding: 16px;
+            border: 2px solid transparent;
+            border-radius: var(--border-radius);
+            background: var(--bg-card);
+            color: var(--text-primary);
+            font-size: 16px;
+            transition: border-color 0.3s;
+        }
+
+        .form-input:focus {
+            outline: none;
+            border-color: var(--primary);
+        }
+
+        .form-input::placeholder {
+            color: var(--text-secondary);
+        }
+
+        .btn {
+            width: 100%;
+            padding: 16px;
+            border: none;
+            border-radius: var(--border-radius);
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            color: white;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 20px rgba(102, 126, 234, 0.4);
+        }
+
+        .btn-primary:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .btn-secondary {
+            background: transparent;
+            color: var(--primary);
+            border: 2px solid var(--primary);
+        }
+
+        .auth-link {
+            text-align: center;
+            margin-top: 20px;
+            color: var(--text-secondary);
+        }
+
+        .auth-link a {
+            color: var(--primary);
+            text-decoration: none;
+            font-weight: 600;
+        }
+
+        /* Header */
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 16px 0;
+            margin-bottom: 20px;
+        }
+
+        .header-title {
+            font-size: 24px;
+            font-weight: bold;
+        }
+
+        .header-icon {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: var(--bg-card);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+        }
+
+        /* Cards */
+        .card {
+            background: var(--bg-card);
+            border-radius: var(--border-radius);
+            padding: 20px;
+            margin-bottom: 16px;
+        }
+
+        .card-title {
+            font-size: 18px;
+            font-weight: 600;
+            margin-bottom: 12px;
+        }
+
+        /* Group card */
+        .group-card {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            cursor: pointer;
+            transition: transform 0.2s;
+        }
+
+        .group-card:hover {
+            transform: translateX(4px);
+        }
+
+        .group-icon {
+            width: 50px;
+            height: 50px;
+            border-radius: 12px;
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+        }
+
+        .group-info {
+            flex: 1;
+        }
+
+        .group-name {
+            font-weight: 600;
+            margin-bottom: 4px;
+        }
+
+        .group-members {
+            color: var(--text-secondary);
+            font-size: 14px;
+        }
+
+        .group-badge {
+            background: var(--danger);
+            color: white;
+            padding: 4px 10px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 600;
+        }
+
+        /* Report button */
+        .report-fab {
+            position: fixed;
+            bottom: 90px;
+            right: 20px;
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            border: none;
+            color: white;
+            font-size: 28px;
+            cursor: pointer;
+            box-shadow: 0 4px 20px rgba(102, 126, 234, 0.4);
+            z-index: 100;
+            transition: transform 0.2s;
+        }
+
+        .report-fab:hover {
+            transform: scale(1.1);
+        }
+
+        /* Bottom navigation */
+        .bottom-nav {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: var(--bg-card);
+            display: flex;
+            justify-content: space-around;
+            padding: 12px 0;
+            padding-bottom: calc(12px + env(safe-area-inset-bottom));
+            border-top: 1px solid rgba(255,255,255,0.1);
+            z-index: 99;
+        }
+
+        .nav-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 4px;
+            color: var(--text-secondary);
+            text-decoration: none;
+            font-size: 12px;
+            cursor: pointer;
+            transition: color 0.2s;
+        }
+
+        .nav-item.active {
+            color: var(--primary);
+        }
+
+        .nav-item svg {
+            width: 24px;
+            height: 24px;
+        }
+
+        /* Report modal */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0,0,0,0.8);
+            z-index: 200;
+            justify-content: center;
+            align-items: flex-end;
+        }
+
+        .modal.active {
+            display: flex;
+        }
+
+        .modal-content {
+            background: var(--bg-card);
+            border-radius: 24px 24px 0 0;
+            width: 100%;
+            max-height: 90vh;
+            padding: 24px;
+            padding-bottom: calc(24px + env(safe-area-inset-bottom));
+            animation: slideUp 0.3s ease;
+        }
+
+        @keyframes slideUp {
+            from {
+                transform: translateY(100%);
+            }
+            to {
+                transform: translateY(0);
+            }
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 24px;
+        }
+
+        .modal-title {
+            font-size: 20px;
+            font-weight: bold;
+        }
+
+        .modal-close {
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            background: rgba(255,255,255,0.1);
+            border: none;
+            color: white;
+            font-size: 20px;
+            cursor: pointer;
+        }
+
+        /* Report options */
+        .report-options {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 12px;
+            margin-bottom: 20px;
+        }
+
+        .report-option {
+            padding: 20px;
+            border-radius: var(--border-radius);
+            background: rgba(255,255,255,0.05);
+            border: 2px solid transparent;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .report-option:hover {
+            background: rgba(255,255,255,0.1);
+        }
+
+        .report-option.selected {
+            border-color: var(--primary);
+            background: rgba(102, 126, 234, 0.2);
+        }
+
+        .report-option.urgent {
+            border-color: var(--danger);
+            background: rgba(229, 115, 115, 0.2);
+        }
+
+        .report-emoji {
+            font-size: 32px;
+            margin-bottom: 8px;
+        }
+
+        .report-label {
+            font-size: 14px;
+        }
+
+        /* Textarea */
+        .form-textarea {
+            width: 100%;
+            padding: 16px;
+            border: 2px solid transparent;
+            border-radius: var(--border-radius);
+            background: rgba(255,255,255,0.05);
+            color: var(--text-primary);
+            font-size: 16px;
+            resize: none;
+            min-height: 100px;
+            font-family: inherit;
+        }
+
+        .form-textarea:focus {
+            outline: none;
+            border-color: var(--primary);
+        }
+
+        /* Reports list */
+        .report-item {
+            display: flex;
+            gap: 12px;
+            padding: 16px 0;
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+        }
+
+        .report-avatar {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: var(--primary);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            flex-shrink: 0;
+        }
+
+        .report-content {
+            flex: 1;
+        }
+
+        .report-header {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 4px;
+        }
+
+        .report-name {
+            font-weight: 600;
+        }
+
+        .report-time {
+            color: var(--text-secondary);
+            font-size: 12px;
+        }
+
+        .report-status {
+            display: inline-block;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 14px;
+        }
+
+        .report-status.ok {
+            background: rgba(76, 175, 80, 0.2);
+            color: var(--success);
+        }
+
+        .report-status.urgent {
+            background: rgba(229, 115, 115, 0.2);
+            color: var(--danger);
+        }
+
+        .report-comment {
+            color: var(--text-secondary);
+            font-size: 14px;
+            margin-top: 8px;
+        }
+
+        /* Loading */
+        .loading {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 40px;
+        }
+
+        .spinner {
+            width: 40px;
+            height: 40px;
+            border: 3px solid rgba(255,255,255,0.1);
+            border-top-color: var(--primary);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        /* Toast */
+        .toast {
+            position: fixed;
+            bottom: 100px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: var(--bg-card);
+            color: white;
+            padding: 12px 24px;
+            border-radius: 8px;
+            z-index: 300;
+            opacity: 0;
+            transition: opacity 0.3s;
+        }
+
+        .toast.show {
+            opacity: 1;
+        }
+
+        .toast.error {
+            background: var(--danger);
+        }
+
+        .toast.success {
+            background: var(--success);
+        }
+
+        /* Empty state */
+        .empty-state {
+            text-align: center;
+            padding: 60px 20px;
+            color: var(--text-secondary);
+        }
+
+        .empty-state svg {
+            width: 80px;
+            height: 80px;
+            margin-bottom: 20px;
+            opacity: 0.5;
+        }
+
+        /* Install banner */
+        .install-banner {
+            display: none;
+            position: fixed;
+            bottom: 70px;
+            left: 20px;
+            right: 20px;
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            padding: 16px;
+            border-radius: var(--border-radius);
+            z-index: 98;
+        }
+
+        .install-banner.show {
+            display: block;
+        }
+
+        .install-banner-content {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .install-banner-text {
+            flex: 1;
+        }
+
+        .install-banner-text strong {
+            display: block;
+            margin-bottom: 4px;
+        }
+
+        .install-banner-text span {
+            font-size: 12px;
+            opacity: 0.9;
+        }
+
+        .install-banner-btn {
+            padding: 8px 16px;
+            background: white;
+            color: var(--primary);
+            border: none;
+            border-radius: 8px;
+            font-weight: 600;
+            cursor: pointer;
+        }
+
+        .install-banner-close {
+            background: none;
+            border: none;
+            color: white;
+            font-size: 20px;
+            cursor: pointer;
+            padding: 4px;
+        }
+
+        /* Settings */
+        .settings-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 16px 0;
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+        }
+
+        .settings-item:last-child {
+            border-bottom: none;
+        }
+
+        .settings-label {
+            font-weight: 500;
+        }
+
+        .settings-value {
+            color: var(--text-secondary);
+        }
+
+        /* Toggle switch */
+        .toggle {
+            width: 50px;
+            height: 28px;
+            background: rgba(255,255,255,0.2);
+            border-radius: 14px;
+            position: relative;
+            cursor: pointer;
+            transition: background 0.3s;
+        }
+
+        .toggle.active {
+            background: var(--primary);
+        }
+
+        .toggle::after {
+            content: '';
+            position: absolute;
+            width: 24px;
+            height: 24px;
+            background: white;
+            border-radius: 50%;
+            top: 2px;
+            left: 2px;
+            transition: transform 0.3s;
+        }
+
+        .toggle.active::after {
+            transform: translateX(22px);
+        }
+    </style>
+</head>
+<body>
+    <!-- Login Screen -->
+    <div id="loginScreen" class="screen auth-screen active">
+        <img src="/icons/icon.svg" alt="ZVIT" class="auth-logo">
+        <h1 class="auth-title">ZVIT</h1>
+        <p class="auth-subtitle">Система швидкого звітування</p>
+
+        <form class="auth-form" id="loginForm">
+            <div class="form-group">
+                <label class="form-label">Номер телефону</label>
+                <input type="tel" class="form-input" id="loginPhone" placeholder="+380XXXXXXXXX" required>
+            </div>
+            <div class="form-group">
+                <label class="form-label">Пароль</label>
+                <input type="password" class="form-input" id="loginPassword" placeholder="Введіть пароль" required>
+            </div>
+            <button type="submit" class="btn btn-primary" id="loginBtn">Увійти</button>
+        </form>
+
+        <p class="auth-link">
+            Немає акаунту? <a href="#" onclick="showScreen('registerScreen')">Зареєструватися</a>
+        </p>
+    </div>
+
+    <!-- Register Screen -->
+    <div id="registerScreen" class="screen auth-screen">
+        <img src="/icons/icon.svg" alt="ZVIT" class="auth-logo">
+        <h1 class="auth-title">Реєстрація</h1>
+        <p class="auth-subtitle">Створіть новий акаунт</p>
+
+        <form class="auth-form" id="registerForm">
+            <div class="form-group">
+                <label class="form-label">Ім'я</label>
+                <input type="text" class="form-input" id="registerName" placeholder="Ваше ім'я" required>
+            </div>
+            <div class="form-group">
+                <label class="form-label">Номер телефону</label>
+                <input type="tel" class="form-input" id="registerPhone" placeholder="+380XXXXXXXXX" required>
+            </div>
+            <div class="form-group">
+                <label class="form-label">Пароль</label>
+                <input type="password" class="form-input" id="registerPassword" placeholder="Мінімум 6 символів" required>
+            </div>
+            <button type="submit" class="btn btn-primary" id="registerBtn">Зареєструватися</button>
+        </form>
+
+        <p class="auth-link">
+            Вже є акаунт? <a href="#" onclick="showScreen('loginScreen')">Увійти</a>
+        </p>
+    </div>
+
+    <!-- Verification Screen -->
+    <div id="verifyScreen" class="screen auth-screen">
+        <h1 class="auth-title">Верифікація</h1>
+        <p class="auth-subtitle">Введіть код з SMS</p>
+
+        <form class="auth-form" id="verifyForm">
+            <div class="form-group">
+                <label class="form-label">Код верифікації</label>
+                <input type="text" class="form-input" id="verifyCode" placeholder="XXXXXX" maxlength="6" required style="text-align: center; font-size: 24px; letter-spacing: 8px;">
+            </div>
+            <button type="submit" class="btn btn-primary">Підтвердити</button>
+        </form>
+    </div>
+
+    <!-- Main Screen (Groups) -->
+    <div id="mainScreen" class="screen">
+        <div class="header">
+            <h1 class="header-title">Мої групи</h1>
+            <div class="header-icon" onclick="showScreen('settingsScreen')">
+                <svg viewBox="0 0 24 24" fill="currentColor" width="24" height="24">
+                    <path d="M12 15.5A3.5 3.5 0 0 1 8.5 12 3.5 3.5 0 0 1 12 8.5a3.5 3.5 0 0 1 3.5 3.5 3.5 3.5 0 0 1-3.5 3.5m7.43-2.53c.04-.32.07-.64.07-.97 0-.33-.03-.66-.07-1l2.11-1.63c.19-.15.24-.42.12-.64l-2-3.46c-.12-.22-.39-.31-.61-.22l-2.49 1c-.52-.39-1.06-.73-1.69-.98l-.37-2.65A.506.506 0 0 0 14 2h-4c-.25 0-.46.18-.5.42l-.37 2.65c-.63.25-1.17.59-1.69.98l-2.49-1c-.22-.09-.49 0-.61.22l-2 3.46c-.13.22-.07.49.12.64L4.57 11c-.04.34-.07.67-.07 1 0 .33.03.65.07.97l-2.11 1.66c-.19.15-.25.42-.12.64l2 3.46c.12.22.39.3.61.22l2.49-1.01c.52.4 1.06.74 1.69.99l.37 2.65c.04.24.25.42.5.42h4c.25 0 .46-.18.5-.42l.37-2.65c.63-.26 1.17-.59 1.69-.99l2.49 1.01c.22.08.49 0 .61-.22l2-3.46c.12-.22.07-.49-.12-.64l-2.11-1.66Z"/>
+                </svg>
+            </div>
+        </div>
+
+        <div id="groupsList">
+            <div class="loading">
+                <div class="spinner"></div>
+            </div>
+        </div>
+
+        <button class="report-fab" onclick="openReportModal()">+</button>
+    </div>
+
+    <!-- Group Detail Screen -->
+    <div id="groupScreen" class="screen">
+        <div class="header">
+            <div style="display: flex; align-items: center; gap: 12px;">
+                <div class="header-icon" onclick="showScreen('mainScreen')">
+                    <svg viewBox="0 0 24 24" fill="currentColor" width="24" height="24">
+                        <path d="M20 11H7.83l5.59-5.59L12 4l-8 8 8 8 1.41-1.41L7.83 13H20v-2z"/>
+                    </svg>
+                </div>
+                <h1 class="header-title" id="groupTitle">Група</h1>
+            </div>
+        </div>
+
+        <div id="reportsList">
+            <div class="loading">
+                <div class="spinner"></div>
+            </div>
+        </div>
+
+        <button class="report-fab" onclick="openReportModal()">+</button>
+    </div>
+
+    <!-- Settings Screen -->
+    <div id="settingsScreen" class="screen">
+        <div class="header">
+            <div style="display: flex; align-items: center; gap: 12px;">
+                <div class="header-icon" onclick="showScreen('mainScreen')">
+                    <svg viewBox="0 0 24 24" fill="currentColor" width="24" height="24">
+                        <path d="M20 11H7.83l5.59-5.59L12 4l-8 8 8 8 1.41-1.41L7.83 13H20v-2z"/>
+                    </svg>
+                </div>
+                <h1 class="header-title">Налаштування</h1>
+            </div>
+        </div>
+
+        <div class="card">
+            <div class="settings-item">
+                <span class="settings-label">Push-сповіщення</span>
+                <div class="toggle" id="notificationsToggle" onclick="toggleNotifications()"></div>
+            </div>
+            <div class="settings-item">
+                <span class="settings-label">Профіль</span>
+                <span class="settings-value" id="profileName">-</span>
+            </div>
+            <div class="settings-item">
+                <span class="settings-label">Телефон</span>
+                <span class="settings-value" id="profilePhone">-</span>
+            </div>
+        </div>
+
+        <div class="card">
+            <div class="settings-item">
+                <span class="settings-label">Версія</span>
+                <span class="settings-value">PWA 1.0.0</span>
+            </div>
+        </div>
+
+        <button class="btn btn-secondary" style="margin-top: 20px;" onclick="logout()">Вийти</button>
+    </div>
+
+    <!-- Report Modal -->
+    <div id="reportModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 class="modal-title">Відправити звіт</h2>
+                <button class="modal-close" onclick="closeReportModal()">&times;</button>
+            </div>
+
+            <div class="report-options" id="reportOptions">
+                <div class="report-option selected" data-response="OK" onclick="selectReportOption(this)">
+                    <div class="report-emoji">👍</div>
+                    <div class="report-label">OK</div>
+                </div>
+                <div class="report-option" data-response="Так" onclick="selectReportOption(this)">
+                    <div class="report-emoji">✅</div>
+                    <div class="report-label">Так</div>
+                </div>
+                <div class="report-option" data-response="Ні" onclick="selectReportOption(this)">
+                    <div class="report-emoji">❌</div>
+                    <div class="report-label">Ні</div>
+                </div>
+                <div class="report-option urgent" data-response="ТЕРМІНОВО" onclick="selectReportOption(this)">
+                    <div class="report-emoji">🚨</div>
+                    <div class="report-label">ТЕРМІНОВО</div>
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label class="form-label">Коментар (необов'язково)</label>
+                <textarea class="form-textarea" id="reportComment" placeholder="Додатковий коментар..."></textarea>
+            </div>
+
+            <button class="btn btn-primary" onclick="sendReport()">Відправити звіт</button>
+        </div>
+    </div>
+
+    <!-- Bottom Navigation -->
+    <div class="bottom-nav" id="bottomNav" style="display: none;">
+        <div class="nav-item active" onclick="showScreen('mainScreen')">
+            <svg viewBox="0 0 24 24" fill="currentColor">
+                <path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z"/>
+            </svg>
+            <span>Групи</span>
+        </div>
+        <div class="nav-item" onclick="showScreen('settingsScreen')">
+            <svg viewBox="0 0 24 24" fill="currentColor">
+                <path d="M12 15.5A3.5 3.5 0 0 1 8.5 12 3.5 3.5 0 0 1 12 8.5a3.5 3.5 0 0 1 3.5 3.5 3.5 3.5 0 0 1-3.5 3.5m7.43-2.53c.04-.32.07-.64.07-.97 0-.33-.03-.66-.07-1l2.11-1.63c.19-.15.24-.42.12-.64l-2-3.46c-.12-.22-.39-.31-.61-.22l-2.49 1c-.52-.39-1.06-.73-1.69-.98l-.37-2.65A.506.506 0 0 0 14 2h-4c-.25 0-.46.18-.5.42l-.37 2.65c-.63.25-1.17.59-1.69.98l-2.49-1c-.22-.09-.49 0-.61.22l-2 3.46c-.13.22-.07.49.12.64L4.57 11c-.04.34-.07.67-.07 1 0 .33.03.65.07.97l-2.11 1.66c-.19.15-.25.42-.12.64l2 3.46c.12.22.39.3.61.22l2.49-1.01c.52.4 1.06.74 1.69.99l.37 2.65c.04.24.25.42.5.42h4c.25 0 .46-.18.5-.42l.37-2.65c.63-.26 1.17-.59 1.69-.99l2.49 1.01c.22.08.49 0 .61-.22l2-3.46c.12-.22.07-.49-.12-.64l-2.11-1.66Z"/>
+            </svg>
+            <span>Налаштування</span>
+        </div>
+    </div>
+
+    <!-- Install Banner -->
+    <div class="install-banner" id="installBanner">
+        <div class="install-banner-content">
+            <div class="install-banner-text">
+                <strong>Встановити ZVIT</strong>
+                <span>Додайте на головний екран для швидкого доступу</span>
+            </div>
+            <button class="install-banner-btn" onclick="installPWA()">Встановити</button>
+            <button class="install-banner-close" onclick="dismissInstallBanner()">&times;</button>
+        </div>
+    </div>
+
+    <!-- Toast -->
+    <div class="toast" id="toast"></div>
+
+    <script src="/pwa/js/app.js"></script>
+</body>
+</html>
