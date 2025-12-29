@@ -55,6 +55,11 @@ function togglePassword(inputId, button) {
     button.querySelector('svg').innerHTML = isPassword ? eyeClosed : eyeOpen;
 }
 
+// Forgot Password
+function showForgotPasswordInfo() {
+    document.getElementById('forgotPasswordModal').classList.add('active');
+}
+
 function setupPhoneInput(input) {
     input.addEventListener('input', (e) => {
         let value = e.target.value;
