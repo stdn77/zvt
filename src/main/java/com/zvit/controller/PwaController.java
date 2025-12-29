@@ -94,7 +94,7 @@ public class PwaController {
             Authentication authentication
     ) {
         String userId = authentication.getName();
-        List<ReportResponse> reports = reportService.getGroupReports(groupId, userId);
+        List<ReportResponse> reports = reportService.getAllGroupReports(groupId, userId);
         return ResponseEntity.ok(ApiResponse.success("Звіти отримано", reports));
     }
 
@@ -106,7 +106,7 @@ public class PwaController {
             Authentication authentication
     ) {
         String userId = authentication.getName();
-        List<ReportResponse> reports = reportService.getUserReports(userId);
+        List<ReportResponse> reports = reportService.getAllMyReports(userId);
         return ResponseEntity.ok(ApiResponse.success("Звіти отримано", reports));
     }
 }
