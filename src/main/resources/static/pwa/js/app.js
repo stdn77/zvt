@@ -429,16 +429,20 @@ function renderGroups(groups) {
         return;
     }
 
-    container.innerHTML = groups.map(group => `
-        <div class="card group-card" onclick="openGroup('${group.id}', '${escapeHtml(group.name)}')">
-            <div class="group-icon">${group.name.charAt(0).toUpperCase()}</div>
+    container.innerHTML = groups.map(group => {
+        const name = group.externalName || group.name || 'Група';
+        const id = group.groupId || group.id;
+        const members = group.currentMembers || group.memberCount || 0;
+        return `
+        <div class="card group-card" onclick="openGroup('${id}', '${escapeHtml(name)}')">
+            <div class="group-icon">${name.charAt(0).toUpperCase()}</div>
             <div class="group-info">
-                <div class="group-name">${escapeHtml(group.name)}</div>
-                <div class="group-members">${group.memberCount || 0} учасників</div>
+                <div class="group-name">${escapeHtml(name)}</div>
+                <div class="group-members">${members} учасників</div>
             </div>
             ${group.pendingReports > 0 ? `<div class="group-badge">${group.pendingReports}</div>` : ''}
         </div>
-    `).join('');
+    `}).join('');
 }
 
 async function openGroup(groupId, groupName) {
