@@ -458,7 +458,9 @@ async function loadReports(groupId) {
     container.innerHTML = '<div class="loading"><div class="spinner"></div></div>';
 
     try {
+        console.log('[PWA] Loading reports for group:', groupId);
         const response = await apiRequest(`/pwa/groups/${groupId}/reports`, 'GET');
+        console.log('[PWA] Reports response:', response);
 
         if (response.success && response.data) {
             renderReports(response.data);
@@ -473,9 +475,11 @@ async function loadReports(groupId) {
             `;
         }
     } catch (error) {
+        console.error('[PWA] Reports loading error:', error);
         container.innerHTML = `
             <div class="card" style="text-align: center; color: var(--danger);">
                 <p>Помилка завантаження звітів</p>
+                <p style="font-size: 12px; margin-top: 5px; opacity: 0.7;">${error.message || 'Невідома помилка'}</p>
             </div>
         `;
     }
@@ -496,19 +500,24 @@ function renderReports(reports) {
         return;
     }
 
-    container.innerHTML = `<div class="card">${reports.map(report => `
+    container.innerHTML = `<div class="card">${reports.map(report => {
+        const userName = report.userName || 'Невідомий';
+        const response = report.simpleResponse || report.response || '';
+        const time = report.submittedAt || report.createdAt;
+        const isUrgent = response.toUpperCase().includes('ТЕРМІНОВ') || response.toUpperCase() === 'НЕ ОК';
+        return `
         <div class="report-item">
-            <div class="report-avatar">${(report.userName || 'U').charAt(0).toUpperCase()}</div>
+            <div class="report-avatar">${userName.charAt(0).toUpperCase()}</div>
             <div class="report-content">
                 <div class="report-header">
-                    <span class="report-name">${escapeHtml(report.userName || 'Невідомий')}</span>
-                    <span class="report-time">${formatTime(report.createdAt)}</span>
+                    <span class="report-name">${escapeHtml(userName)}</span>
+                    <span class="report-time">${formatTime(time)}</span>
                 </div>
-                <span class="report-status ${report.response === 'ТЕРМІНОВО' ? 'urgent' : 'ok'}">${escapeHtml(report.response)}</span>
+                <span class="report-status ${isUrgent ? 'urgent' : 'ok'}">${escapeHtml(response)}</span>
                 ${report.comment ? `<div class="report-comment">${escapeHtml(report.comment)}</div>` : ''}
             </div>
         </div>
-    `).join('')}</div>`;
+    `}).join('')}</div>`;
 }
 
 // Report Modal
