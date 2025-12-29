@@ -128,8 +128,10 @@ public class PwaController {
             Authentication authentication
     ) {
         String userId = authentication.getName();
+        // Ensure groupId from path matches request
+        request.setGroupId(groupId);
         log.info("PWA: Submitting simple report to group: {} by user: {}", groupId, userId);
-        ReportResponse response = reportService.submitSimpleReport(groupId, request, userId);
+        ReportResponse response = reportService.createSimpleReport(request, userId);
         return ResponseEntity
                 .status(HttpStatus.CREATED)
                 .body(ApiResponse.success("Звіт надіслано", response));
