@@ -9,6 +9,73 @@ let deferredPrompt = null;
 // API Base URL
 const API_BASE = '/api/v1';
 
+// Phone utilities
+function normalizePhone(phone) {
+    // Видаляємо всі символи крім цифр
+    let digits = phone.replace(/\D/g, '');
+
+    // Нормалізуємо до формату 380XXXXXXXXX
+    if (digits.startsWith('380')) {
+        // Вже правильний формат
+    } else if (digits.startsWith('80')) {
+        digits = '3' + digits;
+    } else if (digits.startsWith('0')) {
+        digits = '38' + digits;
+    } else if (digits.length === 9) {
+        // 671111111 -> 380671111111
+        digits = '380' + digits;
+    }
+
+    return digits;
+}
+
+function formatPhoneDisplay(phone) {
+    const digits = normalizePhone(phone);
+    if (digits.length === 12) {
+        // 380671111111 -> +380 67 111 11 11
+        return `+${digits.slice(0,3)} ${digits.slice(3,5)} ${digits.slice(5,8)} ${digits.slice(8,10)} ${digits.slice(10,12)}`;
+    }
+    return phone;
+}
+
+function setupPhoneInput(input) {
+    input.addEventListener('input', (e) => {
+        let value = e.target.value;
+
+        // Якщо користувач почав вводити без +, додаємо +380
+        if (value && !value.startsWith('+')) {
+            const digits = value.replace(/\D/g, '');
+            if (digits.length > 0) {
+                if (digits.startsWith('380')) {
+                    value = '+' + digits;
+                } else if (digits.startsWith('80')) {
+                    value = '+3' + digits;
+                } else if (digits.startsWith('0')) {
+                    value = '+38' + digits;
+                } else {
+                    value = '+380' + digits;
+                }
+            }
+        }
+
+        // Форматуємо для відображення
+        const digits = value.replace(/\D/g, '');
+        if (digits.length >= 3) {
+            let formatted = '+' + digits.slice(0, 3);
+            if (digits.length > 3) formatted += ' ' + digits.slice(3, 5);
+            if (digits.length > 5) formatted += ' ' + digits.slice(5, 8);
+            if (digits.length > 8) formatted += ' ' + digits.slice(8, 10);
+            if (digits.length > 10) formatted += ' ' + digits.slice(10, 12);
+            e.target.value = formatted.slice(0, 17); // +380 67 111 11 11 = 17 chars
+        }
+    });
+
+    // Встановлюємо початкове значення
+    if (!input.value) {
+        input.value = '+380 ';
+    }
+}
+
 // Initialize app
 document.addEventListener('DOMContentLoaded', () => {
     initApp();
@@ -32,6 +99,10 @@ async function initApp() {
     document.getElementById('loginForm').addEventListener('submit', handleLogin);
     document.getElementById('registerForm').addEventListener('submit', handleRegister);
     document.getElementById('verifyForm').addEventListener('submit', handleVerify);
+
+    // Setup phone inputs with mask
+    setupPhoneInput(document.getElementById('loginPhone'));
+    setupPhoneInput(document.getElementById('registerPhone'));
 }
 
 // Service Worker
@@ -135,9 +206,15 @@ function showMainScreen() {
 async function handleLogin(e) {
     e.preventDefault();
 
-    const phone = document.getElementById('loginPhone').value;
+    const phoneRaw = document.getElementById('loginPhone').value;
+    const phone = normalizePhone(phoneRaw);
     const password = document.getElementById('loginPassword').value;
     const btn = document.getElementById('loginBtn');
+
+    if (phone.length !== 12) {
+        showToast('Невірний формат телефону', 'error');
+        return;
+    }
 
     btn.disabled = true;
     btn.textContent = 'Вхід...';
@@ -185,9 +262,15 @@ async function handleRegister(e) {
     e.preventDefault();
 
     const name = document.getElementById('registerName').value;
-    const phone = document.getElementById('registerPhone').value;
+    const phoneRaw = document.getElementById('registerPhone').value;
+    const phone = normalizePhone(phoneRaw);
     const password = document.getElementById('registerPassword').value;
     const btn = document.getElementById('registerBtn');
+
+    if (phone.length !== 12) {
+        showToast('Невірний формат телефону', 'error');
+        return;
+    }
 
     if (password.length < 6) {
         showToast('Пароль має бути мінімум 6 символів', 'error');
