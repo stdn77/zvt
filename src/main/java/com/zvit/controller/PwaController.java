@@ -142,6 +142,7 @@ public class PwaController {
 
     /**
      * Отримати звіти групи (без шифрування)
+     * Адміни бачать всі звіти, звичайні члени - тільки свої
      */
     @GetMapping("/groups/{groupId}/reports")
     public ResponseEntity<ApiResponse<List<ReportResponse>>> getGroupReports(
@@ -149,7 +150,16 @@ public class PwaController {
             Authentication authentication
     ) {
         String userId = authentication.getName();
-        List<ReportResponse> reports = reportService.getAllGroupReports(groupId, userId);
+        List<ReportResponse> reports;
+
+        try {
+            // Спробуємо отримати всі звіти (працює тільки для адмінів)
+            reports = reportService.getAllGroupReports(groupId, userId);
+        } catch (RuntimeException e) {
+            // Якщо не адмін - отримуємо тільки свої звіти
+            reports = reportService.getMyReports(groupId, userId);
+        }
+
         return ResponseEntity.ok(ApiResponse.success("Звіти отримано", reports));
     }
 
