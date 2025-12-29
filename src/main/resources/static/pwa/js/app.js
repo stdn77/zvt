@@ -26,13 +26,16 @@ function normalizePhone(phone) {
         digits = '380' + digits;
     }
 
-    return digits;
+    // Повертаємо з + для API (сервер очікує +380XXXXXXXXX)
+    return '+' + digits;
 }
 
 function formatPhoneDisplay(phone) {
-    const digits = normalizePhone(phone);
-    if (digits.length === 12) {
-        // 380671111111 -> +380 67 111 11 11
+    const normalized = normalizePhone(phone);
+    // normalized = +380XXXXXXXXX (13 символів)
+    if (normalized.length === 13) {
+        // +380671111111 -> +380 67 111 11 11
+        const digits = normalized.slice(1); // remove +
         return `+${digits.slice(0,3)} ${digits.slice(3,5)} ${digits.slice(5,8)} ${digits.slice(8,10)} ${digits.slice(10,12)}`;
     }
     return phone;
@@ -211,7 +214,8 @@ async function handleLogin(e) {
     const password = document.getElementById('loginPassword').value;
     const btn = document.getElementById('loginBtn');
 
-    if (phone.length !== 12) {
+    // phone = +380XXXXXXXXX (13 символів)
+    if (phone.length !== 13) {
         showToast('Невірний формат телефону', 'error');
         return;
     }
@@ -264,7 +268,8 @@ async function handleRegister(e) {
     const password = document.getElementById('registerPassword').value;
     const btn = document.getElementById('registerBtn');
 
-    if (phone.length !== 12) {
+    // phone = +380XXXXXXXXX (13 символів)
+    if (phone.length !== 13) {
         showToast('Невірний формат телефону', 'error');
         return;
     }
