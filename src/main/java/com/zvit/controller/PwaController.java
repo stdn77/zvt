@@ -1,0 +1,112 @@
+package com.zvit.controller;
+
+import com.zvit.dto.request.LoginRequest;
+import com.zvit.dto.request.RegisterRequest;
+import com.zvit.dto.response.ApiResponse;
+import com.zvit.dto.response.GroupResponse;
+import com.zvit.dto.response.LoginResponse;
+import com.zvit.dto.response.RegisterResponse;
+import com.zvit.dto.response.ReportResponse;
+import com.zvit.service.AuthService;
+import com.zvit.service.GroupService;
+import com.zvit.service.ReportService;
+import jakarta.validation.Valid;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.Authentication;
+import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
+
+/**
+ * PWA Controller - API без шифрування для Progressive Web App
+ * HTTPS забезпечує безпеку передачі даних
+ */
+@Slf4j
+@RestController
+@RequestMapping("/api/v1/pwa")
+@RequiredArgsConstructor
+public class PwaController {
+
+    private final GroupService groupService;
+    private final ReportService reportService;
+    private final AuthService authService;
+
+    /**
+     * PWA Login - без шифрування
+     */
+    @PostMapping("/login")
+    public ResponseEntity<ApiResponse<LoginResponse>> login(@Valid @RequestBody LoginRequest request) {
+        log.info("PWA LOGIN: {}", request.getPhone().length() > 6 ?
+            request.getPhone().substring(0, 6) + "***" : "***");
+        LoginResponse loginData = authService.login(request);
+        log.info("PWA LOGIN successful, userId: {}", loginData.getUserId());
+        return ResponseEntity.ok(ApiResponse.success("Вхід успішний", loginData));
+    }
+
+    /**
+     * PWA Register - без шифрування
+     */
+    @PostMapping("/register")
+    public ResponseEntity<ApiResponse<RegisterResponse>> register(@Valid @RequestBody RegisterRequest request) {
+        log.info("PWA REGISTER: {}", request.getName());
+        RegisterResponse response = authService.register(request);
+        log.info("PWA REGISTER successful, userId: {}", response.getUserId());
+        return ResponseEntity
+                .status(HttpStatus.CREATED)
+                .body(ApiResponse.success("Користувача зареєстровано", response));
+    }
+
+    /**
+     * Отримати групи користувача (без шифрування)
+     */
+    @GetMapping("/groups")
+    public ResponseEntity<ApiResponse<List<GroupResponse>>> getUserGroups(
+            Authentication authentication
+    ) {
+        String userId = authentication.getName();
+        log.info("PWA: Getting groups for user: {}", userId);
+        List<GroupResponse> groups = groupService.getUserGroups(userId);
+        return ResponseEntity.ok(ApiResponse.success("Групи отримано", groups));
+    }
+
+    /**
+     * Отримати деталі групи (без шифрування)
+     */
+    @GetMapping("/groups/{groupId}")
+    public ResponseEntity<ApiResponse<GroupResponse>> getGroupById(
+            @PathVariable String groupId,
+            Authentication authentication
+    ) {
+        String userId = authentication.getName();
+        GroupResponse response = groupService.getGroupById(groupId, userId);
+        return ResponseEntity.ok(ApiResponse.success("Групу знайдено", response));
+    }
+
+    /**
+     * Отримати звіти групи (без шифрування)
+     */
+    @GetMapping("/groups/{groupId}/reports")
+    public ResponseEntity<ApiResponse<List<ReportResponse>>> getGroupReports(
+            @PathVariable String groupId,
+            Authentication authentication
+    ) {
+        String userId = authentication.getName();
+        List<ReportResponse> reports = reportService.getGroupReports(groupId, userId);
+        return ResponseEntity.ok(ApiResponse.success("Звіти отримано", reports));
+    }
+
+    /**
+     * Отримати всі звіти користувача (без шифрування)
+     */
+    @GetMapping("/reports")
+    public ResponseEntity<ApiResponse<List<ReportResponse>>> getUserReports(
+            Authentication authentication
+    ) {
+        String userId = authentication.getName();
+        List<ReportResponse> reports = reportService.getUserReports(userId);
+        return ResponseEntity.ok(ApiResponse.success("Звіти отримано", reports));
+    }
+}

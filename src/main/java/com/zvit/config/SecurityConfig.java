@@ -48,6 +48,8 @@ public class SecurityConfig {
                 .requestMatchers("/api/v1/auth/reset-password").permitAll()
                 .requestMatchers("/api/v1/auth/test").permitAll()
                 .requestMatchers("/api/v1/auth/public-key").permitAll()
+                .requestMatchers("/api/v1/pwa/login").permitAll() // PWA login without encryption
+                .requestMatchers("/api/v1/pwa/register").permitAll() // PWA register without encryption
                 .requestMatchers("/error").permitAll()
                 .requestMatchers("/web/**").permitAll()
                 .requestMatchers("/api/web/**").permitAll() // Web API з session token
@@ -60,6 +62,7 @@ public class SecurityConfig {
                 .requestMatchers("/api/v1/admin/**").authenticated()
                 .requestMatchers("/api/v1/groups/**").authenticated()
                 .requestMatchers("/api/v1/reports/**").authenticated()
+                .requestMatchers("/api/v1/pwa/**").authenticated() // PWA API (no encryption)
                 .anyRequest().authenticated()
             )
             // Rate limiting фільтр виконується першим

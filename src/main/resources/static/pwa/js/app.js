@@ -220,29 +220,26 @@ async function handleLogin(e) {
     btn.textContent = 'Вхід...';
 
     try {
-        const response = await apiRequest('/auth/login', 'POST', {
+        const response = await apiRequest('/pwa/login', 'POST', {
             phone: phone,
             password: password
         });
 
-        if (response.success) {
-            // Handle encrypted response
+        if (response.success && response.data) {
             const loginData = response.data;
 
             // Store token and user data
-            // Note: In production, you'd need to decrypt the response
-            // For PWA, we'll use a simplified flow
-            localStorage.setItem('zvit_token', loginData.token || loginData.encryptedPayload);
+            localStorage.setItem('zvit_token', loginData.token);
             localStorage.setItem('zvit_user', JSON.stringify({
                 id: loginData.userId,
                 name: loginData.name,
-                phone: phone
+                phone: formatPhoneDisplay(phone)
             }));
 
             currentUser = {
                 id: loginData.userId,
                 name: loginData.name,
-                phone: phone
+                phone: formatPhoneDisplay(phone)
             };
 
             showToast('Успішний вхід!', 'success');
@@ -281,7 +278,7 @@ async function handleRegister(e) {
     btn.textContent = 'Реєстрація...';
 
     try {
-        const response = await apiRequest('/auth/register', 'POST', {
+        const response = await apiRequest('/pwa/register', 'POST', {
             name: name,
             phone: phone,
             password: password
@@ -291,6 +288,7 @@ async function handleRegister(e) {
             // Store phone for verification
             localStorage.setItem('zvit_pending_phone', phone);
             localStorage.setItem('zvit_pending_password', password);
+            localStorage.setItem('zvit_pending_name', name);
 
             showToast('Код відправлено на ваш телефон', 'success');
             showScreen('verifyScreen');
@@ -311,31 +309,33 @@ async function handleVerify(e) {
     const code = document.getElementById('verifyCode').value;
     const phone = localStorage.getItem('zvit_pending_phone');
     const password = localStorage.getItem('zvit_pending_password');
+    const name = localStorage.getItem('zvit_pending_name');
 
     try {
         // Try to login after verification
-        const response = await apiRequest('/auth/login', 'POST', {
+        const response = await apiRequest('/pwa/login', 'POST', {
             phone: phone,
             password: password,
             verificationCode: code
         });
 
-        if (response.success) {
+        if (response.success && response.data) {
             localStorage.removeItem('zvit_pending_phone');
             localStorage.removeItem('zvit_pending_password');
+            localStorage.removeItem('zvit_pending_name');
 
             const loginData = response.data;
-            localStorage.setItem('zvit_token', loginData.token || loginData.encryptedPayload);
+            localStorage.setItem('zvit_token', loginData.token);
             localStorage.setItem('zvit_user', JSON.stringify({
                 id: loginData.userId,
-                name: loginData.name,
-                phone: phone
+                name: loginData.name || name,
+                phone: formatPhoneDisplay(phone)
             }));
 
             currentUser = {
                 id: loginData.userId,
-                name: loginData.name,
-                phone: phone
+                name: loginData.name || name,
+                phone: formatPhoneDisplay(phone)
             };
 
             showToast('Реєстрація успішна!', 'success');
@@ -363,7 +363,7 @@ async function loadGroups() {
     container.innerHTML = '<div class="loading"><div class="spinner"></div></div>';
 
     try {
-        const response = await apiRequest('/groups', 'GET');
+        const response = await apiRequest('/pwa/groups', 'GET');
 
         if (response.success && response.data) {
             renderGroups(response.data);
@@ -428,7 +428,7 @@ async function loadReports(groupId) {
     container.innerHTML = '<div class="loading"><div class="spinner"></div></div>';
 
     try {
-        const response = await apiRequest(`/reports/group/${groupId}`, 'GET');
+        const response = await apiRequest(`/pwa/groups/${groupId}/reports`, 'GET');
 
         if (response.success && response.data) {
             renderReports(response.data);
