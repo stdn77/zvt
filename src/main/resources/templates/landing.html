@@ -99,6 +99,27 @@
             font-weight: 500;
         }
 
+        .guide-link {
+            display: inline-block;
+            margin-top: 25px;
+            padding: 15px 30px;
+            background: linear-gradient(135deg, rgba(74, 222, 128, 0.2) 0%, rgba(34, 197, 94, 0.1) 100%);
+            border: 2px solid rgba(74, 222, 128, 0.4);
+            border-radius: 12px;
+            color: #4ade80;
+            text-decoration: none;
+            font-weight: 600;
+            font-size: 1.1rem;
+            transition: all 0.3s;
+        }
+
+        .guide-link:hover {
+            background: linear-gradient(135deg, rgba(74, 222, 128, 0.3) 0%, rgba(34, 197, 94, 0.2) 100%);
+            border-color: #4ade80;
+            transform: translateY(-2px);
+            box-shadow: 0 10px 30px rgba(74, 222, 128, 0.2);
+        }
+
         /* Features */
         .features {
             display: grid;
@@ -137,78 +158,162 @@
             line-height: 1.6;
         }
 
-        /* Download Section */
-        .download-section {
-            background: rgba(255, 255, 255, 0.03);
+        /* Beta Testing Section */
+        .beta-section {
+            background: linear-gradient(135deg, rgba(251, 191, 36, 0.15) 0%, rgba(245, 158, 11, 0.1) 100%);
+            border: 2px solid rgba(251, 191, 36, 0.3);
             border-radius: 24px;
             padding: 50px 30px;
             margin: 60px 0;
             text-align: center;
         }
 
-        .download-section h2 {
+        .beta-badge {
+            display: inline-block;
+            background: linear-gradient(135deg, #fbbf24 0%, #f59e0b 100%);
+            color: #000;
+            padding: 8px 20px;
+            border-radius: 20px;
+            font-weight: 700;
+            font-size: 0.85rem;
+            margin-bottom: 20px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .beta-section h2 {
             font-size: 2rem;
-            margin-bottom: 10px;
+            margin-bottom: 15px;
+            color: #fbbf24;
         }
 
-        .download-section .subtitle {
-            color: #94a3b8;
-            margin-bottom: 40px;
+        .beta-section .subtitle {
+            color: #cbd5e1;
+            margin-bottom: 30px;
+            max-width: 600px;
+            margin-left: auto;
+            margin-right: auto;
         }
 
-        .download-cards {
+        .beta-steps {
             display: flex;
             justify-content: center;
-            gap: 40px;
+            gap: 20px;
             flex-wrap: wrap;
+            margin: 40px 0;
         }
 
-        .download-card {
+        .beta-step {
             background: rgba(255, 255, 255, 0.08);
             border-radius: 16px;
-            padding: 30px;
+            padding: 25px;
             text-align: center;
-            min-width: 250px;
+            width: 200px;
+            position: relative;
         }
 
-        .download-card h4 {
-            margin-bottom: 20px;
-            font-size: 1.1rem;
-        }
-
-        .qr-placeholder {
-            width: 180px;
-            height: 180px;
-            background: #ffffff;
-            border-radius: 12px;
-            margin: 0 auto 20px;
+        .beta-step-number {
+            position: absolute;
+            top: -15px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 30px;
+            height: 30px;
+            background: linear-gradient(135deg, #fbbf24 0%, #f59e0b 100%);
+            color: #000;
+            border-radius: 50%;
             display: flex;
             align-items: center;
             justify-content: center;
-            color: #333;
+            font-weight: 700;
             font-size: 0.9rem;
-            padding: 15px;
         }
 
-        .store-badge {
-            display: inline-block;
-            padding: 12px 24px;
+        .beta-step-icon {
+            font-size: 2.5rem;
+            margin: 15px 0;
+        }
+
+        .beta-step h4 {
+            color: #fff;
+            margin-bottom: 8px;
+            font-size: 1rem;
+        }
+
+        .beta-step p {
+            color: #94a3b8;
+            font-size: 0.85rem;
+            line-height: 1.4;
+        }
+
+        .beta-download-btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 12px;
+            padding: 18px 40px;
             background: linear-gradient(135deg, #4ade80 0%, #22c55e 100%);
             color: #000;
             text-decoration: none;
-            border-radius: 8px;
-            font-weight: 600;
+            border-radius: 12px;
+            font-weight: 700;
+            font-size: 1.2rem;
             transition: transform 0.2s, box-shadow 0.2s;
+            margin-top: 20px;
         }
 
-        .store-badge:hover {
+        .beta-download-btn:hover {
             transform: scale(1.05);
-            box-shadow: 0 10px 30px rgba(74, 222, 128, 0.3);
+            box-shadow: 0 15px 40px rgba(74, 222, 128, 0.4);
         }
 
-        .store-badge.apple {
-            background: linear-gradient(135deg, #333 0%, #000 100%);
-            color: #fff;
+        .beta-download-btn svg {
+            width: 28px;
+            height: 28px;
+        }
+
+        .beta-note {
+            margin-top: 25px;
+            padding: 15px;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 12px;
+            color: #94a3b8;
+            font-size: 0.9rem;
+            max-width: 500px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+
+        .beta-note strong {
+            color: #fbbf24;
+        }
+
+        /* Screenshots */
+        .screenshots {
+            display: flex;
+            justify-content: center;
+            gap: 30px;
+            margin: 40px 0;
+            flex-wrap: wrap;
+        }
+
+        .screenshot {
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 20px;
+            padding: 15px;
+            max-width: 280px;
+        }
+
+        .screenshot img {
+            width: 100%;
+            border-radius: 12px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+        }
+
+        .screenshot-caption {
+            text-align: center;
+            margin-top: 12px;
+            color: #94a3b8;
+            font-size: 0.85rem;
         }
 
         /* Admin Section */
@@ -344,6 +449,9 @@
                         Спробуйте! Буду вдячний, якщо залишите відгук про програму в Google Play або App Store.
                     </p>
                 </div>
+                <a href="/guide" class="guide-link">
+                    📖 Інструкція користувача — як користуватись програмою
+                </a>
             </div>
         </section>
 
@@ -381,28 +489,47 @@
             </div>
         </section>
 
-        <!-- Download -->
-        <section class="download-section">
-            <h2>Завантажити додаток</h2>
-            <p class="subtitle">Доступно для Android та iOS</p>
+        <!-- Beta Testing -->
+        <section class="beta-section">
+            <span class="beta-badge">🧪 Beta Testing</span>
+            <h2>Станьте бета-тестером ZVIT</h2>
+            <p class="subtitle">
+                Приєднуйтесь до програми тестування та допоможіть зробити ZVIT кращим!
+                Отримуйте нові функції першими та діліться своїми враженнями.
+            </p>
 
-            <div class="download-cards">
-                <div class="download-card">
-                    <h4>Android</h4>
-                    <div class="qr-placeholder" id="qr-android">
-                        <!-- QR code буде тут -->
-                        QR-код<br>Play Market<br><small>(скоро)</small>
-                    </div>
-                    <a href="#" class="store-badge">Google Play</a>
+            <div class="beta-steps">
+                <div class="beta-step">
+                    <div class="beta-step-number">1</div>
+                    <div class="beta-step-icon">🔗</div>
+                    <h4>Перейдіть за посиланням</h4>
+                    <p>Натисніть кнопку нижче для переходу на сторінку тестування</p>
                 </div>
-                <div class="download-card">
-                    <h4>iOS</h4>
-                    <div class="qr-placeholder" id="qr-ios">
-                        <!-- QR code буде тут -->
-                        QR-код<br>App Store<br><small>(скоро)</small>
-                    </div>
-                    <a href="#" class="store-badge apple">App Store</a>
+                <div class="beta-step">
+                    <div class="beta-step-number">2</div>
+                    <div class="beta-step-icon">✅</div>
+                    <h4>Приєднайтесь до програми</h4>
+                    <p>Натисніть "Become a tester" на сторінці Google Play</p>
                 </div>
+                <div class="beta-step">
+                    <div class="beta-step-number">3</div>
+                    <div class="beta-step-icon">📲</div>
+                    <h4>Встановіть додаток</h4>
+                    <p>Завантажте ZVIT з Google Play після приєднання</p>
+                </div>
+            </div>
+
+            <a href="https://play.google.com/apps/testing/com.zvit.app" target="_blank" class="beta-download-btn">
+                <svg viewBox="0 0 24 24" fill="currentColor">
+                    <path d="M3,20.5V3.5C3,2.91 3.34,2.39 3.84,2.15L13.69,12L3.84,21.85C3.34,21.6 3,21.09 3,20.5M16.81,15.12L6.05,21.34L14.54,12.85L16.81,15.12M20.16,10.81C20.5,11.08 20.75,11.5 20.75,12C20.75,12.5 20.53,12.9 20.18,13.18L17.89,14.5L15.39,12L17.89,9.5L20.16,10.81M6.05,2.66L16.81,8.88L14.54,11.15L6.05,2.66Z"/>
+                </svg>
+                Приєднатися до тестування
+            </a>
+
+            <div class="beta-note">
+                <strong>💡 Примітка:</strong> Після приєднання до програми тестування,
+                оновлення можуть з'являтися з невеликою затримкою. Перевіряйте Google Play
+                через кілька хвилин після реєстрації.
             </div>
         </section>
 

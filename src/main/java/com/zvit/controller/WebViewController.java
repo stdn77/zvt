@@ -61,6 +61,14 @@ public class WebViewController {
     }
 
     /**
+     * GET /guide - Інструкція користувача
+     */
+    @GetMapping("/guide")
+    public String userGuide() {
+        return "guide";
+    }
+
+    /**
      * GET /feature-graphic - Банер для Google Play (1024x500)
      */
     @GetMapping("/feature-graphic")
