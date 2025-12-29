@@ -1,7 +1,10 @@
 package com.zvit.controller;
 
+import com.zvit.dto.request.CreateGroupRequest;
+import com.zvit.dto.request.JoinGroupRequest;
 import com.zvit.dto.request.LoginRequest;
 import com.zvit.dto.request.RegisterRequest;
+import com.zvit.dto.request.SimpleReportRequest;
 import com.zvit.dto.response.ApiResponse;
 import com.zvit.dto.response.GroupResponse;
 import com.zvit.dto.response.LoginResponse;
@@ -83,6 +86,53 @@ public class PwaController {
         String userId = authentication.getName();
         GroupResponse response = groupService.getGroupById(groupId, userId);
         return ResponseEntity.ok(ApiResponse.success("Групу знайдено", response));
+    }
+
+    /**
+     * Створити групу (без шифрування)
+     */
+    @PostMapping("/groups")
+    public ResponseEntity<ApiResponse<GroupResponse>> createGroup(
+            @Valid @RequestBody CreateGroupRequest request,
+            Authentication authentication
+    ) {
+        String userId = authentication.getName();
+        log.info("PWA: Creating group: {} by user: {}", request.getExternalName(), userId);
+        GroupResponse response = groupService.createGroup(request, userId);
+        return ResponseEntity
+                .status(HttpStatus.CREATED)
+                .body(ApiResponse.success("Групу створено", response));
+    }
+
+    /**
+     * Приєднатися до групи (без шифрування)
+     */
+    @PostMapping("/groups/join")
+    public ResponseEntity<ApiResponse<GroupResponse>> joinGroup(
+            @Valid @RequestBody JoinGroupRequest request,
+            Authentication authentication
+    ) {
+        String userId = authentication.getName();
+        log.info("PWA: Joining group with code: {} by user: {}", request.getAccessCode(), userId);
+        GroupResponse response = groupService.joinGroupByAccessCode(request, userId);
+        return ResponseEntity.ok(ApiResponse.success("Заявку надіслано", response));
+    }
+
+    /**
+     * Надіслати простий звіт (без шифрування)
+     */
+    @PostMapping("/groups/{groupId}/reports/simple")
+    public ResponseEntity<ApiResponse<ReportResponse>> submitSimpleReport(
+            @PathVariable String groupId,
+            @Valid @RequestBody SimpleReportRequest request,
+            Authentication authentication
+    ) {
+        String userId = authentication.getName();
+        log.info("PWA: Submitting simple report to group: {} by user: {}", groupId, userId);
+        ReportResponse response = reportService.submitSimpleReport(groupId, request, userId);
+        return ResponseEntity
+                .status(HttpStatus.CREATED)
+                .body(ApiResponse.success("Звіт надіслано", response));
     }
 
     /**

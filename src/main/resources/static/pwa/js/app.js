@@ -187,15 +187,38 @@ function showScreen(screenId) {
     // Show/hide bottom nav
     const bottomNav = document.getElementById('bottomNav');
     const authScreens = ['loginScreen', 'registerScreen', 'verifyScreen'];
+    const mainScreens = ['mainScreen', 'reportsScreen', 'settingsScreen'];
     bottomNav.style.display = authScreens.includes(screenId) ? 'none' : 'flex';
 
-    // Update nav active state
-    document.querySelectorAll('.nav-item').forEach(item => item.classList.remove('active'));
+    // Update nav active state based on data-screen attribute
+    document.querySelectorAll('.nav-item').forEach(item => {
+        item.classList.remove('active');
+        if (item.dataset.screen === screenId) {
+            item.classList.add('active');
+        }
+    });
+}
+
+// Navigation with data loading
+function navigateTo(screenId) {
+    showScreen(screenId);
+
+    // Load data for the screen
     if (screenId === 'mainScreen') {
-        document.querySelector('.nav-item:first-child').classList.add('active');
+        loadGroups();
+    } else if (screenId === 'reportsScreen') {
+        loadMyReports();
     } else if (screenId === 'settingsScreen') {
-        document.querySelector('.nav-item:last-child').classList.add('active');
+        updateSettingsScreen();
     }
+}
+
+function updateSettingsScreen() {
+    if (currentUser) {
+        document.getElementById('profileName').textContent = currentUser.name || '-';
+        document.getElementById('profilePhone').textContent = currentUser.phone || '-';
+    }
+    updateNotificationsToggle();
 }
 
 function showMainScreen() {
@@ -452,6 +475,95 @@ async function openGroup(groupId, groupName) {
     loadReports(groupId);
 }
 
+// Group Actions Menu
+function showGroupActionsMenu() {
+    document.getElementById('actionMenu').classList.add('active');
+    document.getElementById('actionMenuOverlay').classList.add('active');
+}
+
+function hideGroupActionsMenu() {
+    document.getElementById('actionMenu').classList.remove('active');
+    document.getElementById('actionMenuOverlay').classList.remove('active');
+}
+
+// Create Group
+function showCreateGroupDialog() {
+    hideGroupActionsMenu();
+    document.getElementById('newGroupName').value = '';
+    document.querySelector('input[name="reportType"][value="SIMPLE"]').checked = true;
+    document.getElementById('createGroupModal').classList.add('active');
+}
+
+async function createGroup() {
+    const name = document.getElementById('newGroupName').value.trim();
+    const reportType = document.querySelector('input[name="reportType"]:checked').value;
+
+    if (!name) {
+        showToast('Введіть назву групи', 'error');
+        return;
+    }
+
+    if (name.length < 3) {
+        showToast('Назва групи має бути мінімум 3 символи', 'error');
+        return;
+    }
+
+    try {
+        const response = await apiRequest('/pwa/groups', 'POST', {
+            externalName: name,
+            reportType: reportType,
+            maxMembers: 50
+        });
+
+        if (response.success) {
+            closeModal('createGroupModal');
+            showToast('Групу створено!', 'success');
+            loadGroups();
+        } else {
+            showToast(response.message || 'Помилка створення групи', 'error');
+        }
+    } catch (error) {
+        showToast(error.message || 'Помилка створення групи', 'error');
+    }
+}
+
+// Join Group
+function showJoinGroupDialog() {
+    hideGroupActionsMenu();
+    document.getElementById('accessCode').value = '';
+    document.getElementById('joinGroupModal').classList.add('active');
+}
+
+async function joinGroup() {
+    const accessCode = document.getElementById('accessCode').value.trim().toUpperCase();
+
+    if (!accessCode) {
+        showToast('Введіть код доступу', 'error');
+        return;
+    }
+
+    try {
+        const response = await apiRequest('/pwa/groups/join', 'POST', {
+            accessCode: accessCode
+        });
+
+        if (response.success) {
+            closeModal('joinGroupModal');
+            showToast('Заявку відправлено!', 'success');
+            loadGroups();
+        } else {
+            showToast(response.message || 'Помилка приєднання', 'error');
+        }
+    } catch (error) {
+        showToast(error.message || 'Невірний код або групу не знайдено', 'error');
+    }
+}
+
+// Modal helpers
+function closeModal(modalId) {
+    document.getElementById(modalId).classList.remove('active');
+}
+
 // Reports
 async function loadReports(groupId) {
     const container = document.getElementById('reportsList');
@@ -520,6 +632,78 @@ function renderReports(reports) {
     `}).join('')}</div>`;
 }
 
+// My Reports (all user's reports)
+async function loadMyReports() {
+    const container = document.getElementById('myReportsList');
+    container.innerHTML = '<div class="loading"><div class="spinner"></div></div>';
+
+    try {
+        console.log('[PWA] Loading my reports...');
+        const response = await apiRequest('/pwa/reports', 'GET');
+        console.log('[PWA] My reports response:', response);
+
+        if (response.success && response.data && response.data.length > 0) {
+            renderMyReports(response.data);
+        } else {
+            container.innerHTML = `
+                <div class="empty-state">
+                    <svg viewBox="0 0 24 24" fill="currentColor">
+                        <path d="M14 2H6c-1.1 0-2 .9-2 2v16c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V8l-6-6zm2 16H8v-2h8v2zm0-4H8v-2h8v2zm-3-5V3.5L18.5 9H13z"/>
+                    </svg>
+                    <p>Ви ще не надсилали звітів</p>
+                </div>
+            `;
+        }
+    } catch (error) {
+        console.error('[PWA] My reports loading error:', error);
+        container.innerHTML = `
+            <div class="card" style="text-align: center; color: var(--danger);">
+                <p>Помилка завантаження звітів</p>
+                <p style="font-size: 12px; margin-top: 5px; opacity: 0.7;">${error.message || 'Невідома помилка'}</p>
+                <button class="btn btn-secondary" style="margin-top: 10px;" onclick="loadMyReports()">Спробувати знову</button>
+            </div>
+        `;
+    }
+}
+
+function renderMyReports(reports) {
+    const container = document.getElementById('myReportsList');
+
+    // Group reports by groupName
+    const groupedReports = {};
+    reports.forEach(report => {
+        const groupName = report.groupName || 'Невідома група';
+        if (!groupedReports[groupName]) {
+            groupedReports[groupName] = [];
+        }
+        groupedReports[groupName].push(report);
+    });
+
+    let html = '';
+    for (const [groupName, groupReports] of Object.entries(groupedReports)) {
+        html += `<div class="card" style="margin-bottom: 16px;">
+            <h3 style="margin-bottom: 12px; color: var(--primary);">${escapeHtml(groupName)}</h3>
+            ${groupReports.map(report => {
+                const response = report.simpleResponse || report.response || '';
+                const time = report.submittedAt || report.createdAt;
+                const isUrgent = response.toUpperCase().includes('ТЕРМІНОВ') || response.toUpperCase() === 'НЕ ОК' || response.toUpperCase() === 'NOT_OK';
+                return `
+                <div class="report-item">
+                    <div class="report-content" style="width: 100%;">
+                        <div class="report-header">
+                            <span class="report-status ${isUrgent ? 'urgent' : 'ok'}">${escapeHtml(response)}</span>
+                            <span class="report-time">${formatTime(time)}</span>
+                        </div>
+                        ${report.comment ? `<div class="report-comment">${escapeHtml(report.comment)}</div>` : ''}
+                    </div>
+                </div>
+            `}).join('')}
+        </div>`;
+    }
+
+    container.innerHTML = html;
+}
+
 // Report Modal
 function openReportModal() {
     if (!currentGroup && !currentUser) {
@@ -558,9 +742,9 @@ async function sendReport() {
     const comment = document.getElementById('reportComment').value;
 
     try {
-        const response = await apiRequest('/reports', 'POST', {
+        const response = await apiRequest(`/pwa/groups/${currentGroup.id}/reports/simple`, 'POST', {
             groupId: currentGroup.id,
-            response: selectedReportResponse,
+            simpleResponse: selectedReportResponse,
             comment: comment || null
         });
 
