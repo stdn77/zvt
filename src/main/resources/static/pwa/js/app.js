@@ -553,9 +553,8 @@ async function openGroup(groupId, groupName) {
     document.getElementById('groupTitle').textContent = groupName;
     showScreen('groupScreen');
 
-    // Завантажуємо деталі групи та звіти
+    // Завантажуємо деталі групи (функція сама вирішить що показати - учасників чи звіти)
     await loadGroupDetails(groupId);
-    await loadReports(groupId);
 }
 
 async function loadGroupDetails(groupId) {
@@ -575,12 +574,15 @@ async function loadGroupDetails(groupId) {
                 membersCount: group.currentMembers || 0
             };
 
-            // Показуємо/ховаємо адмін-панель
+            // Показуємо/ховаємо адмін-панель та вид для членів
             const adminInfo = document.getElementById('groupAdminInfo');
+            const memberView = document.getElementById('groupMemberView');
             const settingsBtn = document.getElementById('groupSettingsBtn');
 
             if (currentGroup.isAdmin) {
+                // Адмін бачить учасників
                 adminInfo.style.display = 'block';
+                memberView.style.display = 'none';
                 settingsBtn.style.display = 'flex';
 
                 // Оновлюємо інформацію
@@ -588,9 +590,17 @@ async function loadGroupDetails(groupId) {
                     group.reportType === 'SIMPLE' ? 'Простий' : 'Розширений';
                 document.getElementById('groupAccessCode').textContent = group.accessCode || '-';
                 document.getElementById('groupMembersCount').textContent = group.currentMembers || 0;
+
+                // Завантажуємо учасників
+                loadGroupMembersForAdmin();
             } else {
+                // Член групи бачить свої звіти
                 adminInfo.style.display = 'none';
+                memberView.style.display = 'block';
                 settingsBtn.style.display = 'none';
+
+                // Завантажуємо звіти
+                loadReports(groupId);
             }
         }
     } catch (error) {
@@ -617,15 +627,8 @@ function copyAccessCode() {
 function showGroupSettings() {
     if (!currentGroup || !currentGroup.isAdmin) return;
 
-    // Update settings modal with current group data
+    // Оновлюємо назву в модальному вікні
     document.getElementById('settingsGroupName').textContent = currentGroup.name || '-';
-    document.getElementById('settingsReportType').textContent =
-        currentGroup.reportType === 'SIMPLE' ? 'Простий' : 'Розширений';
-    document.getElementById('settingsAccessCode').textContent = currentGroup.accessCode || '-';
-    document.getElementById('settingsMemberCount').textContent = currentGroup.membersCount || 0;
-
-    // Load members list
-    loadGroupMembers();
 
     document.getElementById('groupSettingsModal').classList.add('active');
 }
@@ -761,15 +764,16 @@ async function confirmDeleteGroup() {
     }
 }
 
-async function loadGroupMembers() {
-    const container = document.getElementById('membersList');
+async function loadGroupMembersForAdmin() {
+    const container = document.getElementById('adminMembersList');
     container.innerHTML = '<div class="loading" style="padding: 20px;"><div class="spinner" style="width: 24px; height: 24px;"></div></div>';
 
     try {
         const response = await apiRequest(`/pwa/groups/${currentGroup.id}/members`, 'GET');
 
         if (response.success && response.data) {
-            renderMembers(response.data);
+            renderMembersForAdmin(response.data);
+            document.getElementById('groupMembersCount').textContent = response.data.length;
         } else {
             container.innerHTML = '<p style="color: var(--text-secondary); text-align: center; padding: 20px;">Не вдалося завантажити учасників</p>';
         }
@@ -778,27 +782,31 @@ async function loadGroupMembers() {
     }
 }
 
-function renderMembers(members) {
-    const container = document.getElementById('membersList');
+function loadGroupMembers() {
+    loadGroupMembersForAdmin();
+}
+
+function renderMembersForAdmin(members) {
+    const container = document.getElementById('adminMembersList');
 
     if (!members || members.length === 0) {
         container.innerHTML = '<p style="color: var(--text-secondary); text-align: center; padding: 20px;">Немає учасників</p>';
         return;
     }
 
-    container.innerHTML = members.map(member => {
+    container.innerHTML = `<div class="card">${members.map(member => {
         const name = member.name || member.userName || 'Невідомий';
         const role = member.role || 'MEMBER';
         const isAdmin = role === 'ADMIN';
         const isPending = member.status === 'PENDING';
 
         return `
-            <div class="settings-item" style="padding: 12px 0;">
-                <div style="display: flex; align-items: center; gap: 12px;">
-                    <div class="report-avatar" style="width: 36px; height: 36px; font-size: 14px;">${name.charAt(0).toUpperCase()}</div>
-                    <div>
-                        <span class="settings-label" style="font-weight: 500;">${escapeHtml(name)}</span>
-                        <span style="font-size: 12px; color: ${isAdmin ? 'var(--primary)' : isPending ? 'var(--warning)' : 'var(--text-secondary)'};">
+            <div class="report-item" style="align-items: center;">
+                <div class="report-avatar" style="width: 40px; height: 40px;">${name.charAt(0).toUpperCase()}</div>
+                <div class="report-content">
+                    <div class="report-header">
+                        <span class="report-name">${escapeHtml(name)}</span>
+                        <span style="font-size: 12px; padding: 2px 8px; border-radius: 10px; background: ${isAdmin ? 'var(--primary)' : isPending ? 'var(--warning)' : 'rgba(255,255,255,0.1)'}; color: ${isAdmin || isPending ? 'white' : 'var(--text-secondary)'};">
                             ${isAdmin ? 'Адмін' : isPending ? 'Очікує' : 'Учасник'}
                         </span>
                     </div>
@@ -818,7 +826,7 @@ function renderMembers(members) {
                 ` : ''}
             </div>
         `;
-    }).join('');
+    }).join('')}</div>`;
 }
 
 async function removeMember(memberId) {

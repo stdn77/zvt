@@ -1001,21 +1001,31 @@
                     <span class="admin-info-label">Код доступу</span>
                     <span class="admin-info-value" id="groupAccessCode">-</span>
                 </div>
-                <div class="admin-info-item">
-                    <span class="admin-info-label">Учасників</span>
-                    <span class="admin-info-value" id="groupMembersCount">0</span>
+            </div>
+
+            <!-- Список учасників для адміна -->
+            <div style="padding: 0 16px; margin: 16px 0 8px; display: flex; justify-content: space-between; align-items: center;">
+                <span style="color: var(--text-secondary); font-size: 14px;">Учасники (<span id="groupMembersCount">0</span>)</span>
+                <span style="color: var(--primary); font-size: 14px; cursor: pointer;" onclick="loadGroupMembers()">Оновити</span>
+            </div>
+            <div id="adminMembersList" style="padding: 0 16px;">
+                <div class="loading">
+                    <div class="spinner"></div>
                 </div>
             </div>
         </div>
 
-        <div style="padding: 0 16px; margin-bottom: 8px; display: flex; justify-content: space-between; align-items: center;">
-            <span style="color: var(--text-secondary); font-size: 14px;">Звіти</span>
-            <span style="color: var(--primary); font-size: 14px; cursor: pointer;" onclick="refreshGroupReports()">Оновити</span>
-        </div>
+        <!-- Звіти для звичайних учасників -->
+        <div id="groupMemberView" style="display: none;">
+            <div style="padding: 0 16px; margin-bottom: 8px; display: flex; justify-content: space-between; align-items: center;">
+                <span style="color: var(--text-secondary); font-size: 14px;">Мої звіти</span>
+                <span style="color: var(--primary); font-size: 14px; cursor: pointer;" onclick="refreshGroupReports()">Оновити</span>
+            </div>
 
-        <div id="reportsList" style="padding: 0 16px;">
-            <div class="loading">
-                <div class="spinner"></div>
+            <div id="reportsList" style="padding: 0 16px;">
+                <div class="loading">
+                    <div class="spinner"></div>
+                </div>
             </div>
         </div>
 
@@ -1308,61 +1318,30 @@
 
     <!-- Group Settings Modal (Admin) -->
     <div class="modal" id="groupSettingsModal">
-        <div class="modal-content" style="max-height: 80vh; overflow-y: auto;">
+        <div class="modal-content">
             <div class="modal-header">
                 <h2>Налаштування групи</h2>
                 <button class="modal-close" onclick="closeModal('groupSettingsModal')">&times;</button>
             </div>
 
-            <div class="card" style="margin-bottom: 16px;">
-                <h3 style="font-size: 14px; color: var(--text-secondary); margin-bottom: 12px;">Основні</h3>
-                <div class="settings-item" onclick="showEditGroupNameDialog()">
-                    <div>
-                        <span class="settings-label">Назва групи</span>
-                        <span class="settings-value" id="settingsGroupName">-</span>
-                    </div>
-                    <svg viewBox="0 0 24 24" fill="currentColor" width="20" height="20" style="opacity: 0.5;">
-                        <path d="M8.59 16.59L13.17 12 8.59 7.41 10 6l6 6-6 6-1.41-1.41z"/>
-                    </svg>
+            <div class="settings-item" onclick="showEditGroupNameDialog()" style="cursor: pointer;">
+                <div>
+                    <span class="settings-label">Назва групи</span>
+                    <span class="settings-value" id="settingsGroupName">-</span>
                 </div>
-                <div class="settings-item" onclick="showChangeReportTypeModal()">
-                    <div>
-                        <span class="settings-label">Тип звіту</span>
-                        <span class="settings-value" id="settingsReportType">Простий</span>
-                    </div>
-                    <svg viewBox="0 0 24 24" fill="currentColor" width="20" height="20" style="opacity: 0.5;">
-                        <path d="M8.59 16.59L13.17 12 8.59 7.41 10 6l6 6-6 6-1.41-1.41z"/>
-                    </svg>
-                </div>
+                <svg viewBox="0 0 24 24" fill="currentColor" width="20" height="20" style="opacity: 0.5;">
+                    <path d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zM20.71 7.04c.39-.39.39-1.02 0-1.41l-2.34-2.34c-.39-.39-1.02-.39-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z"/>
+                </svg>
             </div>
 
-            <div class="card" style="margin-bottom: 16px;">
-                <h3 style="font-size: 14px; color: var(--text-secondary); margin-bottom: 12px;">Доступ</h3>
-                <div class="settings-item" onclick="copyAccessCode()">
-                    <div>
-                        <span class="settings-label">Код доступу</span>
-                        <span class="settings-value" id="settingsAccessCode">-</span>
-                    </div>
-                    <svg viewBox="0 0 24 24" fill="currentColor" width="20" height="20" style="opacity: 0.5;">
-                        <path d="M16 1H4c-1.1 0-2 .9-2 2v14h2V3h12V1zm3 4H8c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h11c1.1 0 2-.9 2-2V7c0-1.1-.9-2-2-2zm0 16H8V7h11v14z"/>
-                    </svg>
-                </div>
-                <div class="settings-item" onclick="regenerateAccessCode()">
-                    <span class="settings-label" style="color: var(--primary);">Змінити код доступу</span>
-                    <svg viewBox="0 0 24 24" fill="var(--primary)" width="20" height="20">
-                        <path d="M17.65 6.35C16.2 4.9 14.21 4 12 4c-4.42 0-7.99 3.58-7.99 8s3.57 8 7.99 8c3.73 0 6.84-2.55 7.73-6h-2.08c-.82 2.33-3.04 4-5.65 4-3.31 0-6-2.69-6-6s2.69-6 6-6c1.66 0 3.14.69 4.22 1.78L13 11h7V4l-2.35 2.35z"/>
-                    </svg>
-                </div>
+            <div class="settings-item" onclick="regenerateAccessCode()" style="cursor: pointer;">
+                <span class="settings-label">Змінити код доступу</span>
+                <svg viewBox="0 0 24 24" fill="currentColor" width="20" height="20" style="opacity: 0.5;">
+                    <path d="M17.65 6.35C16.2 4.9 14.21 4 12 4c-4.42 0-7.99 3.58-7.99 8s3.57 8 7.99 8c3.73 0 6.84-2.55 7.73-6h-2.08c-.82 2.33-3.04 4-5.65 4-3.31 0-6-2.69-6-6s2.69-6 6-6c1.66 0 3.14.69 4.22 1.78L13 11h7V4l-2.35 2.35z"/>
+                </svg>
             </div>
 
-            <div class="card" style="margin-bottom: 16px;">
-                <h3 style="font-size: 14px; color: var(--text-secondary); margin-bottom: 12px;">Учасники (<span id="settingsMemberCount">0</span>)</h3>
-                <div id="membersList" style="max-height: 200px; overflow-y: auto;">
-                    <!-- Members will be loaded here -->
-                </div>
-            </div>
-
-            <button class="btn" style="background: var(--danger); margin-top: 12px;" onclick="showDeleteGroupConfirm()">
+            <button class="btn" style="background: var(--danger); margin-top: 20px;" onclick="showDeleteGroupConfirm()">
                 Видалити групу
             </button>
         </div>
