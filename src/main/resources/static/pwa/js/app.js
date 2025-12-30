@@ -1374,44 +1374,65 @@ function renderReportGroups(groups) {
 
     let html = '';
 
-    // Групи де учасник (можна звітувати)
-    if (memberGroups.length > 0) {
-        html += `<div class="section-title" style="padding: 0 0 8px 0; color: var(--text-secondary); font-size: 12px; text-transform: uppercase;">Мої групи</div>`;
-        memberGroups.forEach(group => {
-            html += renderReportGroupCard(group);
+    // Групи де адмін
+    if (adminGroups.length > 0) {
+        html += `<div class="section-title" style="padding: 16px 20px 8px; font-size: 16px; font-weight: bold;">Групи де я адміністратор</div>`;
+        adminGroups.forEach(group => {
+            html += renderReportGroupCard(group, true);
         });
     }
 
-    // Групи де адмін
-    if (adminGroups.length > 0) {
-        html += `<div class="section-title" style="padding: 16px 0 8px 0; color: var(--text-secondary); font-size: 12px; text-transform: uppercase;">Адміністрування</div>`;
-        adminGroups.forEach(group => {
-            html += renderReportGroupCard(group, true);
+    // Групи де учасник
+    if (memberGroups.length > 0) {
+        html += `<div class="section-title" style="padding: 16px 20px 8px; font-size: 16px; font-weight: bold;">Групи де я учасник</div>`;
+        memberGroups.forEach(group => {
+            html += renderReportGroupCard(group, false);
         });
     }
 
     container.innerHTML = html;
 }
 
-function renderReportGroupCard(group, isAdminSection = false) {
+function renderReportGroupCard(group, isAdmin) {
     const membersCount = group.membersCount || 0;
-    const reportType = group.reportType === 'EXTENDED' ? 'Розширений' : 'Простий';
+    const reportedCount = group.reportedCount || 0;
+    const roleText = isAdmin ? 'Адміністратор' : 'Учасник';
 
     return `
-        <div class="card report-group-card" style="margin-bottom: 12px; cursor: pointer;" onclick="openReportForGroup('${group.id}', '${escapeHtml(group.name)}', '${group.reportType}', ${group.isAdmin})">
-            <div style="display: flex; justify-content: space-between; align-items: center; gap: 12px;">
-                <div style="flex: 1; min-width: 0;">
-                    <h3 style="margin: 0 0 4px 0; font-size: 16px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">${escapeHtml(group.name)}</h3>
-                    <div style="font-size: 13px; color: var(--text-secondary);">
-                        ${membersCount} учасник${getPlural(membersCount, '', 'и', 'ів')} · ${reportType}
+        <div class="card report-group-card" style="margin: 8px 16px; padding: 0; overflow: hidden;">
+            <div style="display: flex;">
+                <!-- Ліва частина -->
+                <div style="flex: 0.6; display: flex; padding: 16px; cursor: pointer;" onclick="openGroupDetails('${group.id}')">
+                    <!-- Кольоровий індикатор -->
+                    <div style="width: 8px; background: var(--primary); border-radius: 4px; margin-right: 12px;"></div>
+                    <!-- Інформація -->
+                    <div style="flex: 1; min-width: 0;">
+                        <div style="font-size: 16px; font-weight: bold; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">
+                            ${escapeHtml(group.name)} ${isAdmin ? `(${reportedCount}/${membersCount})` : ''}
+                        </div>
+                        <div style="font-size: 12px; color: var(--text-secondary); margin-top: 2px;">
+                            ${roleText}
+                        </div>
                     </div>
                 </div>
-                <button class="btn btn-primary" style="width: auto; padding: 8px 16px; font-size: 14px; flex-shrink: 0;" onclick="event.stopPropagation(); openReportForGroup('${group.id}', '${escapeHtml(group.name)}', '${group.reportType}', ${group.isAdmin})">
-                    ${isAdminSection ? 'Переглянути' : 'Звітувати'}
-                </button>
+                <!-- Розділювач -->
+                <div style="width: 1px; background: rgba(255,255,255,0.1);"></div>
+                <!-- Права частина - кнопка звіту -->
+                <div style="flex: 0.4; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 12px; cursor: pointer;" onclick="openReportForGroup('${group.id}', '${escapeHtml(group.name)}', '${group.reportType}', ${isAdmin})">
+                    <svg viewBox="0 0 24 24" fill="var(--primary)" width="32" height="32">
+                        <path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"/>
+                    </svg>
+                    <div style="font-size: 12px; font-weight: bold; color: var(--primary); margin-top: 4px;">Звіт</div>
+                </div>
             </div>
         </div>
     `;
+}
+
+function openGroupDetails(groupId) {
+    currentGroup = { id: groupId };
+    showScreen('groupScreen');
+    loadGroupDetails(groupId);
 }
 
 function getPlural(n, one, few, many) {
@@ -1426,25 +1447,19 @@ function openReportForGroup(groupId, groupName, reportType, isAdmin) {
     // Зберігаємо вибрану групу для звіту
     currentGroup = { id: groupId, name: groupName, reportType: reportType, isAdmin: isAdmin };
 
-    if (isAdmin) {
-        // Для адміна - переходимо до деталей групи
-        showScreen('groupScreen');
-        loadGroupDetails(groupId);
-    } else {
-        // Для учасника - відкриваємо модальне вікно звіту
-        document.getElementById('reportModalTitle').textContent = groupName;
-        document.getElementById('reportModal').classList.add('active');
-        document.getElementById('reportComment').value = '';
-        selectedReportResponse = 'OK';
+    // Відкриваємо модальне вікно звіту (для всіх - і адмінів, і учасників)
+    document.getElementById('reportModalTitle').textContent = groupName;
+    document.getElementById('reportModal').classList.add('active');
+    document.getElementById('reportComment').value = '';
+    selectedReportResponse = 'OK';
 
-        // Reset selection
-        document.querySelectorAll('.report-option').forEach(opt => {
-            opt.classList.remove('selected');
-            if (opt.dataset.response === 'OK') {
-                opt.classList.add('selected');
-            }
-        });
-    }
+    // Reset selection
+    document.querySelectorAll('.report-option').forEach(opt => {
+        opt.classList.remove('selected');
+        if (opt.dataset.response === 'OK') {
+            opt.classList.add('selected');
+        }
+    });
 }
 
 // Report Modal
