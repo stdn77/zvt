@@ -1400,11 +1400,16 @@ function renderReportGroupCard(group, isAdmin) {
     const groupName = group.externalName || group.name || 'Група';
     const groupId = group.groupId || group.id;
 
+    // Для адміна - відкриваємо статуси, для учасника - деталі групи
+    const leftClickHandler = isAdmin
+        ? `openGroupStatuses('${groupId}', '${escapeHtml(groupName)}')`
+        : `openGroupDetails('${groupId}')`;
+
     return `
         <div class="card report-group-card" style="margin: 8px 16px; padding: 0; overflow: hidden;">
             <div style="display: flex;">
                 <!-- Ліва частина -->
-                <div style="flex: 0.6; display: flex; padding: 16px; cursor: pointer;" onclick="openGroupDetails('${groupId}')">
+                <div style="flex: 0.6; display: flex; padding: 16px; cursor: pointer;" onclick="${leftClickHandler}">
                     <!-- Кольоровий індикатор -->
                     <div style="width: 8px; background: var(--primary); border-radius: 4px; margin-right: 12px;"></div>
                     <!-- Інформація -->
@@ -1435,6 +1440,122 @@ function openGroupDetails(groupId) {
     currentGroup = { id: groupId };
     showScreen('groupScreen');
     loadGroupDetails(groupId);
+}
+
+// Відкрити екран статусів учасників (для адміна)
+function openGroupStatuses(groupId, groupName) {
+    currentGroup = { id: groupId, name: groupName };
+    document.getElementById('groupStatusTitle').textContent = groupName || 'Статус групи';
+    showScreen('groupStatusScreen');
+    loadGroupStatuses(groupId);
+}
+
+// Завантажити статуси учасників групи
+async function loadGroupStatuses(groupId) {
+    const container = document.getElementById('userTilesGrid');
+    container.innerHTML = '<div class="loading" style="grid-column: 1 / -1;"><div class="spinner"></div></div>';
+
+    try {
+        console.log('[PWA] Loading group statuses for:', groupId);
+        const response = await apiRequest(`/pwa/groups/${groupId}/statuses`, 'GET');
+        console.log('[PWA] Group statuses:', response);
+
+        if (response.success && response.data && response.data.users) {
+            renderUserTiles(response.data.users);
+        } else {
+            container.innerHTML = `
+                <div style="grid-column: 1 / -1; text-align: center; padding: 32px; color: var(--text-secondary);">
+                    <p>Немає учасників у групі</p>
+                </div>
+            `;
+        }
+    } catch (error) {
+        console.error('[PWA] Group statuses error:', error);
+        container.innerHTML = `
+            <div style="grid-column: 1 / -1; text-align: center; padding: 32px; color: var(--danger);">
+                <p>Помилка завантаження статусів</p>
+                <p style="font-size: 12px; margin-top: 5px; opacity: 0.7;">${error.message || 'Невідома помилка'}</p>
+                <button class="btn btn-secondary" style="margin-top: 10px; width: auto;" onclick="loadGroupStatuses('${groupId}')">Спробувати знову</button>
+            </div>
+        `;
+    }
+}
+
+// Відобразити плитки користувачів
+function renderUserTiles(users) {
+    const container = document.getElementById('userTilesGrid');
+
+    if (!users || users.length === 0) {
+        container.innerHTML = `
+            <div style="grid-column: 1 / -1; text-align: center; padding: 32px; color: var(--text-secondary);">
+                <p>Немає учасників у групі</p>
+            </div>
+        `;
+        return;
+    }
+
+    let html = '';
+    users.forEach(user => {
+        const userName = user.userName || 'Невідомий';
+        const bgColor = user.colorHex || '#444444';
+
+        // Форматуємо час та дату останнього звіту
+        let timeText = '';
+        let dateText = '';
+        if (user.lastReportAt) {
+            const reportDate = new Date(user.lastReportAt);
+            timeText = reportDate.toLocaleTimeString('uk-UA', { hour: '2-digit', minute: '2-digit' });
+            dateText = reportDate.toLocaleDateString('uk-UA', { day: '2-digit', month: '2-digit', year: 'numeric' });
+        }
+
+        // Визначаємо колір тексту в залежності від яскравості фону
+        const textColor = isLightColor(bgColor) ? '#000000' : '#FFFFFF';
+        const secondaryTextColor = isLightColor(bgColor) ? 'rgba(0,0,0,0.6)' : 'rgba(255,255,255,0.7)';
+
+        html += `
+            <div class="user-tile" style="
+                background: ${bgColor};
+                border-radius: 8px;
+                padding: 12px;
+                text-align: center;
+                min-height: 60px;
+                display: flex;
+                flex-direction: column;
+                justify-content: center;
+                align-items: center;
+            ">
+                <div style="
+                    font-size: 14px;
+                    font-weight: bold;
+                    color: ${textColor};
+                    max-width: 100%;
+                    overflow: hidden;
+                    text-overflow: ellipsis;
+                    white-space: nowrap;
+                ">${escapeHtml(userName)}</div>
+                ${timeText ? `
+                    <div style="font-size: 12px; color: ${secondaryTextColor}; margin-top: 4px;">${timeText}</div>
+                    <div style="font-size: 10px; color: ${secondaryTextColor}; margin-top: 2px;">${dateText}</div>
+                ` : `
+                    <div style="font-size: 11px; color: ${secondaryTextColor}; margin-top: 4px;">Немає звітів</div>
+                `}
+            </div>
+        `;
+    });
+
+    container.innerHTML = html;
+}
+
+// Визначити чи колір світлий
+function isLightColor(hexColor) {
+    if (!hexColor) return false;
+    const hex = hexColor.replace('#', '');
+    const r = parseInt(hex.substr(0, 2), 16);
+    const g = parseInt(hex.substr(2, 2), 16);
+    const b = parseInt(hex.substr(4, 2), 16);
+    // Використовуємо формулу для відносної яскравості
+    const luminance = (0.299 * r + 0.587 * g + 0.114 * b) / 255;
+    return luminance > 0.5;
 }
 
 function getPlural(n, one, few, many) {

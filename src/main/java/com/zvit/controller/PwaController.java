@@ -10,6 +10,7 @@ import com.zvit.dto.request.UpdateProfileRequest;
 import com.zvit.dto.response.ApiResponse;
 import com.zvit.dto.response.GroupMemberResponse;
 import com.zvit.dto.response.GroupResponse;
+import com.zvit.dto.response.GroupStatusesResponse;
 import com.zvit.dto.response.LoginResponse;
 import com.zvit.dto.response.RegisterResponse;
 import com.zvit.dto.response.ReportResponse;
@@ -306,5 +307,19 @@ public class PwaController {
         log.info("PWA: Rejecting member {} in group {} by user: {}", memberId, groupId, userId);
         groupService.rejectMember(groupId, memberId, userId);
         return ResponseEntity.ok(ApiResponse.success("Заявку відхилено", null));
+    }
+
+    /**
+     * Отримати статуси учасників групи (для відображення плиток)
+     */
+    @GetMapping("/groups/{groupId}/statuses")
+    public ResponseEntity<ApiResponse<GroupStatusesResponse>> getGroupStatuses(
+            @PathVariable String groupId,
+            Authentication authentication
+    ) {
+        String userId = authentication.getName();
+        log.info("PWA: Getting group statuses for group: {} by user: {}", groupId, userId);
+        GroupStatusesResponse statuses = reportService.getGroupStatuses(groupId, userId);
+        return ResponseEntity.ok(ApiResponse.success("Статуси отримано", statuses));
     }
 }
