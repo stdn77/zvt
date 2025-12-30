@@ -1420,7 +1420,7 @@ function renderReportGroupCard(group, isAdmin) {
     const safeGroupName = groupName.replace(/'/g, "\\'").replace(/"/g, '&quot;');
 
     // Для адміна: ліва частина - відкриваємо статуси, права - терміновий звіт
-    // Для учасника: ліва частина - не клікабельна, права - відправка звіту
+    // Для учасника: ліва частина - мої звіти, права - відправка звіту
 
     // Права частина: адмін - терміновий звіт, учасник - звичайний звіт
     let rightSection;
@@ -1446,15 +1446,17 @@ function renderReportGroupCard(group, isAdmin) {
         `;
     }
 
-    // Для адміна ліва частина клікабельна - відкриває статуси
-    const leftOnclick = isAdmin ? `onclick="openGroupStatuses('${groupId}', '${safeGroupName}')"` : '';
-    const leftCursor = isAdmin ? 'cursor: pointer;' : '';
+    // Ліва частина завжди клікабельна
+    // Адмін - відкриває статуси, Учасник - відкриває свої звіти
+    const leftOnclick = isAdmin
+        ? `onclick="openGroupStatuses('${groupId}', '${safeGroupName}')"`
+        : `onclick="openMyReportsInGroup('${groupId}', '${safeGroupName}')"`;
 
     return `
         <div class="card report-group-card" style="margin-bottom: 8px; padding: 0; overflow: hidden;">
             <div style="display: flex;">
                 <!-- Ліва частина -->
-                <div style="flex: 0.6; display: flex; padding: 16px; ${leftCursor}" ${leftOnclick}>
+                <div style="flex: 0.6; display: flex; padding: 16px; cursor: pointer;" ${leftOnclick}>
                     <!-- Кольоровий індикатор -->
                     <div style="width: 8px; background: var(--primary); border-radius: 4px; margin-right: 12px;"></div>
                     <!-- Інформація -->
@@ -1502,6 +1504,60 @@ async function openGroupStatuses(groupId, groupName) {
     }
 
     loadGroupStatuses(groupId);
+}
+
+// Відкрити мої звіти в групі (для учасника)
+async function openMyReportsInGroup(groupId, groupName) {
+    console.log('[PWA] openMyReportsInGroup called:', groupId, groupName);
+
+    currentGroup = { id: groupId, name: groupName };
+    currentReportUser = null; // Це мої звіти, не потрібен телефон
+
+    // Оновлюємо заголовок - назва групи
+    document.getElementById('userReportsTitle').textContent = groupName || 'Мої звіти';
+
+    // Ховаємо телефон (це мої звіти)
+    document.getElementById('userReportsPhoneHeader').style.display = 'none';
+
+    // Переходимо на екран
+    showScreen('userReportsScreen');
+
+    // Завантажуємо деталі групи для власних слів
+    try {
+        const groupResponse = await apiRequest(`/pwa/groups/${groupId}`, 'GET');
+        if (groupResponse.success && groupResponse.data) {
+            currentGroup.positiveWord = groupResponse.data.positiveWord || 'ОК';
+            currentGroup.negativeWord = groupResponse.data.negativeWord || 'НЕ ОК';
+        }
+    } catch (e) {
+        console.log('[PWA] Could not load group details for words:', e);
+    }
+
+    const container = document.getElementById('userReportsList');
+    container.innerHTML = '<div class="loading"><div class="spinner"></div></div>';
+
+    try {
+        // Завантажуємо мої звіти в групі (той самий ендпойнт що для member view)
+        const response = await apiRequest(`/pwa/groups/${groupId}/reports`, 'GET');
+        console.log('[PWA] My reports response:', response);
+
+        if (response.success && response.data && response.data.length > 0) {
+            renderUserReportsList(response.data);
+        } else {
+            container.innerHTML = `
+                <div style="text-align: center; padding: 32px; color: var(--text-secondary);">
+                    <p>Ви ще не надсилали звітів</p>
+                </div>
+            `;
+        }
+    } catch (error) {
+        console.error('[PWA] My reports error:', error);
+        container.innerHTML = `
+            <div style="text-align: center; padding: 32px; color: var(--danger);">
+                <p>Помилка завантаження звітів</p>
+            </div>
+        `;
+    }
 }
 
 // Завантажити статуси учасників групи
@@ -1670,7 +1726,13 @@ async function openUserReports(userId, userName, userPhone) {
 
 // Повернутись назад з екрану звітів користувача
 function navigateBackFromUserReports() {
-    showScreen('groupStatusScreen');
+    // Якщо це мої звіти (currentReportUser null) - повертаємось на екран звітів
+    // Якщо це звіти іншого користувача - повертаємось на статуси групи
+    if (currentReportUser) {
+        showScreen('groupStatusScreen');
+    } else {
+        navigateTo('reportsScreen');
+    }
 }
 
 // Показати опції зв'язку з користувачем
