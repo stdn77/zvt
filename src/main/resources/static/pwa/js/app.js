@@ -1399,14 +1399,14 @@ function renderReportGroupCard(group, isAdminSection = false) {
 
     return `
         <div class="card report-group-card" style="margin-bottom: 12px; cursor: pointer;" onclick="openReportForGroup('${group.id}', '${escapeHtml(group.name)}', '${group.reportType}', ${group.isAdmin})">
-            <div style="display: flex; justify-content: space-between; align-items: flex-start;">
-                <div style="flex: 1;">
-                    <h3 style="margin: 0 0 4px 0; font-size: 16px;">${escapeHtml(group.name)}</h3>
+            <div style="display: flex; justify-content: space-between; align-items: center; gap: 12px;">
+                <div style="flex: 1; min-width: 0;">
+                    <h3 style="margin: 0 0 4px 0; font-size: 16px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">${escapeHtml(group.name)}</h3>
                     <div style="font-size: 13px; color: var(--text-secondary);">
                         ${membersCount} учасник${getPlural(membersCount, '', 'и', 'ів')} · ${reportType}
                     </div>
                 </div>
-                <button class="btn btn-primary" style="padding: 8px 16px; font-size: 14px;" onclick="event.stopPropagation(); openReportForGroup('${group.id}', '${escapeHtml(group.name)}', '${group.reportType}', ${group.isAdmin})">
+                <button class="btn btn-primary" style="padding: 8px 16px; font-size: 14px; flex-shrink: 0;" onclick="event.stopPropagation(); openReportForGroup('${group.id}', '${escapeHtml(group.name)}', '${group.reportType}', ${group.isAdmin})">
                     ${isAdminSection ? 'Переглянути' : 'Звітувати'}
                 </button>
             </div>
