@@ -351,4 +351,19 @@ public class PwaController {
         reportService.endUrgentSession(groupId, userId);
         return ResponseEntity.ok(ApiResponse.success("Терміновий збір завершено", null));
     }
+
+    /**
+     * Отримати звіти конкретного користувача в групі (тільки для адміна)
+     */
+    @GetMapping("/groups/{groupId}/users/{targetUserId}/reports")
+    public ResponseEntity<ApiResponse<List<ReportResponse>>> getUserReportsInGroup(
+            @PathVariable String groupId,
+            @PathVariable String targetUserId,
+            Authentication authentication
+    ) {
+        String userId = authentication.getName();
+        log.info("PWA: Getting user reports in group: {} for user: {} by: {}", groupId, targetUserId, userId);
+        List<ReportResponse> reports = reportService.getUserReportsInGroup(groupId, targetUserId, userId);
+        return ResponseEntity.ok(ApiResponse.success("Звіти отримано", reports));
+    }
 }

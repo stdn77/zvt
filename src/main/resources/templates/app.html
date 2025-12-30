@@ -1207,8 +1207,8 @@
             </div>
         </div>
 
-        <!-- Grid з плитками користувачів -->
-        <div id="userTilesGrid" style="padding: 8px; display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px;">
+        <!-- Grid з плитками користувачів (4 колонки, адаптивно) -->
+        <div id="userTilesGrid" style="padding: 6px; display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 6px;">
             <div class="loading" style="grid-column: 1 / -1;">
                 <div class="spinner"></div>
             </div>
@@ -1258,7 +1258,7 @@
         <div class="card">
             <div class="settings-item">
                 <span class="settings-label">Версія</span>
-                <span class="settings-value">PWA 1.0.06</span>
+                <span class="settings-value">PWA 1.0.07</span>
             </div>
         </div>
 
@@ -1336,6 +1336,25 @@
             </p>
 
             <button class="btn btn-danger" style="width: 100%;" onclick="submitUrgentReport()">ВІДПРАВИТИ ТЕРМІНОВО</button>
+        </div>
+    </div>
+
+    <!-- User Reports Modal -->
+    <div id="userReportsModal" class="modal">
+        <div class="modal-content" style="max-height: 80vh; display: flex; flex-direction: column;">
+            <div class="modal-header">
+                <div style="display: flex; flex-direction: column;">
+                    <h2 class="modal-title" id="userReportsName" style="margin: 0;">Звіти</h2>
+                    <a id="userReportsPhone" href="#" style="font-size: 14px; color: var(--primary); margin-top: 4px; text-decoration: none;"></a>
+                </div>
+                <button class="modal-close" onclick="closeModal('userReportsModal')">&times;</button>
+            </div>
+
+            <div id="userReportsList" style="flex: 1; overflow-y: auto; max-height: 60vh;">
+                <div class="loading">
+                    <div class="spinner"></div>
+                </div>
+            </div>
         </div>
     </div>
 

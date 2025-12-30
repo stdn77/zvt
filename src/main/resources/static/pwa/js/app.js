@@ -1524,49 +1524,169 @@ function renderUserTiles(users) {
     users.forEach(user => {
         const userName = user.userName || 'Невідомий';
         const bgColor = user.colorHex || '#444444';
+        const isAdmin = user.role === 'ADMIN';
+        const userId = user.userId || user.id;
+        const userPhone = user.phone || '';
 
-        // Форматуємо час та дату останнього звіту
-        let timeText = '';
-        let dateText = '';
-        if (user.lastReportAt) {
+        // Форматуємо час та дату останнього звіту (DD.MM, HH:MM)
+        let timeDateText = '';
+        if (!isAdmin && user.lastReportAt) {
             const reportDate = new Date(user.lastReportAt);
-            timeText = reportDate.toLocaleTimeString('uk-UA', { hour: '2-digit', minute: '2-digit' });
-            dateText = reportDate.toLocaleDateString('uk-UA', { day: '2-digit', month: '2-digit', year: 'numeric' });
+            const time = reportDate.toLocaleTimeString('uk-UA', { hour: '2-digit', minute: '2-digit' });
+            const day = String(reportDate.getDate()).padStart(2, '0');
+            const month = String(reportDate.getMonth() + 1).padStart(2, '0');
+            timeDateText = `${time}   ${day}.${month}`;
         }
 
         // Визначаємо колір тексту в залежності від яскравості фону
         const textColor = isLightColor(bgColor) ? '#000000' : '#FFFFFF';
-        const secondaryTextColor = isLightColor(bgColor) ? 'rgba(0,0,0,0.6)' : 'rgba(255,255,255,0.7)';
+        const secondaryTextColor = isLightColor(bgColor) ? 'rgba(0,0,0,0.7)' : 'rgba(255,255,255,0.8)';
+
+        // Екрануємо дані для onclick
+        const safeUserName = userName.replace(/'/g, "\\'").replace(/"/g, '&quot;');
+        const safePhone = userPhone.replace(/'/g, "\\'").replace(/"/g, '&quot;');
 
         html += `
-            <div class="user-tile" style="
+            <div class="user-tile" onclick="openUserReports('${userId}', '${safeUserName}', '${safePhone}')" style="
                 background: ${bgColor};
                 border-radius: 8px;
-                padding: 12px;
+                padding: 8px 4px;
                 text-align: center;
-                min-height: 60px;
+                min-height: 70px;
                 display: flex;
                 flex-direction: column;
                 justify-content: center;
                 align-items: center;
+                cursor: pointer;
+                box-sizing: border-box;
             ">
                 <div style="
-                    font-size: 14px;
+                    font-size: 12px;
                     font-weight: bold;
                     color: ${textColor};
-                    max-width: 100%;
+                    width: 100%;
+                    word-wrap: break-word;
+                    overflow-wrap: break-word;
+                    hyphens: auto;
+                    line-height: 1.2;
+                    max-height: 2.4em;
                     overflow: hidden;
-                    text-overflow: ellipsis;
-                    white-space: nowrap;
                 ">${escapeHtml(userName)}</div>
-                ${timeText ? `
-                    <div style="font-size: 12px; color: ${secondaryTextColor}; margin-top: 4px;">${timeText}</div>
-                    <div style="font-size: 10px; color: ${secondaryTextColor}; margin-top: 2px;">${dateText}</div>
-                ` : `
-                    <div style="font-size: 11px; color: ${secondaryTextColor}; margin-top: 4px;">Немає звітів</div>
-                `}
+                ${isAdmin ? `
+                    <div style="font-size: 10px; color: ${secondaryTextColor}; margin-top: 4px; font-weight: bold;">Адмін</div>
+                ` : timeDateText ? `
+                    <div style="font-size: 10px; color: ${secondaryTextColor}; margin-top: 4px; white-space: nowrap;">${timeDateText}</div>
+                ` : ''}
             </div>
         `;
+    });
+
+    container.innerHTML = html;
+}
+
+// Відкрити звіти користувача
+async function openUserReports(userId, userName, userPhone) {
+    console.log('[PWA] Opening user reports:', userId, userName);
+
+    // Відкриваємо модальне вікно
+    document.getElementById('userReportsModal').classList.add('active');
+    document.getElementById('userReportsName').textContent = userName;
+
+    const phoneEl = document.getElementById('userReportsPhone');
+    if (userPhone && userPhone.trim()) {
+        phoneEl.textContent = userPhone;
+        phoneEl.style.display = 'inline';
+        phoneEl.onclick = () => window.open('tel:' + userPhone, '_self');
+    } else {
+        phoneEl.style.display = 'none';
+    }
+
+    const container = document.getElementById('userReportsList');
+    container.innerHTML = '<div class="loading"><div class="spinner"></div></div>';
+
+    try {
+        const groupId = currentGroup.id;
+        const response = await apiRequest(`/pwa/groups/${groupId}/users/${userId}/reports`, 'GET');
+        console.log('[PWA] User reports response:', response);
+
+        if (response.success && response.data && response.data.length > 0) {
+            renderUserReportsList(response.data);
+        } else {
+            container.innerHTML = `
+                <div style="text-align: center; padding: 32px; color: var(--text-secondary);">
+                    <p>Немає звітів</p>
+                </div>
+            `;
+        }
+    } catch (error) {
+        console.error('[PWA] User reports error:', error);
+        container.innerHTML = `
+            <div style="text-align: center; padding: 32px; color: var(--danger);">
+                <p>Помилка завантаження звітів</p>
+            </div>
+        `;
+    }
+}
+
+// Відобразити список звітів користувача
+function renderUserReportsList(reports) {
+    const container = document.getElementById('userReportsList');
+
+    let html = '';
+    reports.forEach(report => {
+        const date = new Date(report.submittedAt);
+        const day = String(date.getDate()).padStart(2, '0');
+        const month = String(date.getMonth() + 1).padStart(2, '0');
+        const time = date.toLocaleTimeString('uk-UA', { hour: '2-digit', minute: '2-digit' });
+        const dateStr = `${day}.${month}`;
+
+        // Тип звіту
+        let typeText = 'Звіт';
+        if (report.reportType === 'SIMPLE') typeText = 'Простий';
+        else if (report.reportType === 'EXTENDED') typeText = 'Розширений';
+        else if (report.reportType === 'URGENT') typeText = 'Терміновий';
+
+        // Відповідь для простого звіту
+        let responseText = '';
+        if (report.reportType === 'SIMPLE' && report.simpleResponse) {
+            if (report.simpleResponse === 'OK') responseText = '✅ OK';
+            else if (report.simpleResponse === 'NOT_OK') responseText = '❌ НЕ OK';
+            else responseText = report.simpleResponse;
+        }
+
+        html += `
+            <div class="card" style="margin: 8px 0; padding: 12px;">
+                <div style="display: flex; gap: 12px; align-items: center; flex-wrap: wrap;">
+                    <span style="color: var(--text-secondary);">${dateStr}</span>
+                    <span style="font-weight: bold;">${time}</span>
+                    <span style="color: var(--primary);">${typeText}</span>
+                    ${responseText ? `<span>${responseText}</span>` : ''}
+                </div>
+        `;
+
+        // Розширені поля (T1-T5)
+        if (report.reportType === 'EXTENDED') {
+            const fields = [
+                { label: 'Т1', value: report.field1Value },
+                { label: 'Т2', value: report.field2Value },
+                { label: 'Т3', value: report.field3Value },
+                { label: 'Т4', value: report.field4Value },
+                { label: 'Т5', value: report.field5Value }
+            ];
+
+            fields.forEach(field => {
+                if (field.value && field.value.trim()) {
+                    html += `<div style="margin-top: 4px; font-size: 13px; color: var(--text-secondary);">${field.label}: ${escapeHtml(field.value)}</div>`;
+                }
+            });
+        }
+
+        // Коментар
+        if (report.comment && report.comment.trim()) {
+            html += `<div style="margin-top: 6px; font-size: 13px; font-style: italic; color: var(--text-secondary);">💬 ${escapeHtml(report.comment)}</div>`;
+        }
+
+        html += '</div>';
     });
 
     container.innerHTML = html;
