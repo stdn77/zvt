@@ -299,40 +299,109 @@
             opacity: 1;
         }
 
-        /* Admin Info Card */
-        .admin-info-card {
-            background: var(--bg-card);
-            border-radius: var(--border-radius);
-            padding: 16px;
-            margin: 16px;
-            margin-bottom: 8px;
-        }
-
-        .admin-info-item {
+        /* Group Info Card (Android style) */
+        .group-info-row {
             display: flex;
             justify-content: space-between;
             align-items: center;
             padding: 12px 0;
             border-bottom: 1px solid rgba(255,255,255,0.1);
-            cursor: pointer;
         }
 
-        .admin-info-item:last-child {
+        .group-info-row:last-child {
             border-bottom: none;
         }
 
-        .admin-info-item:hover {
-            opacity: 0.8;
-        }
-
-        .admin-info-label {
+        .group-info-label {
             color: var(--text-secondary);
             font-size: 14px;
         }
 
-        .admin-info-value {
+        .group-info-value {
             color: var(--text-primary);
             font-weight: 500;
+        }
+
+        .group-info-value.clickable {
+            color: var(--primary);
+        }
+
+        .group-info-value.clickable:hover {
+            text-decoration: underline;
+        }
+
+        /* Member Card */
+        .member-card {
+            background: var(--bg-card);
+            border-radius: var(--border-radius);
+            padding: 12px 16px;
+            margin-bottom: 8px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .member-card.pending {
+            background: rgba(255, 152, 0, 0.1);
+            border: 1px solid var(--warning);
+        }
+
+        .member-info {
+            flex: 1;
+        }
+
+        .member-name {
+            font-weight: 500;
+            margin-bottom: 2px;
+        }
+
+        .member-role {
+            font-size: 12px;
+            padding: 2px 8px;
+            border-radius: 10px;
+            display: inline-block;
+        }
+
+        .member-role.admin {
+            background: var(--primary);
+            color: white;
+        }
+
+        .member-role.member {
+            background: rgba(255,255,255,0.1);
+            color: var(--text-secondary);
+        }
+
+        .member-role.pending {
+            background: var(--warning);
+            color: white;
+        }
+
+        .member-actions {
+            display: flex;
+            gap: 8px;
+        }
+
+        .member-action-btn {
+            background: none;
+            border: none;
+            padding: 8px;
+            cursor: pointer;
+            border-radius: 8px;
+        }
+
+        .member-action-btn.approve {
+            background: var(--success);
+            color: white;
+        }
+
+        .member-action-btn.reject {
+            background: var(--danger);
+            color: white;
+        }
+
+        .member-action-btn.delete {
+            color: var(--danger);
         }
 
         .admin-actions {
@@ -990,24 +1059,60 @@
             </div>
         </div>
 
-        <!-- Admin Info (shown only for admins) -->
+        <!-- Admin View (shown only for admins) -->
         <div id="groupAdminInfo" style="display: none;">
-            <div class="admin-info-card">
-                <div class="admin-info-item" onclick="showChangeReportTypeDialog()">
-                    <span class="admin-info-label">Тип звіту</span>
-                    <span class="admin-info-value" id="groupReportType">Простий</span>
+            <!-- Інформація про групу -->
+            <div class="card" style="margin: 16px;">
+                <div class="group-info-row">
+                    <span class="group-info-label">Учасників</span>
+                    <span class="group-info-value" id="groupMembersInfo">0/10</span>
                 </div>
-                <div class="admin-info-item" onclick="copyAccessCode()">
-                    <span class="admin-info-label">Код доступу</span>
-                    <span class="admin-info-value" id="groupAccessCode">-</span>
+                <div class="group-info-row" onclick="showChangeReportTypeDialog()" style="cursor: pointer;">
+                    <span class="group-info-label">Тип звіту</span>
+                    <span class="group-info-value clickable" id="groupReportType">Простий</span>
+                </div>
+                <div class="group-info-row" onclick="copyAccessCode()" style="cursor: pointer;">
+                    <span class="group-info-label">Код доступу</span>
+                    <span class="group-info-value clickable" id="groupAccessCode">-</span>
+                </div>
+                <div class="group-info-row" id="groupScheduleRow" style="display: none;">
+                    <span class="group-info-label">Розклад</span>
+                    <span class="group-info-value" id="groupSchedule">-</span>
+                </div>
+                <div class="group-info-row" id="groupWordsRow" style="display: none;">
+                    <span class="group-info-label">Слова звіту</span>
+                    <span class="group-info-value" id="groupWords">ОК / НЕ ОК</span>
                 </div>
             </div>
 
-            <!-- Список учасників для адміна -->
-            <div style="padding: 0 16px; margin: 16px 0 8px; display: flex; justify-content: space-between; align-items: center;">
-                <span style="color: var(--text-secondary); font-size: 14px;">Учасники (<span id="groupMembersCount">0</span>)</span>
+            <!-- Кнопки адміністрування -->
+            <div style="display: flex; gap: 12px; padding: 0 16px; margin-bottom: 16px;">
+                <button class="btn btn-secondary" style="flex: 1;" onclick="showAddMemberDialog()">
+                    <svg viewBox="0 0 24 24" fill="currentColor" width="18" height="18" style="margin-right: 8px;">
+                        <path d="M15 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm-9-2V7H4v3H1v2h3v3h2v-3h3v-2H6zm9 4c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/>
+                    </svg>
+                    Додати
+                </button>
+                <button class="btn btn-secondary" style="flex: 1;" onclick="showScheduleDialog()">
+                    <svg viewBox="0 0 24 24" fill="currentColor" width="18" height="18" style="margin-right: 8px;">
+                        <path d="M11.99 2C6.47 2 2 6.48 2 12s4.47 10 9.99 10C17.52 22 22 17.52 22 12S17.52 2 11.99 2zM12 20c-4.42 0-8-3.58-8-8s3.58-8 8-8 8 3.58 8 8-3.58 8-8 8zm.5-13H11v6l5.25 3.15.75-1.23-4.5-2.67z"/>
+                    </svg>
+                    Період
+                </button>
+            </div>
+            <div style="padding: 0 16px; margin-bottom: 16px;">
+                <button class="btn" style="background: var(--danger); width: 100%;" onclick="showDeleteGroupConfirm()">
+                    Видалити групу
+                </button>
+            </div>
+
+            <!-- Заголовок учасників -->
+            <div style="padding: 0 16px; margin-bottom: 8px; display: flex; justify-content: space-between; align-items: center;">
+                <span style="font-weight: 500;">Учасники групи</span>
                 <span style="color: var(--primary); font-size: 14px; cursor: pointer;" onclick="loadGroupMembers()">Оновити</span>
             </div>
+
+            <!-- Список учасників -->
             <div id="adminMembersList" style="padding: 0 16px;">
                 <div class="loading">
                     <div class="spinner"></div>
@@ -1015,7 +1120,7 @@
             </div>
         </div>
 
-        <!-- Звіти для звичайних учасників -->
+        <!-- Member View (for regular members) -->
         <div id="groupMemberView" style="display: none;">
             <div style="padding: 0 16px; margin-bottom: 8px; display: flex; justify-content: space-between; align-items: center;">
                 <span style="color: var(--text-secondary); font-size: 14px;">Мої звіти</span>
@@ -1316,7 +1421,103 @@
         </div>
     </div>
 
-    <!-- Group Settings Modal (Admin) -->
+    <!-- Add Member Modal -->
+    <div class="modal" id="addMemberModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>Додати учасника</h2>
+                <button class="modal-close" onclick="closeModal('addMemberModal')">&times;</button>
+            </div>
+            <p style="color: var(--text-secondary); margin-bottom: 16px;">
+                Поділіться цим кодом з людиною, яку хочете додати до групи:
+            </p>
+            <div style="background: var(--bg-card); border-radius: 12px; padding: 20px; text-align: center; margin-bottom: 16px;">
+                <span id="addMemberCode" style="font-size: 24px; font-weight: bold; letter-spacing: 2px; color: var(--primary);">GROUP-00000</span>
+            </div>
+            <div style="display: flex; gap: 12px;">
+                <button class="btn btn-secondary" style="flex: 1;" onclick="copyAccessCodeFromModal()">
+                    <svg viewBox="0 0 24 24" fill="currentColor" width="18" height="18" style="margin-right: 8px;">
+                        <path d="M16 1H4c-1.1 0-2 .9-2 2v14h2V3h12V1zm3 4H8c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h11c1.1 0 2-.9 2-2V7c0-1.1-.9-2-2-2zm0 16H8V7h11v14z"/>
+                    </svg>
+                    Копіювати
+                </button>
+                <button class="btn btn-primary" style="flex: 1;" onclick="shareAccessCode()">
+                    <svg viewBox="0 0 24 24" fill="currentColor" width="18" height="18" style="margin-right: 8px;">
+                        <path d="M18 16.08c-.76 0-1.44.3-1.96.77L8.91 12.7c.05-.23.09-.46.09-.7s-.04-.47-.09-.7l7.05-4.11c.54.5 1.25.81 2.04.81 1.66 0 3-1.34 3-3s-1.34-3-3-3-3 1.34-3 3c0 .24.04.47.09.7L8.04 9.81C7.5 9.31 6.79 9 6 9c-1.66 0-3 1.34-3 3s1.34 3 3 3c.79 0 1.5-.31 2.04-.81l7.12 4.16c-.05.21-.08.43-.08.65 0 1.61 1.31 2.92 2.92 2.92s2.92-1.31 2.92-2.92-1.31-2.92-2.92-2.92z"/>
+                    </svg>
+                    Поділитися
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Schedule Settings Modal -->
+    <div class="modal" id="scheduleModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>Період звітування</h2>
+                <button class="modal-close" onclick="closeModal('scheduleModal')">&times;</button>
+            </div>
+
+            <div class="radio-group" style="margin-bottom: 16px;">
+                <label class="radio-option">
+                    <input type="radio" name="scheduleType" value="FIXED_TIMES" id="scheduleFixed" checked>
+                    <div>
+                        <span style="font-weight: 500;">На час</span>
+                        <p style="font-size: 12px; color: var(--text-secondary); margin-top: 4px;">Конкретний час звітування</p>
+                    </div>
+                </label>
+                <label class="radio-option">
+                    <input type="radio" name="scheduleType" value="INTERVAL" id="scheduleInterval">
+                    <div>
+                        <span style="font-weight: 500;">Через час</span>
+                        <p style="font-size: 12px; color: var(--text-secondary); margin-top: 4px;">Періодичні звіти</p>
+                    </div>
+                </label>
+            </div>
+
+            <!-- Fixed Times -->
+            <div id="fixedTimesSection">
+                <div class="form-group">
+                    <label class="form-label">Час 1 (обов'язково)</label>
+                    <input type="time" class="form-input" id="fixedTime1">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Час 2</label>
+                    <input type="time" class="form-input" id="fixedTime2">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Час 3</label>
+                    <input type="time" class="form-input" id="fixedTime3">
+                </div>
+            </div>
+
+            <!-- Interval -->
+            <div id="intervalSection" style="display: none;">
+                <div class="form-group">
+                    <label class="form-label">Час початку</label>
+                    <input type="time" class="form-input" id="intervalStart">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Інтервал (хвилини)</label>
+                    <select class="form-input" id="intervalMinutes">
+                        <option value="30">30 хвилин</option>
+                        <option value="60">1 година</option>
+                        <option value="120">2 години</option>
+                        <option value="180">3 години</option>
+                        <option value="240">4 години</option>
+                        <option value="360">6 годин</option>
+                        <option value="480">8 годин</option>
+                        <option value="720">12 годин</option>
+                    </select>
+                </div>
+            </div>
+
+            <button class="btn btn-primary" style="margin-top: 16px;" onclick="saveSchedule()">Зберегти</button>
+        </div>
+    </div>
+
+    <!-- Group Settings Modal (for name edit) -->
     <div class="modal" id="groupSettingsModal">
         <div class="modal-content">
             <div class="modal-header">
@@ -1340,10 +1541,6 @@
                     <path d="M17.65 6.35C16.2 4.9 14.21 4 12 4c-4.42 0-7.99 3.58-7.99 8s3.57 8 7.99 8c3.73 0 6.84-2.55 7.73-6h-2.08c-.82 2.33-3.04 4-5.65 4-3.31 0-6-2.69-6-6s2.69-6 6-6c1.66 0 3.14.69 4.22 1.78L13 11h7V4l-2.35 2.35z"/>
                 </svg>
             </div>
-
-            <button class="btn" style="background: var(--danger); margin-top: 20px;" onclick="showDeleteGroupConfirm()">
-                Видалити групу
-            </button>
         </div>
     </div>
 

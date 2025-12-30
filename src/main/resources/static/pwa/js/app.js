@@ -571,7 +571,14 @@ async function loadGroupDetails(groupId) {
                 isAdmin: group.userRole === 'ADMIN',
                 accessCode: group.accessCode,
                 reportType: group.reportType,
-                membersCount: group.currentMembers || 0
+                membersCount: group.currentMembers || 0,
+                maxMembers: group.maxMembers || 10,
+                scheduleType: group.scheduleType,
+                fixedTimes: group.fixedTimes,
+                intervalMinutes: group.intervalMinutes,
+                intervalStartTime: group.intervalStartTime,
+                positiveWord: group.positiveWord || 'ОК',
+                negativeWord: group.negativeWord || 'НЕ ОК'
             };
 
             // Показуємо/ховаємо адмін-панель та вид для членів
@@ -586,10 +593,37 @@ async function loadGroupDetails(groupId) {
                 settingsBtn.style.display = 'flex';
 
                 // Оновлюємо інформацію
+                document.getElementById('groupMembersInfo').textContent =
+                    `${group.currentMembers || 0}/${group.maxMembers || 10}`;
                 document.getElementById('groupReportType').textContent =
                     group.reportType === 'SIMPLE' ? 'Простий' : 'Розширений';
                 document.getElementById('groupAccessCode').textContent = group.accessCode || '-';
-                document.getElementById('groupMembersCount').textContent = group.currentMembers || 0;
+
+                // Розклад
+                const scheduleRow = document.getElementById('groupScheduleRow');
+                if (group.scheduleType && (group.fixedTimes || group.intervalMinutes)) {
+                    scheduleRow.style.display = 'flex';
+                    if (group.scheduleType === 'FIXED_TIMES' && group.fixedTimes) {
+                        document.getElementById('groupSchedule').textContent = 'о ' + group.fixedTimes.join('; ');
+                    } else if (group.scheduleType === 'INTERVAL') {
+                        const hours = Math.floor(group.intervalMinutes / 60);
+                        const mins = group.intervalMinutes % 60;
+                        const interval = hours > 0 ? `${hours} год${mins > 0 ? ` ${mins} хв` : ''}` : `${mins} хв`;
+                        document.getElementById('groupSchedule').textContent = `з ${group.intervalStartTime}, кожні ${interval}`;
+                    }
+                } else {
+                    scheduleRow.style.display = 'none';
+                }
+
+                // Слова звіту (для простих)
+                const wordsRow = document.getElementById('groupWordsRow');
+                if (group.reportType === 'SIMPLE') {
+                    wordsRow.style.display = 'flex';
+                    document.getElementById('groupWords').textContent =
+                        `${group.positiveWord || 'ОК'} / ${group.negativeWord || 'НЕ ОК'}`;
+                } else {
+                    wordsRow.style.display = 'none';
+                }
 
                 // Завантажуємо учасників
                 loadGroupMembersForAdmin();
@@ -621,6 +655,118 @@ function copyAccessCode() {
         }).catch(() => {
             showToast('Не вдалося скопіювати', 'error');
         });
+    }
+}
+
+// Додати учасника
+function showAddMemberDialog() {
+    if (!currentGroup) return;
+    document.getElementById('addMemberCode').textContent = currentGroup.accessCode || '-';
+    document.getElementById('addMemberModal').classList.add('active');
+}
+
+function copyAccessCodeFromModal() {
+    copyAccessCode();
+    closeModal('addMemberModal');
+}
+
+function shareAccessCode() {
+    if (!currentGroup || !currentGroup.accessCode) return;
+
+    const shareData = {
+        title: 'ZVIT - Код групи',
+        text: `Приєднуйтесь до групи "${currentGroup.name}" в ZVIT!\nКод: ${currentGroup.accessCode}`,
+        url: window.location.origin + '/app'
+    };
+
+    if (navigator.share) {
+        navigator.share(shareData).catch(() => {
+            copyAccessCode();
+        });
+    } else {
+        copyAccessCode();
+    }
+    closeModal('addMemberModal');
+}
+
+// Період звітування
+function showScheduleDialog() {
+    if (!currentGroup) return;
+
+    // Встановлюємо поточні значення
+    const isInterval = currentGroup.scheduleType === 'INTERVAL';
+    document.getElementById('scheduleFixed').checked = !isInterval;
+    document.getElementById('scheduleInterval').checked = isInterval;
+
+    toggleScheduleType();
+
+    // Заповнюємо значення
+    if (currentGroup.fixedTimes) {
+        const times = currentGroup.fixedTimes;
+        if (times[0]) document.getElementById('fixedTime1').value = times[0];
+        if (times[1]) document.getElementById('fixedTime2').value = times[1];
+        if (times[2]) document.getElementById('fixedTime3').value = times[2];
+    }
+
+    if (currentGroup.intervalStartTime) {
+        document.getElementById('intervalStart').value = currentGroup.intervalStartTime;
+    }
+    if (currentGroup.intervalMinutes) {
+        document.getElementById('intervalMinutes').value = currentGroup.intervalMinutes;
+    }
+
+    document.getElementById('scheduleModal').classList.add('active');
+}
+
+function toggleScheduleType() {
+    const isInterval = document.getElementById('scheduleInterval').checked;
+    document.getElementById('fixedTimesSection').style.display = isInterval ? 'none' : 'block';
+    document.getElementById('intervalSection').style.display = isInterval ? 'block' : 'none';
+}
+
+// Слухачі для перемикання типу розкладу
+document.addEventListener('DOMContentLoaded', () => {
+    const scheduleFixed = document.getElementById('scheduleFixed');
+    const scheduleInterval = document.getElementById('scheduleInterval');
+    if (scheduleFixed) scheduleFixed.addEventListener('change', toggleScheduleType);
+    if (scheduleInterval) scheduleInterval.addEventListener('change', toggleScheduleType);
+});
+
+async function saveSchedule() {
+    if (!currentGroup) return;
+
+    const isInterval = document.getElementById('scheduleInterval').checked;
+
+    const request = {
+        scheduleType: isInterval ? 'INTERVAL' : 'FIXED_TIMES'
+    };
+
+    if (isInterval) {
+        request.intervalStartTime = document.getElementById('intervalStart').value;
+        request.intervalMinutes = parseInt(document.getElementById('intervalMinutes').value);
+    } else {
+        const times = [];
+        const t1 = document.getElementById('fixedTime1').value;
+        const t2 = document.getElementById('fixedTime2').value;
+        const t3 = document.getElementById('fixedTime3').value;
+        if (t1) times.push(t1);
+        if (t2) times.push(t2);
+        if (t3) times.push(t3);
+        request.fixedTimes = times;
+    }
+
+    try {
+        const response = await apiRequest(`/pwa/groups/${currentGroup.id}`, 'PUT', request);
+
+        if (response.success) {
+            closeModal('scheduleModal');
+            showToast('Розклад оновлено', 'success');
+            loadGroupDetails(currentGroup.id);
+        } else {
+            showToast(response.message || 'Помилка збереження', 'error');
+        }
+    } catch (error) {
+        showToast(error.message || 'Помилка збереження', 'error');
     }
 }
 
@@ -772,7 +918,11 @@ async function loadGroupMembersForAdmin() {
 
         if (response.success && response.data) {
             renderMembersForAdmin(response.data);
-            document.getElementById('groupMembersCount').textContent = response.data.length;
+            // Оновлюємо лічильник у інфо-блоці
+            const membersInfo = document.getElementById('groupMembersInfo');
+            if (membersInfo) {
+                membersInfo.textContent = `${response.data.length}/${currentGroup.maxMembers || 10}`;
+            }
         } else {
             container.innerHTML = '<p style="color: var(--text-secondary); text-align: center; padding: 20px;">Не вдалося завантажити учасників</p>';
         }
