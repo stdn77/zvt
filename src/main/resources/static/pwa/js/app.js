@@ -665,7 +665,6 @@ async function saveReportType() {
             const typeText = newType === 'SIMPLE' ? 'Простий' : 'Розширений';
 
             document.getElementById('groupReportType').textContent = typeText;
-            document.getElementById('settingsReportType').textContent = typeText;
 
             closeModal('changeReportTypeModal');
             showToast('Тип звіту змінено', 'success');
@@ -728,8 +727,8 @@ async function regenerateAccessCode() {
             currentGroup.accessCode = newCode;
 
             document.getElementById('groupAccessCode').textContent = newCode;
-            document.getElementById('settingsAccessCode').textContent = newCode;
 
+            closeModal('groupSettingsModal');
             showToast('Код доступу змінено', 'success');
         } else {
             showToast(response.message || 'Помилка зміни коду', 'error');
