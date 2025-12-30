@@ -1400,19 +1400,18 @@ function renderReportGroupCard(group, isAdmin) {
     const groupName = group.externalName || group.name || 'Група';
     const groupId = group.groupId || group.id;
 
+    // Екрануємо для безпечного використання в onclick
+    const safeGroupName = groupName.replace(/'/g, "\\'").replace(/"/g, '&quot;');
+
     // Для адміна: ліва частина - відкриваємо статуси, права - терміновий звіт
     // Для учасника: ліва частина - не клікабельна, права - відправка звіту
-    const leftClickHandler = isAdmin
-        ? `openGroupStatuses('${groupId}', '${escapeHtml(groupName)}')`
-        : '';
-    const leftCursor = isAdmin ? 'cursor: pointer;' : '';
 
     // Права частина: адмін - терміновий звіт, учасник - звичайний звіт
     let rightSection;
     if (isAdmin) {
         // Адмін: кнопка "Терміновий" (червона)
         rightSection = `
-            <div style="flex: 0.4; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 12px; cursor: pointer;" onclick="openUrgentReportDialog('${groupId}', '${escapeHtml(groupName)}')">
+            <div style="flex: 0.4; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 12px; cursor: pointer;" onclick="openUrgentReportDialog('${groupId}', '${safeGroupName}')">
                 <svg viewBox="0 0 24 24" fill="var(--danger)" width="32" height="32">
                     <path d="M1 21h22L12 2 1 21zm12-3h-2v-2h2v2zm0-4h-2v-4h2v4z"/>
                 </svg>
@@ -1422,7 +1421,7 @@ function renderReportGroupCard(group, isAdmin) {
     } else {
         // Учасник: кнопка "Звіт" (синя)
         rightSection = `
-            <div style="flex: 0.4; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 12px; cursor: pointer;" onclick="openReportForGroup('${groupId}', '${escapeHtml(groupName)}', '${group.reportType}', ${isAdmin})">
+            <div style="flex: 0.4; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 12px; cursor: pointer;" onclick="openReportForGroup('${groupId}', '${safeGroupName}', '${group.reportType}', ${isAdmin})">
                 <svg viewBox="0 0 24 24" fill="var(--primary)" width="32" height="32">
                     <path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"/>
                 </svg>
@@ -1431,11 +1430,15 @@ function renderReportGroupCard(group, isAdmin) {
         `;
     }
 
+    // Для адміна ліва частина клікабельна - відкриває статуси
+    const leftOnclick = isAdmin ? `onclick="openGroupStatuses('${groupId}', '${safeGroupName}')"` : '';
+    const leftCursor = isAdmin ? 'cursor: pointer;' : '';
+
     return `
         <div class="card report-group-card" style="margin: 8px 16px; padding: 0; overflow: hidden;">
             <div style="display: flex;">
                 <!-- Ліва частина -->
-                <div style="flex: 0.6; display: flex; padding: 16px; ${leftCursor}" ${leftClickHandler ? `onclick="${leftClickHandler}"` : ''}>
+                <div style="flex: 0.6; display: flex; padding: 16px; ${leftCursor}" ${leftOnclick}>
                     <!-- Кольоровий індикатор -->
                     <div style="width: 8px; background: var(--primary); border-radius: 4px; margin-right: 12px;"></div>
                     <!-- Інформація -->
@@ -1458,6 +1461,7 @@ function renderReportGroupCard(group, isAdmin) {
 }
 
 function openGroupDetails(groupId) {
+    console.log('[PWA] openGroupDetails called:', groupId);
     currentGroup = { id: groupId };
     showScreen('groupScreen');
     loadGroupDetails(groupId);
@@ -1465,6 +1469,7 @@ function openGroupDetails(groupId) {
 
 // Відкрити екран статусів учасників (для адміна)
 function openGroupStatuses(groupId, groupName) {
+    console.log('[PWA] openGroupStatuses called:', groupId, groupName);
     currentGroup = { id: groupId, name: groupName };
     document.getElementById('groupStatusTitle').textContent = groupName || 'Статус групи';
     showScreen('groupStatusScreen');
