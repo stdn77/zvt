@@ -144,4 +144,12 @@ public class Group {
         }
         return code.toString();
     }
+
+    /**
+     * Regenerate access code for the group
+     */
+    public void regenerateAccessCode() {
+        this.accessCode = generateAccessCode();
+        this.updatedAt = LocalDateTime.now();
+    }
 }

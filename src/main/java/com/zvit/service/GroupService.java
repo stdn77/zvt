@@ -467,6 +467,24 @@ public class GroupService {
         groupMemberRepository.delete(pendingMember);
     }
 
+    @Transactional
+    public String regenerateAccessCode(String groupId, String adminUserId) {
+        Group group = groupRepository.findById(groupId)
+                .orElseThrow(() -> new RuntimeException("Групу не знайдено"));
+
+        GroupMember adminMember = groupMemberRepository.findByGroupIdAndUserId(groupId, adminUserId)
+                .orElseThrow(() -> new RuntimeException("Ви не є учасником цієї групи"));
+
+        if (adminMember.getRole() != GroupMember.Role.ADMIN) {
+            throw new RuntimeException("Тільки адміністратор може змінювати код доступу");
+        }
+
+        group.regenerateAccessCode();
+        groupRepository.save(group);
+
+        return group.getAccessCode();
+    }
+
     private GroupResponse mapToGroupResponse(Group group, GroupMember member) {
         boolean isAdmin = member.getRole() == GroupMember.Role.ADMIN;
         boolean isAccepted = member.getStatus() == GroupMember.MemberStatus.ACCEPTED;

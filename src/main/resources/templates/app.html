@@ -274,6 +274,79 @@
             display: block;
         }
 
+        /* Pull to Refresh */
+        .screen {
+            position: relative;
+        }
+
+        .ptr-indicator {
+            position: absolute;
+            top: 0;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 40px;
+            height: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            opacity: 0;
+            transition: all 0.2s ease;
+            z-index: 10;
+            pointer-events: none;
+        }
+
+        .ptr-indicator.refreshing {
+            opacity: 1;
+        }
+
+        /* Admin Info Card */
+        .admin-info-card {
+            background: var(--bg-card);
+            border-radius: var(--border-radius);
+            padding: 16px;
+            margin: 16px;
+            margin-bottom: 8px;
+        }
+
+        .admin-info-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 12px 0;
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+            cursor: pointer;
+        }
+
+        .admin-info-item:last-child {
+            border-bottom: none;
+        }
+
+        .admin-info-item:hover {
+            opacity: 0.8;
+        }
+
+        .admin-info-label {
+            color: var(--text-secondary);
+            font-size: 14px;
+        }
+
+        .admin-info-value {
+            color: var(--text-primary);
+            font-weight: 500;
+        }
+
+        .admin-actions {
+            display: flex;
+            gap: 8px;
+            margin: 0 16px 16px;
+        }
+
+        .admin-actions .btn {
+            flex: 1;
+            padding: 12px;
+            font-size: 14px;
+        }
+
         /* Cards */
         .card {
             background: var(--bg-card);
@@ -861,9 +934,17 @@
 
     <!-- Main Screen (Groups) -->
     <div id="mainScreen" class="screen">
+        <div class="ptr-indicator">
+            <div class="spinner" style="width: 24px; height: 24px;"></div>
+        </div>
         <div class="header">
             <h1 class="header-title">Мої групи</h1>
             <div class="header-actions">
+                <div class="header-icon" onclick="loadGroups()" title="Оновити">
+                    <svg viewBox="0 0 24 24" fill="currentColor" width="24" height="24">
+                        <path d="M17.65 6.35C16.2 4.9 14.21 4 12 4c-4.42 0-7.99 3.58-7.99 8s3.57 8 7.99 8c3.73 0 6.84-2.55 7.73-6h-2.08c-.82 2.33-3.04 4-5.65 4-3.31 0-6-2.69-6-6s2.69-6 6-6c1.66 0 3.14.69 4.22 1.78L13 11h7V4l-2.35 2.35z"/>
+                    </svg>
+                </div>
                 <div class="header-icon" onclick="showJoinGroupDialog()" title="Приєднатися">
                     <svg viewBox="0 0 24 24" fill="currentColor" width="24" height="24">
                         <path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z"/>
@@ -872,7 +953,7 @@
             </div>
         </div>
 
-        <div id="groupsList">
+        <div id="groupsList" style="padding: 0 16px;">
             <div class="loading">
                 <div class="spinner"></div>
             </div>
@@ -883,23 +964,56 @@
 
     <!-- Group Detail Screen -->
     <div id="groupScreen" class="screen">
+        <div class="ptr-indicator">
+            <div class="spinner" style="width: 24px; height: 24px;"></div>
+        </div>
         <div class="header">
             <div style="display: flex; align-items: center; gap: 12px;">
-                <div class="header-icon" onclick="showScreen('mainScreen')">
+                <div class="header-icon" onclick="navigateTo('mainScreen')">
                     <svg viewBox="0 0 24 24" fill="currentColor" width="24" height="24">
                         <path d="M20 11H7.83l5.59-5.59L12 4l-8 8 8 8 1.41-1.41L7.83 13H20v-2z"/>
                     </svg>
                 </div>
                 <h1 class="header-title" id="groupTitle">Група</h1>
             </div>
-            <div class="header-icon" onclick="showLeaveGroupConfirm()" title="Вийти з групи" style="color: var(--danger);">
-                <svg viewBox="0 0 24 24" fill="currentColor" width="24" height="24">
-                    <path d="M10.09 15.59L11.5 17l5-5-5-5-1.41 1.41L12.67 11H3v2h9.67l-2.58 2.59zM19 3H5c-1.11 0-2 .9-2 2v4h2V5h14v14H5v-4H3v4c0 1.1.89 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2z"/>
-                </svg>
+            <div class="header-actions">
+                <div class="header-icon" id="groupSettingsBtn" onclick="showGroupSettings()" title="Налаштування" style="display: none;">
+                    <svg viewBox="0 0 24 24" fill="currentColor" width="24" height="24">
+                        <path d="M12 15.5A3.5 3.5 0 0 1 8.5 12 3.5 3.5 0 0 1 12 8.5a3.5 3.5 0 0 1 3.5 3.5 3.5 3.5 0 0 1-3.5 3.5m7.43-2.53c.04-.32.07-.64.07-.97 0-.33-.03-.66-.07-1l2.11-1.63c.19-.15.24-.42.12-.64l-2-3.46c-.12-.22-.39-.31-.61-.22l-2.49 1c-.52-.39-1.06-.73-1.69-.98l-.37-2.65A.506.506 0 0 0 14 2h-4c-.25 0-.46.18-.5.42l-.37 2.65c-.63.25-1.17.59-1.69.98l-2.49-1c-.22-.09-.49 0-.61.22l-2 3.46c-.13.22-.07.49.12.64L4.57 11c-.04.34-.07.67-.07 1 0 .33.03.65.07.97l-2.11 1.66c-.19.15-.25.42-.12.64l2 3.46c.12.22.39.3.61.22l2.49-1.01c.52.4 1.06.74 1.69.99l.37 2.65c.04.24.25.42.5.42h4c.25 0 .46-.18.5-.42l.37-2.65c.63-.26 1.17-.59 1.69-.99l2.49 1.01c.22.08.49 0 .61-.22l2-3.46c.12-.22.07-.49-.12-.64l-2.11-1.66Z"/>
+                    </svg>
+                </div>
+                <div class="header-icon" onclick="showLeaveGroupConfirm()" title="Вийти з групи" style="color: var(--danger);">
+                    <svg viewBox="0 0 24 24" fill="currentColor" width="24" height="24">
+                        <path d="M10.09 15.59L11.5 17l5-5-5-5-1.41 1.41L12.67 11H3v2h9.67l-2.58 2.59zM19 3H5c-1.11 0-2 .9-2 2v4h2V5h14v14H5v-4H3v4c0 1.1.89 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2z"/>
+                    </svg>
+                </div>
             </div>
         </div>
 
-        <div id="reportsList">
+        <!-- Admin Info (shown only for admins) -->
+        <div id="groupAdminInfo" style="display: none;">
+            <div class="admin-info-card">
+                <div class="admin-info-item" onclick="showChangeReportTypeDialog()">
+                    <span class="admin-info-label">Тип звіту</span>
+                    <span class="admin-info-value" id="groupReportType">Простий</span>
+                </div>
+                <div class="admin-info-item" onclick="copyAccessCode()">
+                    <span class="admin-info-label">Код доступу</span>
+                    <span class="admin-info-value" id="groupAccessCode">-</span>
+                </div>
+                <div class="admin-info-item">
+                    <span class="admin-info-label">Учасників</span>
+                    <span class="admin-info-value" id="groupMembersCount">0</span>
+                </div>
+            </div>
+        </div>
+
+        <div style="padding: 0 16px; margin-bottom: 8px; display: flex; justify-content: space-between; align-items: center;">
+            <span style="color: var(--text-secondary); font-size: 14px;">Звіти</span>
+            <span style="color: var(--primary); font-size: 14px; cursor: pointer;" onclick="refreshGroupReports()">Оновити</span>
+        </div>
+
+        <div id="reportsList" style="padding: 0 16px;">
             <div class="loading">
                 <div class="spinner"></div>
             </div>
@@ -910,11 +1024,19 @@
 
     <!-- Reports Screen -->
     <div id="reportsScreen" class="screen">
+        <div class="ptr-indicator">
+            <div class="spinner" style="width: 24px; height: 24px;"></div>
+        </div>
         <div class="header">
             <h1 class="header-title">Мої звіти</h1>
+            <div class="header-icon" onclick="loadMyReports()" title="Оновити">
+                <svg viewBox="0 0 24 24" fill="currentColor" width="24" height="24">
+                    <path d="M17.65 6.35C16.2 4.9 14.21 4 12 4c-4.42 0-7.99 3.58-7.99 8s3.57 8 7.99 8c3.73 0 6.84-2.55 7.73-6h-2.08c-.82 2.33-3.04 4-5.65 4-3.31 0-6-2.69-6-6s2.69-6 6-6c1.66 0 3.14.69 4.22 1.78L13 11h7V4l-2.35 2.35z"/>
+                </svg>
+            </div>
         </div>
 
-        <div id="myReportsList">
+        <div id="myReportsList" style="padding: 0 16px;">
             <div class="loading">
                 <div class="spinner"></div>
             </div>
@@ -1180,6 +1302,127 @@
             <div style="display: flex; gap: 12px;">
                 <button class="btn btn-secondary" style="flex: 1;" onclick="closeModal('leaveGroupModal')">Скасувати</button>
                 <button class="btn" style="flex: 1; background: var(--danger);" onclick="confirmLeaveGroup()">Вийти</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Group Settings Modal (Admin) -->
+    <div class="modal" id="groupSettingsModal">
+        <div class="modal-content" style="max-height: 80vh; overflow-y: auto;">
+            <div class="modal-header">
+                <h2>Налаштування групи</h2>
+                <button class="modal-close" onclick="closeModal('groupSettingsModal')">&times;</button>
+            </div>
+
+            <div class="card" style="margin-bottom: 16px;">
+                <h3 style="font-size: 14px; color: var(--text-secondary); margin-bottom: 12px;">Основні</h3>
+                <div class="settings-item" onclick="showEditGroupNameDialog()">
+                    <div>
+                        <span class="settings-label">Назва групи</span>
+                        <span class="settings-value" id="settingsGroupName">-</span>
+                    </div>
+                    <svg viewBox="0 0 24 24" fill="currentColor" width="20" height="20" style="opacity: 0.5;">
+                        <path d="M8.59 16.59L13.17 12 8.59 7.41 10 6l6 6-6 6-1.41-1.41z"/>
+                    </svg>
+                </div>
+                <div class="settings-item" onclick="showChangeReportTypeModal()">
+                    <div>
+                        <span class="settings-label">Тип звіту</span>
+                        <span class="settings-value" id="settingsReportType">Простий</span>
+                    </div>
+                    <svg viewBox="0 0 24 24" fill="currentColor" width="20" height="20" style="opacity: 0.5;">
+                        <path d="M8.59 16.59L13.17 12 8.59 7.41 10 6l6 6-6 6-1.41-1.41z"/>
+                    </svg>
+                </div>
+            </div>
+
+            <div class="card" style="margin-bottom: 16px;">
+                <h3 style="font-size: 14px; color: var(--text-secondary); margin-bottom: 12px;">Доступ</h3>
+                <div class="settings-item" onclick="copyAccessCode()">
+                    <div>
+                        <span class="settings-label">Код доступу</span>
+                        <span class="settings-value" id="settingsAccessCode">-</span>
+                    </div>
+                    <svg viewBox="0 0 24 24" fill="currentColor" width="20" height="20" style="opacity: 0.5;">
+                        <path d="M16 1H4c-1.1 0-2 .9-2 2v14h2V3h12V1zm3 4H8c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h11c1.1 0 2-.9 2-2V7c0-1.1-.9-2-2-2zm0 16H8V7h11v14z"/>
+                    </svg>
+                </div>
+                <div class="settings-item" onclick="regenerateAccessCode()">
+                    <span class="settings-label" style="color: var(--primary);">Змінити код доступу</span>
+                    <svg viewBox="0 0 24 24" fill="var(--primary)" width="20" height="20">
+                        <path d="M17.65 6.35C16.2 4.9 14.21 4 12 4c-4.42 0-7.99 3.58-7.99 8s3.57 8 7.99 8c3.73 0 6.84-2.55 7.73-6h-2.08c-.82 2.33-3.04 4-5.65 4-3.31 0-6-2.69-6-6s2.69-6 6-6c1.66 0 3.14.69 4.22 1.78L13 11h7V4l-2.35 2.35z"/>
+                    </svg>
+                </div>
+            </div>
+
+            <div class="card" style="margin-bottom: 16px;">
+                <h3 style="font-size: 14px; color: var(--text-secondary); margin-bottom: 12px;">Учасники (<span id="settingsMemberCount">0</span>)</h3>
+                <div id="membersList" style="max-height: 200px; overflow-y: auto;">
+                    <!-- Members will be loaded here -->
+                </div>
+            </div>
+
+            <button class="btn" style="background: var(--danger); margin-top: 12px;" onclick="showDeleteGroupConfirm()">
+                Видалити групу
+            </button>
+        </div>
+    </div>
+
+    <!-- Change Report Type Modal -->
+    <div class="modal" id="changeReportTypeModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>Тип звіту</h2>
+                <button class="modal-close" onclick="closeModal('changeReportTypeModal')">&times;</button>
+            </div>
+            <div class="radio-group">
+                <label class="radio-option">
+                    <input type="radio" name="newReportType" value="SIMPLE" id="reportTypeSimple">
+                    <div>
+                        <span style="font-weight: 500;">Простий</span>
+                        <p style="font-size: 12px; color: var(--text-secondary); margin-top: 4px;">OK / НЕ OK / ТЕРМІНОВО</p>
+                    </div>
+                </label>
+                <label class="radio-option">
+                    <input type="radio" name="newReportType" value="EXTENDED" id="reportTypeExtended">
+                    <div>
+                        <span style="font-weight: 500;">Розширений</span>
+                        <p style="font-size: 12px; color: var(--text-secondary); margin-top: 4px;">5 питань по категоріях</p>
+                    </div>
+                </label>
+            </div>
+            <button class="btn btn-primary" style="margin-top: 20px;" onclick="saveReportType()">Зберегти</button>
+        </div>
+    </div>
+
+    <!-- Edit Group Name Modal -->
+    <div class="modal" id="editGroupNameModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>Назва групи</h2>
+                <button class="modal-close" onclick="closeModal('editGroupNameModal')">&times;</button>
+            </div>
+            <div class="form-group">
+                <label class="form-label">Нова назва</label>
+                <input type="text" class="form-input" id="editGroupNameInput" placeholder="Введіть назву" maxlength="50">
+            </div>
+            <button class="btn btn-primary" onclick="saveGroupName()">Зберегти</button>
+        </div>
+    </div>
+
+    <!-- Delete Group Confirmation -->
+    <div class="modal" id="deleteGroupModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>Видалити групу?</h2>
+                <button class="modal-close" onclick="closeModal('deleteGroupModal')">&times;</button>
+            </div>
+            <p style="margin-bottom: 20px; color: var(--text-secondary);">
+                Ви впевнені, що хочете видалити групу? Всі дані будуть втрачені назавжди.
+            </p>
+            <div style="display: flex; gap: 12px;">
+                <button class="btn btn-secondary" style="flex: 1;" onclick="closeModal('deleteGroupModal')">Скасувати</button>
+                <button class="btn" style="flex: 1; background: var(--danger);" onclick="confirmDeleteGroup()">Видалити</button>
             </div>
         </div>
     </div>

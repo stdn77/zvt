@@ -5,8 +5,10 @@ import com.zvit.dto.request.JoinGroupRequest;
 import com.zvit.dto.request.LoginRequest;
 import com.zvit.dto.request.RegisterRequest;
 import com.zvit.dto.request.SimpleReportRequest;
+import com.zvit.dto.request.UpdateGroupSettingsRequest;
 import com.zvit.dto.request.UpdateProfileRequest;
 import com.zvit.dto.response.ApiResponse;
+import com.zvit.dto.response.GroupMemberResponse;
 import com.zvit.dto.response.GroupResponse;
 import com.zvit.dto.response.LoginResponse;
 import com.zvit.dto.response.RegisterResponse;
@@ -201,5 +203,108 @@ public class PwaController {
         log.info("PWA: Updating profile for user: {}", userId);
         userService.updateProfile(userId, request);
         return ResponseEntity.ok(ApiResponse.success("Профіль оновлено", null));
+    }
+
+    // ==================== ADMIN ENDPOINTS ====================
+
+    /**
+     * Оновити налаштування групи (тільки для адміна)
+     */
+    @PutMapping("/groups/{groupId}")
+    public ResponseEntity<ApiResponse<Void>> updateGroupSettings(
+            @PathVariable String groupId,
+            @RequestBody UpdateGroupSettingsRequest request,
+            Authentication authentication
+    ) {
+        String userId = authentication.getName();
+        log.info("PWA: Updating group settings: {} by user: {}", groupId, userId);
+        groupService.updateGroupSettings(groupId, request, userId);
+        return ResponseEntity.ok(ApiResponse.success("Налаштування групи оновлено", null));
+    }
+
+    /**
+     * Видалити групу (тільки для адміна)
+     */
+    @DeleteMapping("/groups/{groupId}")
+    public ResponseEntity<ApiResponse<Void>> deleteGroup(
+            @PathVariable String groupId,
+            Authentication authentication
+    ) {
+        String userId = authentication.getName();
+        log.info("PWA: Deleting group: {} by user: {}", groupId, userId);
+        groupService.deleteGroup(groupId, userId);
+        return ResponseEntity.ok(ApiResponse.success("Групу видалено", null));
+    }
+
+    /**
+     * Регенерувати код доступу (тільки для адміна)
+     */
+    @PostMapping("/groups/{groupId}/regenerate-code")
+    public ResponseEntity<ApiResponse<String>> regenerateAccessCode(
+            @PathVariable String groupId,
+            Authentication authentication
+    ) {
+        String userId = authentication.getName();
+        log.info("PWA: Regenerating access code for group: {} by user: {}", groupId, userId);
+        String newCode = groupService.regenerateAccessCode(groupId, userId);
+        return ResponseEntity.ok(ApiResponse.success("Код доступу змінено", newCode));
+    }
+
+    /**
+     * Отримати список учасників групи
+     */
+    @GetMapping("/groups/{groupId}/members")
+    public ResponseEntity<ApiResponse<List<GroupMemberResponse>>> getGroupMembers(
+            @PathVariable String groupId,
+            Authentication authentication
+    ) {
+        String userId = authentication.getName();
+        List<GroupMemberResponse> members = groupService.getGroupMembers(groupId, userId);
+        return ResponseEntity.ok(ApiResponse.success("Учасників отримано", members));
+    }
+
+    /**
+     * Видалити учасника з групи (тільки для адміна)
+     */
+    @DeleteMapping("/groups/{groupId}/members/{memberId}")
+    public ResponseEntity<ApiResponse<Void>> removeMember(
+            @PathVariable String groupId,
+            @PathVariable String memberId,
+            Authentication authentication
+    ) {
+        String userId = authentication.getName();
+        log.info("PWA: Removing member {} from group {} by user: {}", memberId, groupId, userId);
+        groupService.removeMemberFromGroup(groupId, memberId, userId);
+        return ResponseEntity.ok(ApiResponse.success("Учасника видалено", null));
+    }
+
+    /**
+     * Схвалити учасника (тільки для адміна)
+     */
+    @PostMapping("/groups/{groupId}/members/{memberId}/approve")
+    public ResponseEntity<ApiResponse<Void>> approveMember(
+            @PathVariable String groupId,
+            @PathVariable String memberId,
+            Authentication authentication
+    ) {
+        String userId = authentication.getName();
+        log.info("PWA: Approving member {} in group {} by user: {}", memberId, groupId, userId);
+        groupService.approveMember(groupId, memberId, userId);
+        return ResponseEntity.ok(ApiResponse.success("Учасника схвалено", null));
+    }
+
+    /**
+     * Відхилити учасника (тільки для адміна)
+     */
+    @PostMapping("/groups/{groupId}/members/{memberId}/reject")
+    public ResponseEntity<ApiResponse<Void>> rejectMember(
+            @PathVariable String groupId,
+            @PathVariable String memberId,
+            Authentication authentication
+    ) {
+        String userId = authentication.getName();
+        log.info("PWA: Rejecting member {} in group {} by user: {}", memberId, groupId, userId);
+        groupService.rejectMember(groupId, memberId, userId);
+        return ResponseEntity.ok(ApiResponse.success("Заявку відхилено", null));
     }
 }

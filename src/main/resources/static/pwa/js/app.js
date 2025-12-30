@@ -552,7 +552,328 @@ async function openGroup(groupId, groupName) {
     currentGroup = { id: groupId, name: groupName };
     document.getElementById('groupTitle').textContent = groupName;
     showScreen('groupScreen');
-    loadReports(groupId);
+
+    // Завантажуємо деталі групи та звіти
+    await loadGroupDetails(groupId);
+    await loadReports(groupId);
+}
+
+async function loadGroupDetails(groupId) {
+    try {
+        console.log('[PWA] Loading group details:', groupId);
+        const response = await apiRequest(`/pwa/groups/${groupId}`, 'GET');
+        console.log('[PWA] Group details:', response);
+
+        if (response.success && response.data) {
+            const group = response.data;
+            currentGroup = {
+                id: group.groupId || groupId,
+                name: group.externalName || currentGroup.name,
+                isAdmin: group.userRole === 'ADMIN',
+                accessCode: group.accessCode,
+                reportType: group.reportType,
+                membersCount: group.currentMembers || 0
+            };
+
+            // Показуємо/ховаємо адмін-панель
+            const adminInfo = document.getElementById('groupAdminInfo');
+            const settingsBtn = document.getElementById('groupSettingsBtn');
+
+            if (currentGroup.isAdmin) {
+                adminInfo.style.display = 'block';
+                settingsBtn.style.display = 'flex';
+
+                // Оновлюємо інформацію
+                document.getElementById('groupReportType').textContent =
+                    group.reportType === 'SIMPLE' ? 'Простий' : 'Розширений';
+                document.getElementById('groupAccessCode').textContent = group.accessCode || '-';
+                document.getElementById('groupMembersCount').textContent = group.currentMembers || 0;
+            } else {
+                adminInfo.style.display = 'none';
+                settingsBtn.style.display = 'none';
+            }
+        }
+    } catch (error) {
+        console.error('[PWA] Error loading group details:', error);
+    }
+}
+
+function refreshGroupReports() {
+    if (currentGroup && currentGroup.id) {
+        loadReports(currentGroup.id);
+    }
+}
+
+function copyAccessCode() {
+    if (currentGroup && currentGroup.accessCode) {
+        navigator.clipboard.writeText(currentGroup.accessCode).then(() => {
+            showToast('Код скопійовано!', 'success');
+        }).catch(() => {
+            showToast('Не вдалося скопіювати', 'error');
+        });
+    }
+}
+
+function showGroupSettings() {
+    if (!currentGroup || !currentGroup.isAdmin) return;
+
+    // Update settings modal with current group data
+    document.getElementById('settingsGroupName').textContent = currentGroup.name || '-';
+    document.getElementById('settingsReportType').textContent =
+        currentGroup.reportType === 'SIMPLE' ? 'Простий' : 'Розширений';
+    document.getElementById('settingsAccessCode').textContent = currentGroup.accessCode || '-';
+    document.getElementById('settingsMemberCount').textContent = currentGroup.membersCount || 0;
+
+    // Load members list
+    loadGroupMembers();
+
+    document.getElementById('groupSettingsModal').classList.add('active');
+}
+
+function showChangeReportTypeDialog() {
+    if (!currentGroup || !currentGroup.isAdmin) return;
+    showChangeReportTypeModal();
+}
+
+function showChangeReportTypeModal() {
+    if (!currentGroup) return;
+
+    // Set current type
+    const isSimple = currentGroup.reportType === 'SIMPLE';
+    document.getElementById('reportTypeSimple').checked = isSimple;
+    document.getElementById('reportTypeExtended').checked = !isSimple;
+
+    closeModal('groupSettingsModal');
+    document.getElementById('changeReportTypeModal').classList.add('active');
+}
+
+async function saveReportType() {
+    if (!currentGroup) return;
+
+    const newType = document.querySelector('input[name="newReportType"]:checked').value;
+
+    try {
+        const response = await apiRequest(`/pwa/groups/${currentGroup.id}`, 'PUT', {
+            reportType: newType
+        });
+
+        if (response.success) {
+            currentGroup.reportType = newType;
+            const typeText = newType === 'SIMPLE' ? 'Простий' : 'Розширений';
+
+            document.getElementById('groupReportType').textContent = typeText;
+            document.getElementById('settingsReportType').textContent = typeText;
+
+            closeModal('changeReportTypeModal');
+            showToast('Тип звіту змінено', 'success');
+        } else {
+            showToast(response.message || 'Помилка зміни типу', 'error');
+        }
+    } catch (error) {
+        showToast(error.message || 'Помилка зміни типу', 'error');
+    }
+}
+
+function showEditGroupNameDialog() {
+    if (!currentGroup) return;
+    document.getElementById('editGroupNameInput').value = currentGroup.name || '';
+    closeModal('groupSettingsModal');
+    document.getElementById('editGroupNameModal').classList.add('active');
+}
+
+async function saveGroupName() {
+    if (!currentGroup) return;
+
+    const newName = document.getElementById('editGroupNameInput').value.trim();
+
+    if (!newName || newName.length < 3) {
+        showToast('Назва має бути мінімум 3 символи', 'error');
+        return;
+    }
+
+    try {
+        const response = await apiRequest(`/pwa/groups/${currentGroup.id}`, 'PUT', {
+            externalName: newName
+        });
+
+        if (response.success) {
+            currentGroup.name = newName;
+            document.getElementById('groupTitle').textContent = newName;
+            document.getElementById('settingsGroupName').textContent = newName;
+
+            closeModal('editGroupNameModal');
+            showToast('Назву групи змінено', 'success');
+
+            // Reload groups list
+            loadGroups();
+        } else {
+            showToast(response.message || 'Помилка зміни назви', 'error');
+        }
+    } catch (error) {
+        showToast(error.message || 'Помилка зміни назви', 'error');
+    }
+}
+
+async function regenerateAccessCode() {
+    if (!currentGroup) return;
+
+    try {
+        const response = await apiRequest(`/pwa/groups/${currentGroup.id}/regenerate-code`, 'POST');
+
+        if (response.success && response.data) {
+            const newCode = response.data.accessCode || response.data;
+            currentGroup.accessCode = newCode;
+
+            document.getElementById('groupAccessCode').textContent = newCode;
+            document.getElementById('settingsAccessCode').textContent = newCode;
+
+            showToast('Код доступу змінено', 'success');
+        } else {
+            showToast(response.message || 'Помилка зміни коду', 'error');
+        }
+    } catch (error) {
+        showToast(error.message || 'Помилка зміни коду', 'error');
+    }
+}
+
+function showDeleteGroupConfirm() {
+    closeModal('groupSettingsModal');
+    document.getElementById('deleteGroupModal').classList.add('active');
+}
+
+async function confirmDeleteGroup() {
+    if (!currentGroup) return;
+
+    try {
+        const response = await apiRequest(`/pwa/groups/${currentGroup.id}`, 'DELETE');
+
+        if (response.success) {
+            closeModal('deleteGroupModal');
+            showToast('Групу видалено', 'success');
+            currentGroup = null;
+            navigateTo('mainScreen');
+            loadGroups();
+        } else {
+            showToast(response.message || 'Помилка видалення групи', 'error');
+        }
+    } catch (error) {
+        showToast(error.message || 'Помилка видалення групи', 'error');
+    }
+}
+
+async function loadGroupMembers() {
+    const container = document.getElementById('membersList');
+    container.innerHTML = '<div class="loading" style="padding: 20px;"><div class="spinner" style="width: 24px; height: 24px;"></div></div>';
+
+    try {
+        const response = await apiRequest(`/pwa/groups/${currentGroup.id}/members`, 'GET');
+
+        if (response.success && response.data) {
+            renderMembers(response.data);
+        } else {
+            container.innerHTML = '<p style="color: var(--text-secondary); text-align: center; padding: 20px;">Не вдалося завантажити учасників</p>';
+        }
+    } catch (error) {
+        container.innerHTML = '<p style="color: var(--text-secondary); text-align: center; padding: 20px;">Помилка завантаження</p>';
+    }
+}
+
+function renderMembers(members) {
+    const container = document.getElementById('membersList');
+
+    if (!members || members.length === 0) {
+        container.innerHTML = '<p style="color: var(--text-secondary); text-align: center; padding: 20px;">Немає учасників</p>';
+        return;
+    }
+
+    container.innerHTML = members.map(member => {
+        const name = member.name || member.userName || 'Невідомий';
+        const role = member.role || 'MEMBER';
+        const isAdmin = role === 'ADMIN';
+        const isPending = member.status === 'PENDING';
+
+        return `
+            <div class="settings-item" style="padding: 12px 0;">
+                <div style="display: flex; align-items: center; gap: 12px;">
+                    <div class="report-avatar" style="width: 36px; height: 36px; font-size: 14px;">${name.charAt(0).toUpperCase()}</div>
+                    <div>
+                        <span class="settings-label" style="font-weight: 500;">${escapeHtml(name)}</span>
+                        <span style="font-size: 12px; color: ${isAdmin ? 'var(--primary)' : isPending ? 'var(--warning)' : 'var(--text-secondary)'};">
+                            ${isAdmin ? 'Адмін' : isPending ? 'Очікує' : 'Учасник'}
+                        </span>
+                    </div>
+                </div>
+                ${!isAdmin && !isPending ? `
+                    <button onclick="removeMember('${member.id || member.userId}')" style="background: none; border: none; color: var(--danger); padding: 8px; cursor: pointer;">
+                        <svg viewBox="0 0 24 24" fill="currentColor" width="20" height="20">
+                            <path d="M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zM19 4h-3.5l-1-1h-5l-1 1H5v2h14V4z"/>
+                        </svg>
+                    </button>
+                ` : ''}
+                ${isPending ? `
+                    <div style="display: flex; gap: 8px;">
+                        <button onclick="approveMember('${member.id || member.userId}')" style="background: var(--success); border: none; color: white; padding: 8px 12px; border-radius: 8px; cursor: pointer;">✓</button>
+                        <button onclick="rejectMember('${member.id || member.userId}')" style="background: var(--danger); border: none; color: white; padding: 8px 12px; border-radius: 8px; cursor: pointer;">✕</button>
+                    </div>
+                ` : ''}
+            </div>
+        `;
+    }).join('');
+}
+
+async function removeMember(memberId) {
+    if (!currentGroup || !memberId) return;
+
+    if (!confirm('Видалити учасника з групи?')) return;
+
+    try {
+        const response = await apiRequest(`/pwa/groups/${currentGroup.id}/members/${memberId}`, 'DELETE');
+
+        if (response.success) {
+            showToast('Учасника видалено', 'success');
+            loadGroupMembers();
+            loadGroupDetails(currentGroup.id);
+        } else {
+            showToast(response.message || 'Помилка видалення', 'error');
+        }
+    } catch (error) {
+        showToast(error.message || 'Помилка видалення', 'error');
+    }
+}
+
+async function approveMember(memberId) {
+    if (!currentGroup || !memberId) return;
+
+    try {
+        const response = await apiRequest(`/pwa/groups/${currentGroup.id}/members/${memberId}/approve`, 'POST');
+
+        if (response.success) {
+            showToast('Учасника схвалено', 'success');
+            loadGroupMembers();
+            loadGroupDetails(currentGroup.id);
+        } else {
+            showToast(response.message || 'Помилка схвалення', 'error');
+        }
+    } catch (error) {
+        showToast(error.message || 'Помилка схвалення', 'error');
+    }
+}
+
+async function rejectMember(memberId) {
+    if (!currentGroup || !memberId) return;
+
+    try {
+        const response = await apiRequest(`/pwa/groups/${currentGroup.id}/members/${memberId}/reject`, 'POST');
+
+        if (response.success) {
+            showToast('Заявку відхилено', 'success');
+            loadGroupMembers();
+        } else {
+            showToast(response.message || 'Помилка відхилення', 'error');
+        }
+    } catch (error) {
+        showToast(error.message || 'Помилка відхилення', 'error');
+    }
 }
 
 // Group Actions Menu
@@ -1055,3 +1376,81 @@ window.addEventListener('popstate', () => {
 
 // Prevent zoom on input focus (iOS)
 document.addEventListener('gesturestart', (e) => e.preventDefault());
+
+// Pull-to-Refresh
+let pullStartY = 0;
+let pullMoveY = 0;
+let isPulling = false;
+let pullToRefreshEnabled = true;
+
+function initPullToRefresh() {
+    const screens = ['mainScreen', 'reportsScreen', 'groupScreen'];
+
+    screens.forEach(screenId => {
+        const screen = document.getElementById(screenId);
+        if (!screen) return;
+
+        screen.addEventListener('touchstart', (e) => {
+            if (window.scrollY === 0 && pullToRefreshEnabled) {
+                pullStartY = e.touches[0].clientY;
+                isPulling = true;
+            }
+        }, { passive: true });
+
+        screen.addEventListener('touchmove', (e) => {
+            if (!isPulling) return;
+
+            pullMoveY = e.touches[0].clientY;
+            const pullDistance = pullMoveY - pullStartY;
+
+            if (pullDistance > 0 && pullDistance < 150) {
+                // Show visual feedback
+                const indicator = screen.querySelector('.ptr-indicator');
+                if (indicator) {
+                    indicator.style.transform = `translateX(-50%) translateY(${pullDistance / 2}px)`;
+                    indicator.style.opacity = Math.min(pullDistance / 80, 1);
+                }
+            }
+        }, { passive: true });
+
+        screen.addEventListener('touchend', (e) => {
+            if (!isPulling) return;
+
+            const pullDistance = pullMoveY - pullStartY;
+
+            if (pullDistance > 80) {
+                // Trigger refresh
+                triggerRefresh(screenId);
+            }
+
+            // Reset indicator
+            const indicator = screen.querySelector('.ptr-indicator');
+            if (indicator) {
+                indicator.style.transform = 'translateX(-50%)';
+                indicator.style.opacity = '0';
+            }
+
+            isPulling = false;
+            pullStartY = 0;
+            pullMoveY = 0;
+        }, { passive: true });
+    });
+}
+
+function triggerRefresh(screenId) {
+    showToast('Оновлення...', 'info');
+
+    if (screenId === 'mainScreen') {
+        loadGroups();
+    } else if (screenId === 'reportsScreen') {
+        loadMyReports();
+    } else if (screenId === 'groupScreen' && currentGroup) {
+        loadGroupDetails(currentGroup.id);
+        loadReports(currentGroup.id);
+    }
+}
+
+// Initialize pull-to-refresh when app starts
+document.addEventListener('DOMContentLoaded', () => {
+    setTimeout(initPullToRefresh, 500);
+});
