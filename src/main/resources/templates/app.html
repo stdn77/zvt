@@ -1258,7 +1258,7 @@
         <div class="card">
             <div class="settings-item">
                 <span class="settings-label">Версія</span>
-                <span class="settings-value">PWA 1.0.07</span>
+                <span class="settings-value">PWA 1.0.08</span>
             </div>
         </div>
 
@@ -1339,21 +1339,55 @@
         </div>
     </div>
 
-    <!-- User Reports Modal -->
-    <div id="userReportsModal" class="modal">
-        <div class="modal-content" style="max-height: 80vh; display: flex; flex-direction: column;">
-            <div class="modal-header">
-                <div style="display: flex; flex-direction: column;">
-                    <h2 class="modal-title" id="userReportsName" style="margin: 0;">Звіти</h2>
-                    <a id="userReportsPhone" href="#" style="font-size: 14px; color: var(--primary); margin-top: 4px; text-decoration: none;"></a>
+    <!-- User Reports Screen (окрема сторінка звітів користувача) -->
+    <div id="userReportsScreen" class="screen">
+        <div class="header">
+            <div style="display: flex; align-items: center; gap: 12px;">
+                <div class="header-icon" onclick="navigateBackFromUserReports()">
+                    <svg viewBox="0 0 24 24" fill="currentColor" width="24" height="24">
+                        <path d="M20 11H7.83l5.59-5.59L12 4l-8 8 8 8 1.41-1.41L7.83 13H20v-2z"/>
+                    </svg>
                 </div>
-                <button class="modal-close" onclick="closeModal('userReportsModal')">&times;</button>
+                <h1 class="header-title" id="userReportsTitle">Звіти</h1>
             </div>
+            <div id="userReportsPhoneHeader" onclick="showUserCallOptions()" style="display: none; padding: 8px 12px; background: var(--bg-card); border-radius: 8px; cursor: pointer; color: var(--primary); font-size: 14px;">
+            </div>
+        </div>
 
-            <div id="userReportsList" style="flex: 1; overflow-y: auto; max-height: 60vh;">
-                <div class="loading">
-                    <div class="spinner"></div>
-                </div>
+        <div id="userReportsList" style="padding: 0 16px; overflow-y: auto;">
+            <div class="loading">
+                <div class="spinner"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Call Options Modal -->
+    <div id="callOptionsModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 class="modal-title">Зв'язатися</h2>
+                <button class="modal-close" onclick="closeModal('callOptionsModal')">&times;</button>
+            </div>
+            <p id="callOptionsPhone" style="color: var(--text-secondary); margin-bottom: 16px;"></p>
+            <div style="display: flex; flex-direction: column; gap: 12px;">
+                <button class="btn btn-secondary" onclick="makePhoneCall()">
+                    <svg viewBox="0 0 24 24" fill="currentColor" width="20" height="20" style="margin-right: 8px;">
+                        <path d="M6.62 10.79c1.44 2.83 3.76 5.14 6.59 6.59l2.2-2.2c.27-.27.67-.36 1.02-.24 1.12.37 2.33.57 3.57.57.55 0 1 .45 1 1V20c0 .55-.45 1-1 1-9.39 0-17-7.61-17-17 0-.55.45-1 1-1h3.5c.55 0 1 .45 1 1 0 1.25.2 2.45.57 3.57.11.35.03.74-.25 1.02l-2.2 2.2z"/>
+                    </svg>
+                    Мобільний зв'язок
+                </button>
+                <button class="btn btn-secondary" onclick="openUserSignal()">
+                    <svg viewBox="0 0 24 24" fill="currentColor" width="20" height="20" style="margin-right: 8px;">
+                        <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/>
+                    </svg>
+                    Signal
+                </button>
+                <button class="btn btn-secondary" onclick="openUserWhatsApp()">
+                    <svg viewBox="0 0 24 24" fill="currentColor" width="20" height="20" style="margin-right: 8px;">
+                        <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347z"/>
+                    </svg>
+                    WhatsApp
+                </button>
             </div>
         </div>
     </div>

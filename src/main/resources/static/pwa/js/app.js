@@ -1468,11 +1468,23 @@ function openGroupDetails(groupId) {
 }
 
 // Відкрити екран статусів учасників (для адміна)
-function openGroupStatuses(groupId, groupName) {
+async function openGroupStatuses(groupId, groupName) {
     console.log('[PWA] openGroupStatuses called:', groupId, groupName);
     currentGroup = { id: groupId, name: groupName };
     document.getElementById('groupStatusTitle').textContent = groupName || 'Статус групи';
     showScreen('groupStatusScreen');
+
+    // Завантажуємо деталі групи для власних слів
+    try {
+        const groupResponse = await apiRequest(`/pwa/groups/${groupId}`, 'GET');
+        if (groupResponse.success && groupResponse.data) {
+            currentGroup.positiveWord = groupResponse.data.positiveWord || 'ОК';
+            currentGroup.negativeWord = groupResponse.data.negativeWord || 'НЕ ОК';
+        }
+    } catch (e) {
+        console.log('[PWA] Could not load group details for words:', e);
+    }
+
     loadGroupStatuses(groupId);
 }
 
@@ -1526,7 +1538,7 @@ function renderUserTiles(users) {
         const bgColor = user.colorHex || '#444444';
         const isAdmin = user.role === 'ADMIN';
         const userId = user.userId || user.id;
-        const userPhone = user.phone || '';
+        const userPhone = user.phoneNumber || user.phone || '';
 
         // Форматуємо час та дату останнього звіту (DD.MM, HH:MM)
         let timeDateText = '';
@@ -1584,22 +1596,34 @@ function renderUserTiles(users) {
     container.innerHTML = html;
 }
 
-// Відкрити звіти користувача
+// Зберігаємо дані поточного користувача для звітів
+let currentReportUser = null;
+
+// Відкрити звіти користувача (як окрему сторінку)
 async function openUserReports(userId, userName, userPhone) {
-    console.log('[PWA] Opening user reports:', userId, userName);
+    console.log('[PWA] Opening user reports:', userId, userName, userPhone);
 
-    // Відкриваємо модальне вікно
-    document.getElementById('userReportsModal').classList.add('active');
-    document.getElementById('userReportsName').textContent = userName;
+    // Зберігаємо дані користувача
+    currentReportUser = {
+        id: userId,
+        name: userName,
+        phone: userPhone
+    };
 
-    const phoneEl = document.getElementById('userReportsPhone');
+    // Оновлюємо заголовок
+    document.getElementById('userReportsTitle').textContent = userName;
+
+    // Показуємо телефон якщо є
+    const phoneHeader = document.getElementById('userReportsPhoneHeader');
     if (userPhone && userPhone.trim()) {
-        phoneEl.textContent = userPhone;
-        phoneEl.style.display = 'inline';
-        phoneEl.onclick = () => window.open('tel:' + userPhone, '_self');
+        phoneHeader.textContent = userPhone;
+        phoneHeader.style.display = 'block';
     } else {
-        phoneEl.style.display = 'none';
+        phoneHeader.style.display = 'none';
     }
+
+    // Переходимо на екран
+    showScreen('userReportsScreen');
 
     const container = document.getElementById('userReportsList');
     container.innerHTML = '<div class="loading"><div class="spinner"></div></div>';
@@ -1628,9 +1652,53 @@ async function openUserReports(userId, userName, userPhone) {
     }
 }
 
+// Повернутись назад з екрану звітів користувача
+function navigateBackFromUserReports() {
+    showScreen('groupStatusScreen');
+}
+
+// Показати опції зв'язку з користувачем
+function showUserCallOptions() {
+    if (!currentReportUser || !currentReportUser.phone) return;
+
+    document.getElementById('callOptionsPhone').textContent = currentReportUser.phone;
+    document.getElementById('callOptionsModal').classList.add('active');
+}
+
+// Мобільний зв'язок
+function makePhoneCall() {
+    if (!currentReportUser || !currentReportUser.phone) return;
+    const cleanPhone = currentReportUser.phone.replace(/[^\d+]/g, '');
+    window.location.href = 'tel:' + cleanPhone;
+    closeModal('callOptionsModal');
+}
+
+// Відкрити Signal
+function openUserSignal() {
+    if (!currentReportUser || !currentReportUser.phone) return;
+    let phone = currentReportUser.phone.replace(/[^\d+]/g, '');
+    if (!phone.startsWith('+')) {
+        phone = '+' + phone;
+    }
+    window.open('https://signal.me/#p/' + phone, '_blank');
+    closeModal('callOptionsModal');
+}
+
+// Відкрити WhatsApp
+function openUserWhatsApp() {
+    if (!currentReportUser || !currentReportUser.phone) return;
+    const phone = currentReportUser.phone.replace(/[^\d+]/g, '').replace('+', '');
+    window.open('https://wa.me/' + phone, '_blank');
+    closeModal('callOptionsModal');
+}
+
 // Відобразити список звітів користувача
 function renderUserReportsList(reports) {
     const container = document.getElementById('userReportsList');
+
+    // Отримуємо власні слова з групи (якщо є)
+    const positiveWord = currentGroup?.positiveWord || 'ОК';
+    const negativeWord = currentGroup?.negativeWord || 'НЕ ОК';
 
     let html = '';
     reports.forEach(report => {
@@ -1646,21 +1714,30 @@ function renderUserReportsList(reports) {
         else if (report.reportType === 'EXTENDED') typeText = 'Розширений';
         else if (report.reportType === 'URGENT') typeText = 'Терміновий';
 
-        // Відповідь для простого звіту
+        // Відповідь для простого звіту (з власними словами)
         let responseText = '';
+        let responseColor = 'var(--text-primary)';
         if (report.reportType === 'SIMPLE' && report.simpleResponse) {
-            if (report.simpleResponse === 'OK') responseText = '✅ OK';
-            else if (report.simpleResponse === 'NOT_OK') responseText = '❌ НЕ OK';
-            else responseText = report.simpleResponse;
+            if (report.simpleResponse === 'OK') {
+                responseText = '✅ ' + positiveWord;
+                responseColor = 'var(--success)';
+            } else if (report.simpleResponse === 'NOT_OK') {
+                responseText = '❌ ' + negativeWord;
+                responseColor = 'var(--danger)';
+            } else {
+                responseText = report.simpleResponse;
+            }
         }
 
         html += `
             <div class="card" style="margin: 8px 0; padding: 12px;">
-                <div style="display: flex; gap: 12px; align-items: center; flex-wrap: wrap;">
-                    <span style="color: var(--text-secondary);">${dateStr}</span>
-                    <span style="font-weight: bold;">${time}</span>
-                    <span style="color: var(--primary);">${typeText}</span>
-                    ${responseText ? `<span>${responseText}</span>` : ''}
+                <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 8px;">
+                    <div style="display: flex; gap: 12px; align-items: center;">
+                        <span style="color: var(--text-secondary);">${dateStr}</span>
+                        <span style="font-weight: bold;">${time}</span>
+                        <span style="color: var(--primary);">${typeText}</span>
+                    </div>
+                    ${responseText ? `<span style="font-weight: bold; color: ${responseColor}; text-align: right;">${responseText}</span>` : ''}
                 </div>
         `;
 
