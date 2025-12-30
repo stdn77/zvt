@@ -1368,9 +1368,9 @@ async function loadReportsScreen() {
 function renderReportGroups(groups) {
     const container = document.getElementById('reportGroupsList');
 
-    // Розділяємо на групи де адмін і де учасник
-    const adminGroups = groups.filter(g => g.isAdmin);
-    const memberGroups = groups.filter(g => !g.isAdmin);
+    // Розділяємо на групи де адмін і де учасник (userRole = 'ADMIN' або 'MEMBER')
+    const adminGroups = groups.filter(g => g.userRole === 'ADMIN');
+    const memberGroups = groups.filter(g => g.userRole !== 'ADMIN');
 
     let html = '';
 
@@ -1394,21 +1394,23 @@ function renderReportGroups(groups) {
 }
 
 function renderReportGroupCard(group, isAdmin) {
-    const membersCount = group.membersCount || 0;
+    const membersCount = group.currentMembers || 0;
     const reportedCount = group.reportedCount || 0;
     const roleText = isAdmin ? 'Адміністратор' : 'Учасник';
+    const groupName = group.externalName || group.name || 'Група';
+    const groupId = group.groupId || group.id;
 
     return `
         <div class="card report-group-card" style="margin: 8px 16px; padding: 0; overflow: hidden;">
             <div style="display: flex;">
                 <!-- Ліва частина -->
-                <div style="flex: 0.6; display: flex; padding: 16px; cursor: pointer;" onclick="openGroupDetails('${group.id}')">
+                <div style="flex: 0.6; display: flex; padding: 16px; cursor: pointer;" onclick="openGroupDetails('${groupId}')">
                     <!-- Кольоровий індикатор -->
                     <div style="width: 8px; background: var(--primary); border-radius: 4px; margin-right: 12px;"></div>
                     <!-- Інформація -->
                     <div style="flex: 1; min-width: 0;">
                         <div style="font-size: 16px; font-weight: bold; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">
-                            ${escapeHtml(group.name)} ${isAdmin ? `(${reportedCount}/${membersCount})` : ''}
+                            ${escapeHtml(groupName)} ${isAdmin ? `(${reportedCount}/${membersCount})` : ''}
                         </div>
                         <div style="font-size: 12px; color: var(--text-secondary); margin-top: 2px;">
                             ${roleText}
@@ -1418,7 +1420,7 @@ function renderReportGroupCard(group, isAdmin) {
                 <!-- Розділювач -->
                 <div style="width: 1px; background: rgba(255,255,255,0.1);"></div>
                 <!-- Права частина - кнопка звіту -->
-                <div style="flex: 0.4; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 12px; cursor: pointer;" onclick="openReportForGroup('${group.id}', '${escapeHtml(group.name)}', '${group.reportType}', ${isAdmin})">
+                <div style="flex: 0.4; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 12px; cursor: pointer;" onclick="openReportForGroup('${groupId}', '${escapeHtml(groupName)}', '${group.reportType}', ${isAdmin})">
                     <svg viewBox="0 0 24 24" fill="var(--primary)" width="32" height="32">
                         <path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"/>
                     </svg>
