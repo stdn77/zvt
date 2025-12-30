@@ -228,13 +228,15 @@ function updateSettingsScreen() {
 }
 
 function showMainScreen() {
-    showScreen('mainScreen');
-    loadGroups();
+    // Після входу показуємо екран Звіти (як в Android)
+    showScreen('reportsScreen');
+    loadMyReports();
 
     // Update settings
     if (currentUser) {
         document.getElementById('profileName').textContent = currentUser.name || '-';
         document.getElementById('profilePhone').textContent = currentUser.phone || '-';
+        document.getElementById('profileEmail').textContent = currentUser.email || 'Не вказано';
     }
 
     // Check notifications permission
@@ -711,7 +713,8 @@ function renderReports(reports) {
                 <svg viewBox="0 0 24 24" fill="currentColor">
                     <path d="M14 2H6c-1.1 0-2 .9-2 2v16c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V8l-6-6zm-1 9h-2v2H9v-2H7v-2h2V7h2v2h2v2zm-1-8.5L17.5 8H13V3.5z"/>
                 </svg>
-                <p>Немає звітів</p>
+                <p>Ви ще не надсилали звітів</p>
+                <p style="font-size: 14px; opacity: 0.7; margin-top: 8px;">Натисніть + щоб надіслати звіт</p>
             </div>
         `;
         return;
