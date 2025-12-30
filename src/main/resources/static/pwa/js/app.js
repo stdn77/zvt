@@ -152,15 +152,15 @@ function setupInstallPrompt() {
         e.preventDefault();
         deferredPrompt = e;
 
-        // Show install banner after login
-        if (currentUser && !localStorage.getItem('zvit_install_dismissed')) {
-            document.getElementById('installBanner').classList.add('show');
+        // Show install modal after login
+        if (currentUser && !sessionStorage.getItem('zvit_install_dismissed')) {
+            document.getElementById('installModal').classList.add('show');
         }
     });
 
     window.addEventListener('appinstalled', () => {
         console.log('PWA installed');
-        document.getElementById('installBanner').classList.remove('show');
+        document.getElementById('installModal').classList.remove('show');
         deferredPrompt = null;
     });
 }
@@ -169,6 +169,7 @@ async function installPWA() {
     if (!deferredPrompt) {
         // iOS Safari
         showToast('Натисніть "Поділитися" → "На Початковий екран"', 'info');
+        document.getElementById('installModal').classList.remove('show');
         return;
     }
 
@@ -176,12 +177,16 @@ async function installPWA() {
     const { outcome } = await deferredPrompt.userChoice;
     console.log('Install outcome:', outcome);
     deferredPrompt = null;
-    document.getElementById('installBanner').classList.remove('show');
+    document.getElementById('installModal').classList.remove('show');
 }
 
-function dismissInstallBanner() {
-    document.getElementById('installBanner').classList.remove('show');
-    localStorage.setItem('zvit_install_dismissed', 'true');
+function dismissInstallModal(event) {
+    // Закрити тільки при кліку на overlay (не на modal)
+    if (event.target.id === 'installModal') {
+        document.getElementById('installModal').classList.remove('show');
+        // Зберігаємо в sessionStorage - закрито до наступного відкриття екрану
+        sessionStorage.setItem('zvit_install_dismissed', 'true');
+    }
 }
 
 // Screen Navigation
@@ -242,10 +247,11 @@ function showMainScreen() {
     // Check notifications permission
     updateNotificationsToggle();
 
-    // Show install banner if available
-    if (deferredPrompt && !localStorage.getItem('zvit_install_dismissed')) {
+    // Show install modal if available (reset dismissed state on screen change)
+    sessionStorage.removeItem('zvit_install_dismissed');
+    if (deferredPrompt) {
         setTimeout(() => {
-            document.getElementById('installBanner').classList.add('show');
+            document.getElementById('installModal').classList.add('show');
         }, 2000);
     }
 }

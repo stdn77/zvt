@@ -230,13 +230,13 @@
         /* Action Menu */
         .action-menu {
             position: fixed;
-            bottom: 100px;
+            bottom: 160px;
             right: 20px;
             background: var(--bg-card);
             border-radius: var(--border-radius);
             padding: 8px 0;
             box-shadow: 0 4px 20px rgba(0,0,0,0.3);
-            z-index: 100;
+            z-index: 160;
             display: none;
         }
 
@@ -251,9 +251,11 @@
             padding: 12px 20px;
             cursor: pointer;
             transition: background 0.2s;
+            touch-action: manipulation;
         }
 
-        .action-menu-item:hover {
+        .action-menu-item:hover,
+        .action-menu-item:active {
             background: rgba(255,255,255,0.1);
         }
 
@@ -266,8 +268,9 @@
         .action-menu-overlay {
             position: fixed;
             inset: 0;
-            z-index: 99;
+            z-index: 155;
             display: none;
+            background: rgba(0, 0, 0, 0.3);
         }
 
         .action-menu-overlay.active {
@@ -491,11 +494,15 @@
             font-size: 28px;
             cursor: pointer;
             box-shadow: 0 4px 20px rgba(102, 126, 234, 0.4);
-            z-index: 100;
+            z-index: 150;
             transition: transform 0.2s;
+            touch-action: manipulation;
+            -webkit-tap-highlight-color: transparent;
+            user-select: none;
         }
 
-        .report-fab:hover {
+        .report-fab:hover,
+        .report-fab:active {
             transform: scale(1.1);
         }
 
@@ -769,7 +776,7 @@
         /* Toast */
         .toast {
             position: fixed;
-            bottom: calc(80px + env(safe-area-inset-bottom));
+            top: calc(10px + env(safe-area-inset-top));
             left: 20px;
             right: 20px;
             transform: none;
@@ -809,60 +816,75 @@
             opacity: 0.5;
         }
 
-        /* Install banner */
-        .install-banner {
+        /* Install modal */
+        .install-modal-overlay {
             display: none;
             position: fixed;
-            bottom: 70px;
-            left: 20px;
-            right: 20px;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.7);
+            z-index: 200;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .install-modal-overlay.show {
+            display: flex;
+        }
+
+        .install-modal {
             background: linear-gradient(135deg, var(--primary), var(--secondary));
-            padding: 16px;
+            padding: 24px;
             border-radius: var(--border-radius);
-            z-index: 98;
+            margin: 20px;
+            max-width: 320px;
+            text-align: center;
+            cursor: pointer;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
         }
 
-        .install-banner.show {
-            display: block;
-        }
-
-        .install-banner-content {
+        .install-modal-icon {
+            width: 64px;
+            height: 64px;
+            margin: 0 auto 16px;
+            background: white;
+            border-radius: 16px;
             display: flex;
             align-items: center;
-            gap: 12px;
+            justify-content: center;
         }
 
-        .install-banner-text {
-            flex: 1;
+        .install-modal-icon svg {
+            width: 36px;
+            height: 36px;
+            fill: var(--primary);
         }
 
-        .install-banner-text strong {
-            display: block;
-            margin-bottom: 4px;
+        .install-modal h3 {
+            margin: 0 0 8px;
+            font-size: 20px;
         }
 
-        .install-banner-text span {
-            font-size: 12px;
+        .install-modal p {
+            margin: 0 0 20px;
             opacity: 0.9;
+            font-size: 14px;
         }
 
-        .install-banner-btn {
-            padding: 8px 16px;
+        .install-modal-btn {
+            padding: 12px 32px;
             background: white;
             color: var(--primary);
             border: none;
             border-radius: 8px;
             font-weight: 600;
+            font-size: 16px;
             cursor: pointer;
         }
 
-        .install-banner-close {
-            background: none;
-            border: none;
-            color: white;
-            font-size: 20px;
-            cursor: pointer;
-            padding: 4px;
+        .install-modal-hint {
+            margin-top: 16px;
+            font-size: 12px;
+            opacity: 0.7;
         }
 
         /* Settings */
@@ -1201,7 +1223,7 @@
         <div class="card">
             <div class="settings-item">
                 <span class="settings-label">Версія</span>
-                <span class="settings-value">PWA 1.0.01</span>
+                <span class="settings-value">PWA 1.0.02</span>
             </div>
         </div>
 
@@ -1331,15 +1353,18 @@
         </div>
     </div>
 
-    <!-- Install Banner -->
-    <div class="install-banner" id="installBanner">
-        <div class="install-banner-content">
-            <div class="install-banner-text">
-                <strong>Встановити ZVIT</strong>
-                <span>Додайте на головний екран для швидкого доступу</span>
+    <!-- Install Modal -->
+    <div class="install-modal-overlay" id="installModal" onclick="dismissInstallModal(event)">
+        <div class="install-modal" onclick="installPWA(); event.stopPropagation();">
+            <div class="install-modal-icon">
+                <svg viewBox="0 0 24 24">
+                    <path d="M19 9h-4V3H9v6H5l7 7 7-7zM5 18v2h14v-2H5z"/>
+                </svg>
             </div>
-            <button class="install-banner-btn" onclick="installPWA()">Встановити</button>
-            <button class="install-banner-close" onclick="dismissInstallBanner()">&times;</button>
+            <h3>Встановити ZVIT</h3>
+            <p>Додайте на головний екран для швидкого доступу</p>
+            <button class="install-modal-btn">Встановити</button>
+            <div class="install-modal-hint">Натисніть будь-де поза вікном щоб закрити</div>
         </div>
     </div>
 
