@@ -1406,7 +1406,7 @@ function renderReportGroupCard(group, isAdminSection = false) {
                         ${membersCount} учасник${getPlural(membersCount, '', 'и', 'ів')} · ${reportType}
                     </div>
                 </div>
-                <button class="btn btn-primary" style="padding: 8px 16px; font-size: 14px; flex-shrink: 0;" onclick="event.stopPropagation(); openReportForGroup('${group.id}', '${escapeHtml(group.name)}', '${group.reportType}', ${group.isAdmin})">
+                <button class="btn btn-primary" style="width: auto; padding: 8px 16px; font-size: 14px; flex-shrink: 0;" onclick="event.stopPropagation(); openReportForGroup('${group.id}', '${escapeHtml(group.name)}', '${group.reportType}', ${group.isAdmin})">
                     ${isAdminSection ? 'Переглянути' : 'Звітувати'}
                 </button>
             </div>
