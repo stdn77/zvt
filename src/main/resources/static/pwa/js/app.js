@@ -917,6 +917,8 @@ async function loadGroupMembersForAdmin() {
         const response = await apiRequest(`/pwa/groups/${currentGroup.id}/members`, 'GET');
 
         if (response.success && response.data) {
+            // Зберігаємо кількість адмінів для перевірки
+            currentGroup.adminCount = response.data.filter(m => m.role === 'ADMIN' && m.status === 'ACCEPTED').length;
             renderMembersForAdmin(response.data);
             // Оновлюємо лічильник у інфо-блоці
             const membersInfo = document.getElementById('groupMembersInfo');
@@ -945,23 +947,30 @@ function renderMembersForAdmin(members) {
 
     container.innerHTML = `<div class="card">${members.map(member => {
         const name = member.name || member.userName || 'Невідомий';
+        const phone = member.phoneNumber || '';
         const role = member.role || 'MEMBER';
         const isAdmin = role === 'ADMIN';
         const isPending = member.status === 'PENDING';
+        const memberId = member.id || member.userId;
 
         return `
             <div class="report-item" style="align-items: center;">
                 <div class="report-avatar" style="width: 40px; height: 40px;">${name.charAt(0).toUpperCase()}</div>
-                <div class="report-content">
-                    <div class="report-header">
+                <div class="report-content" style="flex: 1;">
+                    <div class="report-header" style="flex-wrap: wrap; gap: 4px;">
                         <span class="report-name">${escapeHtml(name)}</span>
-                        <span style="font-size: 12px; padding: 2px 8px; border-radius: 10px; background: ${isAdmin ? 'var(--primary)' : isPending ? 'var(--warning)' : 'rgba(255,255,255,0.1)'}; color: ${isAdmin || isPending ? 'white' : 'var(--text-secondary)'};">
+                        <span onclick="showRoleChangeDialog('${memberId}', '${role}')" style="font-size: 12px; padding: 2px 8px; border-radius: 10px; background: ${isAdmin ? 'var(--primary)' : isPending ? 'var(--warning)' : 'rgba(255,255,255,0.1)'}; color: ${isAdmin || isPending ? 'white' : 'var(--text-secondary)'}; cursor: ${isPending ? 'default' : 'pointer'};">
                             ${isAdmin ? 'Адмін' : isPending ? 'Очікує' : 'Учасник'}
                         </span>
                     </div>
+                    ${phone && !isPending ? `
+                        <div onclick="showContactOptions('${phone}')" style="font-size: 13px; color: var(--primary); cursor: pointer; margin-top: 2px;">
+                            ${escapeHtml(phone)}
+                        </div>
+                    ` : ''}
                 </div>
                 ${!isAdmin && !isPending ? `
-                    <button onclick="removeMember('${member.id || member.userId}')" style="background: none; border: none; color: var(--danger); padding: 8px; cursor: pointer;">
+                    <button onclick="removeMember('${memberId}')" style="background: none; border: none; color: var(--danger); padding: 8px; cursor: pointer;">
                         <svg viewBox="0 0 24 24" fill="currentColor" width="20" height="20">
                             <path d="M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zM19 4h-3.5l-1-1h-5l-1 1H5v2h14V4z"/>
                         </svg>
@@ -969,13 +978,103 @@ function renderMembersForAdmin(members) {
                 ` : ''}
                 ${isPending ? `
                     <div style="display: flex; gap: 8px;">
-                        <button onclick="approveMember('${member.id || member.userId}')" style="background: var(--success); border: none; color: white; padding: 8px 12px; border-radius: 8px; cursor: pointer;">✓</button>
-                        <button onclick="rejectMember('${member.id || member.userId}')" style="background: var(--danger); border: none; color: white; padding: 8px 12px; border-radius: 8px; cursor: pointer;">✕</button>
+                        <button onclick="approveMember('${memberId}')" style="background: var(--success); border: none; color: white; padding: 8px 12px; border-radius: 8px; cursor: pointer;">✓</button>
+                        <button onclick="rejectMember('${memberId}')" style="background: var(--danger); border: none; color: white; padding: 8px 12px; border-radius: 8px; cursor: pointer;">✕</button>
                     </div>
                 ` : ''}
             </div>
         `;
     }).join('')}</div>`;
+}
+
+// Показати опції зв'язку
+function showContactOptions(phone) {
+    const cleanPhone = phone.replace(/[^\d+]/g, '');
+
+    const modal = document.createElement('div');
+    modal.className = 'modal active';
+    modal.id = 'contactOptionsModal';
+    modal.innerHTML = `
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>Зв'язатися</h2>
+                <button class="modal-close" onclick="closeModal('contactOptionsModal')">&times;</button>
+            </div>
+            <p style="color: var(--text-secondary); margin-bottom: 16px;">${escapeHtml(phone)}</p>
+            <div style="display: flex; flex-direction: column; gap: 12px;">
+                <button class="btn btn-secondary" onclick="callPhone('${cleanPhone}')">
+                    <svg viewBox="0 0 24 24" fill="currentColor" width="20" height="20" style="margin-right: 8px;">
+                        <path d="M6.62 10.79c1.44 2.83 3.76 5.14 6.59 6.59l2.2-2.2c.27-.27.67-.36 1.02-.24 1.12.37 2.33.57 3.57.57.55 0 1 .45 1 1V20c0 .55-.45 1-1 1-9.39 0-17-7.61-17-17 0-.55.45-1 1-1h3.5c.55 0 1 .45 1 1 0 1.25.2 2.45.57 3.57.11.35.03.74-.25 1.02l-2.2 2.2z"/>
+                    </svg>
+                    Зателефонувати
+                </button>
+                <button class="btn btn-secondary" onclick="openSignal('${cleanPhone}')">
+                    <svg viewBox="0 0 24 24" fill="currentColor" width="20" height="20" style="margin-right: 8px;">
+                        <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/>
+                    </svg>
+                    Signal
+                </button>
+                <button class="btn btn-secondary" onclick="openWhatsApp('${cleanPhone}')">
+                    <svg viewBox="0 0 24 24" fill="currentColor" width="20" height="20" style="margin-right: 8px;">
+                        <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347z"/>
+                    </svg>
+                    WhatsApp
+                </button>
+            </div>
+        </div>
+    `;
+    document.body.appendChild(modal);
+}
+
+function callPhone(phone) {
+    window.location.href = 'tel:' + phone;
+    closeModal('contactOptionsModal');
+}
+
+function openSignal(phone) {
+    window.open('https://signal.me/#p/' + phone, '_blank');
+    closeModal('contactOptionsModal');
+}
+
+function openWhatsApp(phone) {
+    window.open('https://wa.me/' + phone.replace('+', ''), '_blank');
+    closeModal('contactOptionsModal');
+}
+
+// Показати діалог зміни ролі
+function showRoleChangeDialog(memberId, currentRole) {
+    if (currentRole === 'PENDING') return;
+
+    const isAdmin = currentRole === 'ADMIN';
+    const adminCount = currentGroup.adminCount || 1;
+
+    // Якщо це єдиний адмін - не можна змінити роль
+    if (isAdmin && adminCount <= 1) {
+        showToast('Неможливо змінити роль єдиного адміністратора', 'error');
+        return;
+    }
+
+    const newRole = isAdmin ? 'MEMBER' : 'ADMIN';
+    const newRoleText = isAdmin ? 'Учасника' : 'Адміністратора';
+
+    if (confirm(`Змінити роль на "${newRoleText}"?`)) {
+        changeMemberRole(memberId, newRole);
+    }
+}
+
+async function changeMemberRole(memberId, newRole) {
+    try {
+        const response = await apiRequest(`/groups/${currentGroup.id}/members/${memberId}/role`, 'PUT', { role: newRole });
+
+        if (response.success) {
+            showToast('Роль змінено', 'success');
+            loadGroupMembers();
+        } else {
+            showToast(response.message || 'Помилка зміни ролі', 'error');
+        }
+    } catch (error) {
+        showToast(error.message || 'Помилка зміни ролі', 'error');
+    }
 }
 
 async function removeMember(memberId) {
@@ -1119,7 +1218,14 @@ async function joinGroup() {
 
 // Modal helpers
 function closeModal(modalId) {
-    document.getElementById(modalId).classList.remove('active');
+    const modal = document.getElementById(modalId);
+    if (modal) {
+        modal.classList.remove('active');
+        // Видаляємо динамічно створені модалки
+        if (modalId === 'contactOptionsModal') {
+            setTimeout(() => modal.remove(), 300);
+        }
+    }
 }
 
 // Leave Group
