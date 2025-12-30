@@ -217,7 +217,7 @@ function navigateTo(screenId) {
     if (screenId === 'mainScreen') {
         loadGroups();
     } else if (screenId === 'reportsScreen') {
-        loadMyReports();
+        loadReportsScreen();
     } else if (screenId === 'settingsScreen') {
         updateSettingsScreen();
     }
@@ -235,7 +235,7 @@ function updateSettingsScreen() {
 function showMainScreen() {
     // Після входу показуємо екран Звіти (як в Android)
     showScreen('reportsScreen');
-    loadMyReports();
+    loadReportsScreen();
 
     // Update settings
     if (currentUser) {
@@ -1330,76 +1330,121 @@ function renderReports(reports) {
     `}).join('')}</div>`;
 }
 
-// My Reports (all user's reports)
-async function loadMyReports() {
-    const container = document.getElementById('myReportsList');
+// Reports Screen - показує список груп для звітування (як в Android)
+async function loadReportsScreen() {
+    const container = document.getElementById('reportGroupsList');
     container.innerHTML = '<div class="loading"><div class="spinner"></div></div>';
 
     try {
-        console.log('[PWA] Loading my reports...');
-        const response = await apiRequest('/pwa/reports', 'GET');
-        console.log('[PWA] My reports response:', response);
+        console.log('[PWA] Loading groups for reporting...');
+        const response = await apiRequest('/pwa/groups', 'GET');
+        console.log('[PWA] Groups for reporting:', response);
 
         if (response.success && response.data && response.data.length > 0) {
-            renderMyReports(response.data);
+            renderReportGroups(response.data);
         } else {
             container.innerHTML = `
                 <div class="empty-state">
                     <svg viewBox="0 0 24 24" fill="currentColor">
-                        <path d="M14 2H6c-1.1 0-2 .9-2 2v16c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V8l-6-6zm2 16H8v-2h8v2zm0-4H8v-2h8v2zm-3-5V3.5L18.5 9H13z"/>
+                        <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/>
                     </svg>
-                    <p>Ви ще не надсилали звітів</p>
+                    <p>У вас немає груп для звітування</p>
+                    <p style="font-size: 12px; margin-top: 8px; opacity: 0.7;">Приєднайтесь до групи або створіть нову</p>
                 </div>
             `;
         }
     } catch (error) {
-        console.error('[PWA] My reports loading error:', error);
+        console.error('[PWA] Groups loading error:', error);
         container.innerHTML = `
             <div class="card" style="text-align: center; color: var(--danger);">
-                <p>Помилка завантаження звітів</p>
+                <p>Помилка завантаження груп</p>
                 <p style="font-size: 12px; margin-top: 5px; opacity: 0.7;">${error.message || 'Невідома помилка'}</p>
-                <button class="btn btn-secondary" style="margin-top: 10px;" onclick="loadMyReports()">Спробувати знову</button>
+                <button class="btn btn-secondary" style="margin-top: 10px;" onclick="loadReportsScreen()">Спробувати знову</button>
             </div>
         `;
     }
 }
 
-function renderMyReports(reports) {
-    const container = document.getElementById('myReportsList');
+function renderReportGroups(groups) {
+    const container = document.getElementById('reportGroupsList');
 
-    // Group reports by groupName
-    const groupedReports = {};
-    reports.forEach(report => {
-        const groupName = report.groupName || 'Невідома група';
-        if (!groupedReports[groupName]) {
-            groupedReports[groupName] = [];
-        }
-        groupedReports[groupName].push(report);
-    });
+    // Розділяємо на групи де адмін і де учасник
+    const adminGroups = groups.filter(g => g.isAdmin);
+    const memberGroups = groups.filter(g => !g.isAdmin);
 
     let html = '';
-    for (const [groupName, groupReports] of Object.entries(groupedReports)) {
-        html += `<div class="card" style="margin-bottom: 16px;">
-            <h3 style="margin-bottom: 12px; color: var(--primary);">${escapeHtml(groupName)}</h3>
-            ${groupReports.map(report => {
-                const response = report.simpleResponse || report.response || '';
-                const time = report.submittedAt || report.createdAt;
-                const isUrgent = response.toUpperCase().includes('ТЕРМІНОВ') || response.toUpperCase() === 'НЕ ОК' || response.toUpperCase() === 'NOT_OK';
-                return `
-                <div class="report-item">
-                    <div class="report-content" style="width: 100%;">
-                        <div class="report-header">
-                            <span class="report-status ${isUrgent ? 'urgent' : 'ok'}">${escapeHtml(response)}</span>
-                            <span class="report-time">${formatTime(time)}</span>
-                        </div>
-                        ${report.comment ? `<div class="report-comment">${escapeHtml(report.comment)}</div>` : ''}
-                    </div>
-                </div>
-            `}).join('')}
-        </div>`;
+
+    // Групи де учасник (можна звітувати)
+    if (memberGroups.length > 0) {
+        html += `<div class="section-title" style="padding: 0 0 8px 0; color: var(--text-secondary); font-size: 12px; text-transform: uppercase;">Мої групи</div>`;
+        memberGroups.forEach(group => {
+            html += renderReportGroupCard(group);
+        });
+    }
+
+    // Групи де адмін
+    if (adminGroups.length > 0) {
+        html += `<div class="section-title" style="padding: 16px 0 8px 0; color: var(--text-secondary); font-size: 12px; text-transform: uppercase;">Адміністрування</div>`;
+        adminGroups.forEach(group => {
+            html += renderReportGroupCard(group, true);
+        });
     }
 
     container.innerHTML = html;
+}
+
+function renderReportGroupCard(group, isAdminSection = false) {
+    const membersCount = group.membersCount || 0;
+    const reportType = group.reportType === 'EXTENDED' ? 'Розширений' : 'Простий';
+
+    return `
+        <div class="card report-group-card" style="margin-bottom: 12px; cursor: pointer;" onclick="openReportForGroup('${group.id}', '${escapeHtml(group.name)}', '${group.reportType}', ${group.isAdmin})">
+            <div style="display: flex; justify-content: space-between; align-items: flex-start;">
+                <div style="flex: 1;">
+                    <h3 style="margin: 0 0 4px 0; font-size: 16px;">${escapeHtml(group.name)}</h3>
+                    <div style="font-size: 13px; color: var(--text-secondary);">
+                        ${membersCount} учасник${getPlural(membersCount, '', 'и', 'ів')} · ${reportType}
+                    </div>
+                </div>
+                <button class="btn btn-primary" style="padding: 8px 16px; font-size: 14px;" onclick="event.stopPropagation(); openReportForGroup('${group.id}', '${escapeHtml(group.name)}', '${group.reportType}', ${group.isAdmin})">
+                    ${isAdminSection ? 'Переглянути' : 'Звітувати'}
+                </button>
+            </div>
+        </div>
+    `;
+}
+
+function getPlural(n, one, few, many) {
+    const mod10 = n % 10;
+    const mod100 = n % 100;
+    if (mod10 === 1 && mod100 !== 11) return one;
+    if (mod10 >= 2 && mod10 <= 4 && (mod100 < 10 || mod100 >= 20)) return few;
+    return many;
+}
+
+function openReportForGroup(groupId, groupName, reportType, isAdmin) {
+    // Зберігаємо вибрану групу для звіту
+    currentGroup = { id: groupId, name: groupName, reportType: reportType, isAdmin: isAdmin };
+
+    if (isAdmin) {
+        // Для адміна - переходимо до деталей групи
+        showScreen('groupScreen');
+        loadGroupDetails(groupId);
+    } else {
+        // Для учасника - відкриваємо модальне вікно звіту
+        document.getElementById('reportModalTitle').textContent = groupName;
+        document.getElementById('reportModal').classList.add('active');
+        document.getElementById('reportComment').value = '';
+        selectedReportResponse = 'OK';
+
+        // Reset selection
+        document.querySelectorAll('.report-option').forEach(opt => {
+            opt.classList.remove('selected');
+            if (opt.dataset.response === 'OK') {
+                opt.classList.add('selected');
+            }
+        });
+    }
 }
 
 // Report Modal
@@ -1712,7 +1757,7 @@ function triggerRefresh(screenId) {
     if (screenId === 'mainScreen') {
         loadGroups();
     } else if (screenId === 'reportsScreen') {
-        loadMyReports();
+        loadReportsScreen();
     } else if (screenId === 'groupScreen' && currentGroup) {
         loadGroupDetails(currentGroup.id);
         loadReports(currentGroup.id);
