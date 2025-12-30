@@ -1400,16 +1400,42 @@ function renderReportGroupCard(group, isAdmin) {
     const groupName = group.externalName || group.name || 'Група';
     const groupId = group.groupId || group.id;
 
-    // Для адміна - відкриваємо статуси, для учасника - деталі групи
+    // Для адміна: ліва частина - відкриваємо статуси, права - терміновий звіт
+    // Для учасника: ліва частина - не клікабельна, права - відправка звіту
     const leftClickHandler = isAdmin
         ? `openGroupStatuses('${groupId}', '${escapeHtml(groupName)}')`
-        : `openGroupDetails('${groupId}')`;
+        : '';
+    const leftCursor = isAdmin ? 'cursor: pointer;' : '';
+
+    // Права частина: адмін - терміновий звіт, учасник - звичайний звіт
+    let rightSection;
+    if (isAdmin) {
+        // Адмін: кнопка "Терміновий" (червона)
+        rightSection = `
+            <div style="flex: 0.4; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 12px; cursor: pointer;" onclick="openUrgentReportDialog('${groupId}', '${escapeHtml(groupName)}')">
+                <svg viewBox="0 0 24 24" fill="var(--danger)" width="32" height="32">
+                    <path d="M1 21h22L12 2 1 21zm12-3h-2v-2h2v2zm0-4h-2v-4h2v4z"/>
+                </svg>
+                <div style="font-size: 12px; font-weight: bold; color: var(--danger); margin-top: 4px;">Терміновий</div>
+            </div>
+        `;
+    } else {
+        // Учасник: кнопка "Звіт" (синя)
+        rightSection = `
+            <div style="flex: 0.4; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 12px; cursor: pointer;" onclick="openReportForGroup('${groupId}', '${escapeHtml(groupName)}', '${group.reportType}', ${isAdmin})">
+                <svg viewBox="0 0 24 24" fill="var(--primary)" width="32" height="32">
+                    <path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"/>
+                </svg>
+                <div style="font-size: 12px; font-weight: bold; color: var(--primary); margin-top: 4px;">Звіт</div>
+            </div>
+        `;
+    }
 
     return `
         <div class="card report-group-card" style="margin: 8px 16px; padding: 0; overflow: hidden;">
             <div style="display: flex;">
                 <!-- Ліва частина -->
-                <div style="flex: 0.6; display: flex; padding: 16px; cursor: pointer;" onclick="${leftClickHandler}">
+                <div style="flex: 0.6; display: flex; padding: 16px; ${leftCursor}" ${leftClickHandler ? `onclick="${leftClickHandler}"` : ''}>
                     <!-- Кольоровий індикатор -->
                     <div style="width: 8px; background: var(--primary); border-radius: 4px; margin-right: 12px;"></div>
                     <!-- Інформація -->
@@ -1424,13 +1450,8 @@ function renderReportGroupCard(group, isAdmin) {
                 </div>
                 <!-- Розділювач -->
                 <div style="width: 1px; background: rgba(255,255,255,0.1);"></div>
-                <!-- Права частина - кнопка звіту -->
-                <div style="flex: 0.4; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 12px; cursor: pointer;" onclick="openReportForGroup('${groupId}', '${escapeHtml(groupName)}', '${group.reportType}', ${isAdmin})">
-                    <svg viewBox="0 0 24 24" fill="var(--primary)" width="32" height="32">
-                        <path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"/>
-                    </svg>
-                    <div style="font-size: 12px; font-weight: bold; color: var(--primary); margin-top: 4px;">Звіт</div>
-                </div>
+                <!-- Права частина -->
+                ${rightSection}
             </div>
         </div>
     `;
@@ -1556,6 +1577,57 @@ function isLightColor(hexColor) {
     // Використовуємо формулу для відносної яскравості
     const luminance = (0.299 * r + 0.587 * g + 0.114 * b) / 255;
     return luminance > 0.5;
+}
+
+// Відкрити діалог термінового звіту (для адміна)
+function openUrgentReportDialog(groupId, groupName) {
+    currentGroup = { id: groupId, name: groupName };
+    document.getElementById('urgentModalGroupName').textContent = groupName;
+    document.getElementById('urgentDeadlineSelect').value = '30';
+    document.getElementById('urgentMessage').value = '';
+    document.getElementById('urgentReportModal').classList.add('active');
+}
+
+// Надіслати терміновий запит
+async function submitUrgentReport() {
+    const groupId = currentGroup.id;
+    const deadlineMinutes = parseInt(document.getElementById('urgentDeadlineSelect').value);
+    const additionalMessage = document.getElementById('urgentMessage').value.trim();
+
+    // Базове повідомлення
+    let message = 'Терміново надішліть звіт';
+    if (additionalMessage) {
+        message += '. ' + additionalMessage;
+    }
+
+    const submitBtn = document.querySelector('#urgentReportModal .btn-danger');
+    submitBtn.disabled = true;
+    submitBtn.textContent = 'Надсилання...';
+
+    try {
+        const response = await apiRequest('/pwa/reports/urgent', 'POST', {
+            groupId: groupId,
+            deadlineMinutes: deadlineMinutes,
+            message: message
+        });
+
+        if (response.success) {
+            document.getElementById('urgentReportModal').classList.remove('active');
+            showToast(`Терміновий запит надіслано! Сповіщень: ${response.data}`, 'success');
+            // Пропонуємо переглянути статуси
+            if (confirm('Переглянути хто вже відзвітував?')) {
+                openGroupStatuses(groupId, currentGroup.name);
+            }
+        } else {
+            showToast(response.message || 'Помилка надсилання', 'error');
+        }
+    } catch (error) {
+        console.error('[PWA] Urgent report error:', error);
+        showToast(error.message || 'Помилка надсилання термінового запиту', 'error');
+    } finally {
+        submitBtn.disabled = false;
+        submitBtn.textContent = 'ВІДПРАВИТИ ТЕРМІНОВО';
+    }
 }
 
 function getPlural(n, one, few, many) {

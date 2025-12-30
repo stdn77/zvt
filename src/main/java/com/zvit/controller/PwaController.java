@@ -7,6 +7,7 @@ import com.zvit.dto.request.RegisterRequest;
 import com.zvit.dto.request.SimpleReportRequest;
 import com.zvit.dto.request.UpdateGroupSettingsRequest;
 import com.zvit.dto.request.UpdateProfileRequest;
+import com.zvit.dto.request.UrgentReportRequest;
 import com.zvit.dto.response.ApiResponse;
 import com.zvit.dto.response.GroupMemberResponse;
 import com.zvit.dto.response.GroupResponse;
@@ -321,5 +322,33 @@ public class PwaController {
         log.info("PWA: Getting group statuses for group: {} by user: {}", groupId, userId);
         GroupStatusesResponse statuses = reportService.getGroupStatuses(groupId, userId);
         return ResponseEntity.ok(ApiResponse.success("Статуси отримано", statuses));
+    }
+
+    /**
+     * Надіслати терміновий запит на звіт (тільки для адміна)
+     */
+    @PostMapping("/reports/urgent")
+    public ResponseEntity<ApiResponse<Integer>> createUrgentRequest(
+            @Valid @RequestBody UrgentReportRequest request,
+            Authentication authentication
+    ) {
+        String userId = authentication.getName();
+        log.info("PWA: Creating urgent request for group: {} by user: {}", request.getGroupId(), userId);
+        int sentCount = reportService.createUrgentRequest(request, userId);
+        return ResponseEntity.ok(ApiResponse.success("Терміновий запит створено. Сповіщень відправлено: " + sentCount, sentCount));
+    }
+
+    /**
+     * Завершити терміновий збір (тільки для адміна)
+     */
+    @DeleteMapping("/reports/urgent/{groupId}")
+    public ResponseEntity<ApiResponse<Void>> endUrgentSession(
+            @PathVariable String groupId,
+            Authentication authentication
+    ) {
+        String userId = authentication.getName();
+        log.info("PWA: Ending urgent session for group: {} by user: {}", groupId, userId);
+        reportService.endUrgentSession(groupId, userId);
+        return ResponseEntity.ok(ApiResponse.success("Терміновий збір завершено", null));
     }
 }

@@ -1258,7 +1258,7 @@
         <div class="card">
             <div class="settings-item">
                 <span class="settings-label">Версія</span>
-                <span class="settings-value">PWA 1.0.04</span>
+                <span class="settings-value">PWA 1.0.05</span>
             </div>
         </div>
 
@@ -1298,6 +1298,44 @@
             </div>
 
             <button class="btn btn-primary" onclick="sendReport()">Відправити звіт</button>
+        </div>
+    </div>
+
+    <!-- Urgent Report Modal (for admins) -->
+    <div id="urgentReportModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 class="modal-title" style="color: var(--danger);">Терміновий запит</h2>
+                <button class="modal-close" onclick="closeModal('urgentReportModal')">&times;</button>
+            </div>
+
+            <div style="margin-bottom: 16px;">
+                <span style="color: var(--text-secondary);">Група:</span>
+                <strong id="urgentModalGroupName">-</strong>
+            </div>
+
+            <div class="form-group">
+                <label class="form-label">Час на відповідь</label>
+                <select class="form-select" id="urgentDeadlineSelect" style="width: 100%; padding: 12px; background: var(--card-bg); border: 1px solid rgba(255,255,255,0.1); border-radius: 8px; color: var(--text-primary);">
+                    <option value="5">5 хвилин</option>
+                    <option value="10">10 хвилин</option>
+                    <option value="15">15 хвилин</option>
+                    <option value="30" selected>30 хвилин</option>
+                    <option value="60">1 година</option>
+                    <option value="120">2 години</option>
+                </select>
+            </div>
+
+            <div class="form-group">
+                <label class="form-label">Додаткове повідомлення (необов'язково)</label>
+                <textarea class="form-textarea" id="urgentMessage" placeholder="Причина термінового запиту..."></textarea>
+            </div>
+
+            <p style="font-size: 12px; color: var(--text-secondary); margin-bottom: 16px;">
+                Всім учасникам групи буде надіслано push-сповіщення з проханням терміново надіслати звіт.
+            </p>
+
+            <button class="btn btn-danger" style="width: 100%;" onclick="submitUrgentReport()">ВІДПРАВИТИ ТЕРМІНОВО</button>
         </div>
     </div>
 
