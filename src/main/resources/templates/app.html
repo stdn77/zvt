@@ -53,7 +53,7 @@
         .screen {
             display: none;
             min-height: 100vh;
-            padding: 20px;
+            padding: 10px;
             padding-bottom: 80px;
         }
 
@@ -67,7 +67,7 @@
             flex-direction: column;
             justify-content: center;
             align-items: center;
-            padding: 40px 20px;
+            padding: 40px 10px;
         }
 
         .auth-logo {
@@ -1088,7 +1088,7 @@
         <!-- Admin View (shown only for admins) -->
         <div id="groupAdminInfo" style="display: none;">
             <!-- Інформація про групу -->
-            <div class="card" style="margin: 16px;">
+            <div class="card" style="margin-bottom: 16px;">
                 <div class="group-info-row">
                     <span class="group-info-label">Учасників</span>
                     <span class="group-info-value" id="groupMembersInfo">0/10</span>
@@ -1112,7 +1112,7 @@
             </div>
 
             <!-- Кнопки адміністрування -->
-            <div style="display: flex; gap: 12px; padding: 0 16px; margin-bottom: 16px;">
+            <div style="display: flex; gap: 12px; margin-bottom: 16px;">
                 <button class="btn btn-secondary" style="flex: 1;" onclick="showAddMemberDialog()">
                     <svg viewBox="0 0 24 24" fill="currentColor" width="18" height="18" style="margin-right: 8px;">
                         <path d="M15 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm-9-2V7H4v3H1v2h3v3h2v-3h3v-2H6zm9 4c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/>
@@ -1126,20 +1126,20 @@
                     Період
                 </button>
             </div>
-            <div style="padding: 0 16px; margin-bottom: 16px;">
+            <div style="margin-bottom: 16px;">
                 <button class="btn" style="background: var(--danger); width: 100%;" onclick="showDeleteGroupConfirm()">
                     Видалити групу
                 </button>
             </div>
 
             <!-- Заголовок учасників -->
-            <div style="padding: 0 16px; margin-bottom: 8px; display: flex; justify-content: space-between; align-items: center;">
+            <div style="margin-bottom: 8px; display: flex; justify-content: space-between; align-items: center;">
                 <span style="font-weight: 500;">Учасники групи</span>
                 <span style="color: var(--primary); font-size: 14px; cursor: pointer;" onclick="loadGroupMembers()">Оновити</span>
             </div>
 
             <!-- Список учасників -->
-            <div id="adminMembersList" style="padding: 0 16px;">
+            <div id="adminMembersList">
                 <div class="loading">
                     <div class="spinner"></div>
                 </div>
@@ -1148,12 +1148,12 @@
 
         <!-- Member View (for regular members) -->
         <div id="groupMemberView" style="display: none;">
-            <div style="padding: 0 16px; margin-bottom: 8px; display: flex; justify-content: space-between; align-items: center;">
+            <div style="margin-bottom: 8px; display: flex; justify-content: space-between; align-items: center;">
                 <span style="color: var(--text-secondary); font-size: 14px;">Мої звіти</span>
                 <span style="color: var(--primary); font-size: 14px; cursor: pointer;" onclick="refreshGroupReports()">Оновити</span>
             </div>
 
-            <div id="reportsList" style="padding: 0 16px;">
+            <div id="reportsList">
                 <div class="loading">
                     <div class="spinner"></div>
                 </div>
@@ -1258,7 +1258,7 @@
         <div class="card">
             <div class="settings-item">
                 <span class="settings-label">Версія</span>
-                <span class="settings-value">PWA 1.0.08</span>
+                <span class="settings-value">PWA 1.0.09</span>
             </div>
         </div>
 
@@ -1354,7 +1354,7 @@
             </div>
         </div>
 
-        <div id="userReportsList" style="padding: 0 16px; overflow-y: auto;">
+        <div id="userReportsList" style="overflow-y: auto;">
             <div class="loading">
                 <div class="spinner"></div>
             </div>

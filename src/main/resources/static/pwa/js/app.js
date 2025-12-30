@@ -1368,15 +1368,23 @@ async function loadReportsScreen() {
 function renderReportGroups(groups) {
     const container = document.getElementById('reportGroupsList');
 
-    // Розділяємо на групи де адмін і де учасник (userRole = 'ADMIN' або 'MEMBER')
-    const adminGroups = groups.filter(g => g.userRole === 'ADMIN');
-    const memberGroups = groups.filter(g => g.userRole !== 'ADMIN');
+    console.log('[PWA] renderReportGroups - all groups:', groups);
+
+    // Фільтруємо тільки прийняті групи (userRole не null/undefined)
+    const acceptedGroups = groups.filter(g => g.userRole);
+    console.log('[PWA] Accepted groups:', acceptedGroups);
+
+    // Розділяємо на групи де адмін і де учасник
+    const adminGroups = acceptedGroups.filter(g => g.userRole === 'ADMIN');
+    const memberGroups = acceptedGroups.filter(g => g.userRole === 'MEMBER');
+
+    console.log('[PWA] Admin groups:', adminGroups.length, 'Member groups:', memberGroups.length);
 
     let html = '';
 
     // Групи де адмін
     if (adminGroups.length > 0) {
-        html += `<div class="section-title" style="padding: 16px 20px 8px; font-size: 16px; font-weight: bold;">Групи де я адміністратор</div>`;
+        html += `<div class="section-title" style="padding: 8px 0; font-size: 16px; font-weight: bold;">Групи де я адміністратор</div>`;
         adminGroups.forEach(group => {
             html += renderReportGroupCard(group, true);
         });
@@ -1384,10 +1392,18 @@ function renderReportGroups(groups) {
 
     // Групи де учасник
     if (memberGroups.length > 0) {
-        html += `<div class="section-title" style="padding: 16px 20px 8px; font-size: 16px; font-weight: bold;">Групи де я учасник</div>`;
+        html += `<div class="section-title" style="padding: 8px 0; font-size: 16px; font-weight: bold; margin-top: 8px;">Групи де я учасник</div>`;
         memberGroups.forEach(group => {
             html += renderReportGroupCard(group, false);
         });
+    }
+
+    if (html === '') {
+        html = `
+            <div style="text-align: center; padding: 32px; color: var(--text-secondary);">
+                <p>Немає груп для звітування</p>
+            </div>
+        `;
     }
 
     container.innerHTML = html;
@@ -1435,7 +1451,7 @@ function renderReportGroupCard(group, isAdmin) {
     const leftCursor = isAdmin ? 'cursor: pointer;' : '';
 
     return `
-        <div class="card report-group-card" style="margin: 8px 16px; padding: 0; overflow: hidden;">
+        <div class="card report-group-card" style="margin-bottom: 8px; padding: 0; overflow: hidden;">
             <div style="display: flex;">
                 <!-- Ліва частина -->
                 <div style="flex: 0.6; display: flex; padding: 16px; ${leftCursor}" ${leftOnclick}>
