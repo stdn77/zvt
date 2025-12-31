@@ -1284,35 +1284,40 @@ function renderMembersForAdmin(members) {
         const isPending = member.status === 'PENDING';
         const memberId = member.id || member.userId;
 
+        // Role button styles
+        const roleStyle = isAdmin
+            ? 'background: var(--primary); color: white;'
+            : isPending
+                ? 'background: var(--warning); color: white;'
+                : 'background: rgba(255,255,255,0.15); color: var(--text-secondary);';
+
         return `
-            <div class="report-item" style="align-items: center;">
+            <div class="report-item" style="align-items: center; gap: 12px;">
                 <div class="report-avatar" style="width: 40px; height: 40px;">${name.charAt(0).toUpperCase()}</div>
-                <div class="report-content" style="flex: 1;">
-                    <div class="report-header" style="flex-wrap: wrap; gap: 4px;">
-                        <span class="report-name">${escapeHtml(name)}</span>
-                        <span onclick="showRoleChangeDialog('${memberId}', '${role}')" style="font-size: 12px; padding: 2px 8px; border-radius: 10px; background: ${isAdmin ? 'var(--primary)' : isPending ? 'var(--warning)' : 'rgba(255,255,255,0.1)'}; color: ${isAdmin || isPending ? 'white' : 'var(--text-secondary)'}; cursor: ${isPending ? 'default' : 'pointer'};">
-                            ${isAdmin ? 'Адмін' : isPending ? 'Очікує' : 'Учасник'}
-                        </span>
-                    </div>
+                <div class="report-content" style="flex: 1; min-width: 0;">
+                    <div class="report-name" style="overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">${escapeHtml(name)}</div>
                     ${phone && !isPending ? `
                         <div onclick="showContactOptions('${phone}')" style="font-size: 13px; color: var(--primary); cursor: pointer; margin-top: 2px;">
                             ${escapeHtml(phone)}
                         </div>
                     ` : ''}
                 </div>
-                ${!isAdmin && !isPending ? `
-                    <button onclick="removeMember('${memberId}')" style="background: none; border: none; color: var(--danger); padding: 8px; cursor: pointer;">
-                        <svg viewBox="0 0 24 24" fill="currentColor" width="20" height="20">
-                            <path d="M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zM19 4h-3.5l-1-1h-5l-1 1H5v2h14V4z"/>
-                        </svg>
+                <div style="display: flex; align-items: center; gap: 12px;">
+                    <button onclick="${isPending ? '' : `showRoleChangeDialog('${memberId}', '${role}')`}" style="border: none; padding: 8px 14px; border-radius: 8px; font-size: 13px; font-weight: 500; cursor: ${isPending ? 'default' : 'pointer'}; ${roleStyle}">
+                        ${isAdmin ? 'Адмін' : isPending ? 'Очікує' : 'Учасник'}
                     </button>
-                ` : ''}
-                ${isPending ? `
-                    <div style="display: flex; gap: 8px;">
-                        <button onclick="approveMember('${memberId}')" style="background: var(--success); border: none; color: white; padding: 8px 12px; border-radius: 8px; cursor: pointer;">✓</button>
-                        <button onclick="rejectMember('${memberId}')" style="background: var(--danger); border: none; color: white; padding: 8px 12px; border-radius: 8px; cursor: pointer;">✕</button>
-                    </div>
-                ` : ''}
+                    ${!isAdmin && !isPending ? `
+                        <button onclick="removeMember('${memberId}')" style="background: rgba(229, 115, 115, 0.15); border: none; color: var(--danger); width: 40px; height: 40px; border-radius: 8px; cursor: pointer; display: flex; align-items: center; justify-content: center;">
+                            <svg viewBox="0 0 24 24" fill="currentColor" width="22" height="22">
+                                <path d="M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zM19 4h-3.5l-1-1h-5l-1 1H5v2h14V4z"/>
+                            </svg>
+                        </button>
+                    ` : ''}
+                    ${isPending ? `
+                        <button onclick="approveMember('${memberId}')" style="background: var(--success); border: none; color: white; width: 40px; height: 40px; border-radius: 8px; cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 18px;">✓</button>
+                        <button onclick="rejectMember('${memberId}')" style="background: var(--danger); border: none; color: white; width: 40px; height: 40px; border-radius: 8px; cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 18px;">✕</button>
+                    ` : ''}
+                </div>
             </div>
         `;
     }).join('')}</div>`;
