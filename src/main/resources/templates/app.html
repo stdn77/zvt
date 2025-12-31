@@ -474,17 +474,30 @@
             grid-template-columns: 1fr auto;
             grid-template-rows: auto auto;
             gap: 4px 16px;
-            cursor: pointer;
-            transition: transform 0.2s;
+            transition: transform 0.2s, background 0.2s;
             padding: 16px;
         }
 
-        .group-card:hover {
+        /* Admin card - clickable, bright */
+        .group-card.admin {
+            cursor: pointer;
+            background: linear-gradient(135deg, rgba(102, 126, 234, 0.15) 0%, rgba(118, 75, 162, 0.1) 100%);
+            border-left: 4px solid var(--primary);
+        }
+
+        .group-card.admin:hover {
             transform: translateX(4px);
         }
 
-        .group-card:active {
-            background: rgba(102, 126, 234, 0.1);
+        .group-card.admin:active {
+            background: rgba(102, 126, 234, 0.25);
+        }
+
+        /* Member card - not clickable, dimmed */
+        .group-card.member {
+            cursor: default;
+            background: rgba(255, 255, 255, 0.03);
+            opacity: 0.7;
         }
 
         .group-name {
@@ -502,6 +515,11 @@
             color: var(--text-secondary);
             grid-column: 1;
             grid-row: 2;
+        }
+
+        .group-role.admin-role {
+            color: var(--primary);
+            font-weight: 500;
         }
 
         .group-members {

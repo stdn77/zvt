@@ -860,13 +860,20 @@ function renderGroups(groups) {
         const name = group.externalName || group.name || 'Група';
         const id = group.groupId || group.id;
         const members = group.currentMembers || group.memberCount || 0;
-        const role = group.userRole === 'ADMIN' ? 'Адміністратор' : 'Учасник';
+        const isAdmin = group.userRole === 'ADMIN';
+        const role = isAdmin ? 'Адміністратор' : 'Учасник';
+        const roleClass = isAdmin ? 'admin-role' : '';
+        const cardClass = isAdmin ? 'admin' : 'member';
         const reportType = group.reportType === 'EXTENDED' ? 'Розширений' : 'Простий';
+
+        // Only admins can click to open group
+        const onclick = isAdmin ? `onclick="openGroup('${id}', '${escapeHtml(name)}')"` : '';
+
         return `
-        <div class="card group-card" onclick="openGroup('${id}', '${escapeHtml(name)}')">
+        <div class="card group-card ${cardClass}" ${onclick}>
             <div class="group-name">${escapeHtml(name)}</div>
             <div class="group-members">${members} учасн.</div>
-            <div class="group-role">${role}</div>
+            <div class="group-role ${roleClass}">${role}</div>
             <div class="group-report-type">${reportType}</div>
         </div>
     `}).join('');
