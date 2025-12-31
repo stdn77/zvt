@@ -1,0 +1,18 @@
+# Robots.txt for ZVIT
+User-agent: *
+Allow: /
+Allow: /privacy-policy
+Allow: /terms
+Allow: /guide
+Allow: /delete-account
+
+# PWA app - allow crawling
+Allow: /app
+
+# API endpoints - disallow
+Disallow: /api/
+Disallow: /admin/
+Disallow: /web/
+
+# Sitemap
+Sitemap: https://zvit.online/sitemap.xml

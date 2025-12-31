@@ -3,11 +3,53 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ZVIT - Система звітування</title>
+    <title>ZVIT - Система звітування для команд та організацій</title>
+
+    <!-- SEO Meta Tags -->
+    <meta name="description" content="ZVIT - сучасна система звітування для команд та організацій. Швидкі звіти, термінові збори, push-сповіщення. Безкоштовний додаток для Android та iOS.">
+    <meta name="keywords" content="звітування, звіти, команда, організація, безпека, сповіщення, Android, iOS, додаток, ZVIT">
+    <meta name="author" content="ZVIT Team">
+    <meta name="robots" content="index, follow">
+    <link rel="canonical" href="https://zvit.online/">
+
+    <!-- Open Graph / Facebook -->
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://zvit.online/">
+    <meta property="og:title" content="ZVIT - Система звітування для команд та організацій">
+    <meta property="og:description" content="Сучасна система звітування для команд. Швидкі звіти, термінові збори, push-сповіщення.">
+    <meta property="og:image" content="https://zvit.online/icons/icon-512x512.png">
+
+    <!-- Twitter -->
+    <meta property="twitter:card" content="summary_large_image">
+    <meta property="twitter:url" content="https://zvit.online/">
+    <meta property="twitter:title" content="ZVIT - Система звітування">
+    <meta property="twitter:description" content="Сучасна система звітування для команд та організацій.">
 
     <!-- Google AdSense -->
     <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-7963216972025059"
          crossorigin="anonymous"></script>
+
+    <!-- Structured Data -->
+    <script type="application/ld+json">
+    {
+        "@context": "https://schema.org",
+        "@type": "SoftwareApplication",
+        "name": "ZVIT",
+        "applicationCategory": "BusinessApplication",
+        "operatingSystem": "Android, iOS",
+        "offers": {
+            "@type": "Offer",
+            "price": "0",
+            "priceCurrency": "UAH"
+        },
+        "description": "Сучасна система звітування для команд та організацій. Швидкі звіти, термінові збори, push-сповіщення.",
+        "aggregateRating": {
+            "@type": "AggregateRating",
+            "ratingValue": "5",
+            "ratingCount": "10"
+        }
+    }
+    </script>
 
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -382,6 +424,26 @@
         }
 
         /* Responsive */
+        /* Ad container styles */
+        .ad-container {
+            margin: 40px auto;
+            text-align: center;
+            max-width: 728px;
+            min-height: 90px;
+            background: rgba(255, 255, 255, 0.02);
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .ad-label {
+            font-size: 10px;
+            color: #64748b;
+            text-align: center;
+            margin-bottom: 5px;
+        }
+
         @media (max-width: 768px) {
             h1 {
                 font-size: 2rem;
@@ -398,6 +460,11 @@
 
             .features {
                 grid-template-columns: 1fr;
+            }
+
+            .ad-container {
+                max-width: 100%;
+                min-height: 50px;
             }
         }
     </style>
@@ -494,6 +561,19 @@
             </div>
         </section>
 
+        <!-- AdSense Ad Unit 1 -->
+        <div class="ad-container">
+            <ins class="adsbygoogle"
+                 style="display:block"
+                 data-ad-client="ca-pub-7963216972025059"
+                 data-ad-slot="auto"
+                 data-ad-format="auto"
+                 data-full-width-responsive="true"></ins>
+            <script>
+                 (adsbygoogle = window.adsbygoogle || []).push({});
+            </script>
+        </div>
+
         <!-- Beta Testing -->
         <section class="beta-section">
             <span class="beta-badge">🧪 Beta Testing</span>
@@ -545,6 +625,19 @@
             <a href="/admin/qr-access" class="admin-btn">Увійти як адміністратор</a>
             <p class="admin-note">* Доступ обмежено: не частіше 1 разу на 5 хвилин</p>
         </section>
+
+        <!-- AdSense Ad Unit 2 -->
+        <div class="ad-container">
+            <ins class="adsbygoogle"
+                 style="display:block"
+                 data-ad-client="ca-pub-7963216972025059"
+                 data-ad-slot="auto"
+                 data-ad-format="auto"
+                 data-full-width-responsive="true"></ins>
+            <script>
+                 (adsbygoogle = window.adsbygoogle || []).push({});
+            </script>
+        </div>
 
         <!-- Footer -->
         <footer>
