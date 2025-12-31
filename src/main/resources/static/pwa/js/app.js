@@ -860,14 +860,14 @@ function renderGroups(groups) {
         const name = group.externalName || group.name || 'Група';
         const id = group.groupId || group.id;
         const members = group.currentMembers || group.memberCount || 0;
+        const role = group.userRole === 'ADMIN' ? 'Адміністратор' : 'Учасник';
+        const reportType = group.reportType === 'EXTENDED' ? 'Розширений' : 'Простий';
         return `
         <div class="card group-card" onclick="openGroup('${id}', '${escapeHtml(name)}')">
-            <div class="group-icon">${name.charAt(0).toUpperCase()}</div>
-            <div class="group-info">
-                <div class="group-name">${escapeHtml(name)}</div>
-                <div class="group-members">${members} учасників</div>
-            </div>
-            ${group.pendingReports > 0 ? `<div class="group-badge">${group.pendingReports}</div>` : ''}
+            <div class="group-name">${escapeHtml(name)}</div>
+            <div class="group-members">${members} учасн.</div>
+            <div class="group-role">${role}</div>
+            <div class="group-report-type">${reportType}</div>
         </div>
     `}).join('');
 }
