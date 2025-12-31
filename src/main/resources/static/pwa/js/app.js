@@ -6,6 +6,12 @@ let currentGroup = null;
 let selectedReportResponse = 'OK';
 let deferredPrompt = null;
 
+// Phone verification state
+let phoneVerificationId = null;
+let phoneVerificationPhone = null;
+let phoneVerificationTimer = null;
+let recaptchaVerifier = null;
+
 // API Base URL
 const API_BASE = '/api/v1';
 
@@ -60,6 +66,258 @@ function showForgotPasswordInfo() {
     document.getElementById('forgotPasswordModal').classList.add('active');
 }
 
+// ==========================================
+// PHONE VERIFICATION (Firebase Phone Auth)
+// ==========================================
+
+function initPhoneVerification() {
+    // Initialize reCAPTCHA verifier
+    try {
+        recaptchaVerifier = new firebase.auth.RecaptchaVerifier('recaptcha-container', {
+            size: 'invisible',
+            callback: (response) => {
+                console.log('reCAPTCHA solved');
+            },
+            'expired-callback': () => {
+                console.log('reCAPTCHA expired');
+                showToast('Час reCAPTCHA вийшов, спробуйте знову');
+                resetRecaptcha();
+            }
+        });
+        recaptchaVerifier.render().then(widgetId => {
+            console.log('reCAPTCHA rendered, widgetId:', widgetId);
+        });
+    } catch (error) {
+        console.error('reCAPTCHA init error:', error);
+    }
+}
+
+function resetRecaptcha() {
+    if (recaptchaVerifier) {
+        recaptchaVerifier.clear();
+        recaptchaVerifier = null;
+    }
+    initPhoneVerification();
+}
+
+async function sendVerificationCode() {
+    const phoneInput = document.getElementById('phoneVerifyInput');
+    const phone = normalizePhone(phoneInput.value);
+    const btn = document.getElementById('sendCodeBtn');
+
+    // Validate phone
+    if (phone.length !== 13) {
+        showToast('Введіть коректний номер телефону');
+        return;
+    }
+
+    btn.disabled = true;
+    btn.textContent = 'Надсилання...';
+
+    try {
+        // Ensure reCAPTCHA is initialized
+        if (!recaptchaVerifier) {
+            initPhoneVerification();
+            await new Promise(resolve => setTimeout(resolve, 500));
+        }
+
+        const confirmationResult = await firebase.auth().signInWithPhoneNumber(phone, recaptchaVerifier);
+        phoneVerificationId = confirmationResult.verificationId;
+        phoneVerificationPhone = phone;
+
+        // Store confirmation result for verification
+        window.confirmationResult = confirmationResult;
+
+        // Show OTP input step
+        showOtpInputStep(phone);
+        startOtpTimer();
+
+    } catch (error) {
+        console.error('SMS send error:', error);
+        let errorMessage = 'Помилка надсилання коду';
+
+        if (error.code === 'auth/invalid-phone-number') {
+            errorMessage = 'Невірний формат номера телефону';
+        } else if (error.code === 'auth/too-many-requests') {
+            errorMessage = 'Забагато спроб. Спробуйте пізніше';
+        } else if (error.code === 'auth/quota-exceeded') {
+            errorMessage = 'Перевищено ліміт SMS. Спробуйте пізніше';
+        } else if (error.code === 'auth/captcha-check-failed') {
+            errorMessage = 'Помилка reCAPTCHA. Спробуйте знову';
+            resetRecaptcha();
+        }
+
+        showToast(errorMessage);
+        btn.disabled = false;
+        btn.textContent = 'Надіслати код';
+    }
+}
+
+function showOtpInputStep(phone) {
+    document.getElementById('phoneInputStep').style.display = 'none';
+    document.getElementById('otpInputStep').style.display = 'block';
+    document.getElementById('otpSentMessage').textContent = `Код надіслано на ${formatPhoneDisplay(phone)}`;
+    document.getElementById('otpCodeInput').focus();
+}
+
+function startOtpTimer() {
+    let seconds = 60;
+    const timerEl = document.getElementById('otpTimer');
+    const resendLink = document.getElementById('resendCodeLink');
+
+    resendLink.style.display = 'none';
+
+    if (phoneVerificationTimer) {
+        clearInterval(phoneVerificationTimer);
+    }
+
+    phoneVerificationTimer = setInterval(() => {
+        seconds--;
+        timerEl.textContent = `Код дійсний: ${seconds} сек`;
+
+        if (seconds <= 0) {
+            clearInterval(phoneVerificationTimer);
+            timerEl.textContent = 'Час вийшов';
+            resendLink.style.display = 'inline';
+        }
+    }, 1000);
+}
+
+async function resendVerificationCode() {
+    // Reset and send again
+    resetRecaptcha();
+    document.getElementById('otpInputStep').style.display = 'none';
+    document.getElementById('phoneInputStep').style.display = 'block';
+    document.getElementById('sendCodeBtn').disabled = false;
+    document.getElementById('sendCodeBtn').textContent = 'Надіслати код';
+
+    // Auto-send after recaptcha is ready
+    setTimeout(() => {
+        sendVerificationCode();
+    }, 500);
+}
+
+function resetPhoneVerification() {
+    if (phoneVerificationTimer) {
+        clearInterval(phoneVerificationTimer);
+    }
+
+    phoneVerificationId = null;
+    phoneVerificationPhone = null;
+
+    document.getElementById('otpInputStep').style.display = 'none';
+    document.getElementById('phoneInputStep').style.display = 'block';
+    document.getElementById('sendCodeBtn').disabled = false;
+    document.getElementById('sendCodeBtn').textContent = 'Надіслати код';
+    document.getElementById('otpCodeInput').value = '';
+}
+
+async function verifyOtpCode() {
+    const code = document.getElementById('otpCodeInput').value.trim();
+    const btn = document.getElementById('verifyCodeBtn');
+
+    if (code.length !== 6) {
+        showToast('Введіть 6-значний код');
+        return;
+    }
+
+    btn.disabled = true;
+    btn.textContent = 'Перевірка...';
+
+    try {
+        const result = await window.confirmationResult.confirm(code);
+
+        // Success! Save verified phone
+        localStorage.setItem('zvit_verified_phone', phoneVerificationPhone);
+
+        // Sign out from Firebase (we use our own auth system)
+        await firebase.auth().signOut();
+
+        showToast('Номер підтверджено!');
+
+        // Clear timer
+        if (phoneVerificationTimer) {
+            clearInterval(phoneVerificationTimer);
+        }
+
+        // Pre-fill phone in login form
+        document.getElementById('loginPhone').value = phoneVerificationPhone;
+
+        // Show choice: login or register
+        showLoginOrRegisterChoice();
+
+    } catch (error) {
+        console.error('OTP verify error:', error);
+        let errorMessage = 'Невірний код';
+
+        if (error.code === 'auth/invalid-verification-code') {
+            errorMessage = 'Невірний код верифікації';
+        } else if (error.code === 'auth/code-expired') {
+            errorMessage = 'Час коду вийшов. Надішліть повторно';
+        }
+
+        showToast(errorMessage);
+        btn.disabled = false;
+        btn.textContent = 'Підтвердити';
+    }
+}
+
+function showLoginOrRegisterChoice() {
+    // Create and show modal for choice
+    const modal = document.createElement('div');
+    modal.className = 'modal active';
+    modal.id = 'authChoiceModal';
+    modal.innerHTML = `
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>Вхід або реєстрація</h2>
+            </div>
+            <p style="margin-bottom: 20px; color: var(--text-secondary);">
+                Виберіть дію:
+            </p>
+            <div style="display: flex; flex-direction: column; gap: 12px;">
+                <button class="btn btn-primary" onclick="goToLogin()">У мене є акаунт</button>
+                <button class="btn btn-secondary" onclick="goToRegister()">Зареєструватися</button>
+            </div>
+        </div>
+    `;
+    document.body.appendChild(modal);
+}
+
+function goToLogin() {
+    const modal = document.getElementById('authChoiceModal');
+    if (modal) modal.remove();
+
+    const verifiedPhone = localStorage.getItem('zvit_verified_phone');
+    if (verifiedPhone) {
+        document.getElementById('loginPhone').value = verifiedPhone;
+    }
+    showScreen('loginScreen');
+}
+
+function goToRegister() {
+    const modal = document.getElementById('authChoiceModal');
+    if (modal) modal.remove();
+
+    const verifiedPhone = localStorage.getItem('zvit_verified_phone');
+    if (verifiedPhone) {
+        document.getElementById('registerPhone').value = verifiedPhone;
+    }
+    showScreen('registerScreen');
+}
+
+function isPhoneVerified() {
+    return localStorage.getItem('zvit_verified_phone') !== null;
+}
+
+function getVerifiedPhone() {
+    return localStorage.getItem('zvit_verified_phone');
+}
+
+// ==========================================
+// END PHONE VERIFICATION
+// ==========================================
+
 function setupPhoneInput(input) {
     input.addEventListener('input', (e) => {
         let value = e.target.value;
@@ -109,12 +367,18 @@ async function initApp() {
     // Check if user is logged in
     const token = localStorage.getItem('zvit_token');
     const userData = localStorage.getItem('zvit_user');
+    const verifiedPhone = localStorage.getItem('zvit_verified_phone');
 
     if (token && userData) {
         currentUser = JSON.parse(userData);
         showMainScreen();
-    } else {
+    } else if (verifiedPhone) {
+        // Phone verified but not logged in - show login screen
         showScreen('loginScreen');
+    } else {
+        // No phone verification - show phone verify screen
+        showScreen('phoneVerifyScreen');
+        initPhoneVerification();
     }
 
     // Setup form handlers
@@ -125,6 +389,7 @@ async function initApp() {
     // Setup phone inputs with mask
     setupPhoneInput(document.getElementById('loginPhone'));
     setupPhoneInput(document.getElementById('registerPhone'));
+    setupPhoneInput(document.getElementById('phoneVerifyInput'));
 }
 
 // Service Worker
@@ -271,6 +536,13 @@ async function handleLogin(e) {
         return;
     }
 
+    // Check if phone is verified and matches
+    const verifiedPhone = getVerifiedPhone();
+    if (verifiedPhone && verifiedPhone !== phone) {
+        showToast('Цей номер не співпадає з верифікованим. Використовуйте ' + formatPhoneDisplay(verifiedPhone), 'error');
+        return;
+    }
+
     btn.disabled = true;
     btn.textContent = 'Вхід...';
 
@@ -322,6 +594,13 @@ async function handleRegister(e) {
     // phone = +380XXXXXXXXX (13 символів)
     if (phone.length !== 13) {
         showToast('Невірний формат телефону', 'error');
+        return;
+    }
+
+    // Check if phone is verified and matches
+    const verifiedPhone = getVerifiedPhone();
+    if (verifiedPhone && verifiedPhone !== phone) {
+        showToast('Цей номер не співпадає з верифікованим. Використовуйте ' + formatPhoneDisplay(verifiedPhone), 'error');
         return;
     }
 

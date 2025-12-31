@@ -15,6 +15,25 @@
     <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-7963216972025059"
          crossorigin="anonymous"></script>
 
+    <!-- Firebase SDK -->
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
+    <script>
+        // Firebase configuration
+        const firebaseConfig = {
+            apiKey: "AIzaSyAqt2bGMmhFNZ8ClYwraWmogo7WjhvtMVA",
+            authDomain: "zvit-b9ed2.firebaseapp.com",
+            projectId: "zvit-b9ed2",
+            storageBucket: "zvit-b9ed2.firebasestorage.app",
+            messagingSenderId: "1049422631668",
+            appId: "1:1049422631668:web:5bc66bca4521cd0fb204a1",
+            measurementId: "G-7W1S4HJBP5"
+        };
+        // Initialize Firebase
+        firebase.initializeApp(firebaseConfig);
+        firebase.auth().languageCode = 'uk';
+    </script>
+
     <!-- PWA -->
     <link rel="manifest" href="/manifest.json">
     <link rel="icon" type="image/svg+xml" href="/icons/icon.svg">
@@ -952,8 +971,54 @@
     </style>
 </head>
 <body>
+    <!-- Phone Verification Screen -->
+    <div id="phoneVerifyScreen" class="screen auth-screen active">
+        <img src="/icons/icon.svg" alt="ZVIT" class="auth-logo">
+        <h1 class="auth-title">Верифікація</h1>
+        <p class="auth-subtitle" id="phoneVerifySubtitle">Підтвердіть номер телефону</p>
+
+        <!-- Step 1: Enter Phone -->
+        <div id="phoneInputStep" class="auth-form">
+            <div class="form-group">
+                <label class="form-label">Номер телефону</label>
+                <input type="tel" class="form-input" id="phoneVerifyInput" placeholder="+380XXXXXXXXX" required>
+            </div>
+            <div id="recaptcha-container"></div>
+            <button type="button" class="btn btn-primary" id="sendCodeBtn" onclick="sendVerificationCode()" style="margin-top: 16px;">
+                Надіслати код
+            </button>
+            <p class="auth-link" style="margin-top: 16px; font-size: 12px; color: var(--text-secondary);">
+                Для захисту від шахрайства кожен пристрій прив'язується до номера телефону
+            </p>
+        </div>
+
+        <!-- Step 2: Enter OTP Code -->
+        <div id="otpInputStep" class="auth-form" style="display: none;">
+            <p style="margin-bottom: 16px; color: var(--text-secondary);" id="otpSentMessage">
+                Код надіслано на номер
+            </p>
+            <div class="form-group">
+                <label class="form-label">Код з SMS</label>
+                <input type="text" class="form-input" id="otpCodeInput" placeholder="XXXXXX" maxlength="6"
+                       style="text-align: center; font-size: 24px; letter-spacing: 8px;" autocomplete="one-time-code">
+            </div>
+            <p id="otpTimer" style="text-align: center; color: var(--text-secondary); margin-bottom: 16px;">
+                Код дійсний: 60 сек
+            </p>
+            <button type="button" class="btn btn-primary" id="verifyCodeBtn" onclick="verifyOtpCode()">
+                Підтвердити
+            </button>
+            <p class="auth-link" style="margin-top: 16px;">
+                <a href="#" id="resendCodeLink" onclick="resendVerificationCode()" style="display: none;">Надіслати код повторно</a>
+            </p>
+            <p class="auth-link">
+                <a href="#" onclick="resetPhoneVerification()">Змінити номер</a>
+            </p>
+        </div>
+    </div>
+
     <!-- Login Screen -->
-    <div id="loginScreen" class="screen auth-screen active">
+    <div id="loginScreen" class="screen auth-screen">
         <img src="/icons/icon.svg" alt="ZVIT" class="auth-logo">
         <h1 class="auth-title">ZVIT</h1>
         <p class="auth-subtitle">Система швидкого звітування</p>
