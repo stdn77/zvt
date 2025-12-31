@@ -70,9 +70,23 @@ function showForgotPasswordInfo() {
 // PHONE VERIFICATION (Firebase Phone Auth)
 // ==========================================
 
+let recaptchaWidgetId = null;
+
 function initPhoneVerification() {
+    // Don't re-initialize if already done
+    if (recaptchaVerifier && recaptchaWidgetId !== null) {
+        console.log('reCAPTCHA already initialized');
+        return;
+    }
+
     // Initialize reCAPTCHA verifier
     try {
+        // Clear container first
+        const container = document.getElementById('recaptcha-container');
+        if (container) {
+            container.innerHTML = '';
+        }
+
         recaptchaVerifier = new firebase.auth.RecaptchaVerifier('recaptcha-container', {
             size: 'invisible',
             callback: (response) => {
@@ -81,11 +95,15 @@ function initPhoneVerification() {
             'expired-callback': () => {
                 console.log('reCAPTCHA expired');
                 showToast('Час reCAPTCHA вийшов, спробуйте знову');
-                resetRecaptcha();
+                recaptchaWidgetId = null;
+                recaptchaVerifier = null;
             }
         });
         recaptchaVerifier.render().then(widgetId => {
+            recaptchaWidgetId = widgetId;
             console.log('reCAPTCHA rendered, widgetId:', widgetId);
+        }).catch(err => {
+            console.error('reCAPTCHA render error:', err);
         });
     } catch (error) {
         console.error('reCAPTCHA init error:', error);
@@ -93,11 +111,26 @@ function initPhoneVerification() {
 }
 
 function resetRecaptcha() {
-    if (recaptchaVerifier) {
-        recaptchaVerifier.clear();
-        recaptchaVerifier = null;
+    try {
+        if (recaptchaVerifier) {
+            recaptchaVerifier.clear();
+        }
+    } catch (e) {
+        console.log('Error clearing recaptcha:', e);
     }
-    initPhoneVerification();
+    recaptchaVerifier = null;
+    recaptchaWidgetId = null;
+
+    // Clear container
+    const container = document.getElementById('recaptcha-container');
+    if (container) {
+        container.innerHTML = '';
+    }
+
+    // Re-initialize after a delay
+    setTimeout(() => {
+        initPhoneVerification();
+    }, 300);
 }
 
 async function sendVerificationCode() {
@@ -115,10 +148,15 @@ async function sendVerificationCode() {
     btn.textContent = 'Надсилання...';
 
     try {
-        // Ensure reCAPTCHA is initialized
+        // Ensure reCAPTCHA is initialized (but don't re-render if already exists)
+        if (!recaptchaVerifier || recaptchaWidgetId === null) {
+            resetRecaptcha();
+            await new Promise(resolve => setTimeout(resolve, 600));
+        }
+
+        // Wait for reCAPTCHA to be ready
         if (!recaptchaVerifier) {
-            initPhoneVerification();
-            await new Promise(resolve => setTimeout(resolve, 500));
+            throw new Error('reCAPTCHA не ініціалізовано');
         }
 
         const confirmationResult = await firebase.auth().signInWithPhoneNumber(phone, recaptchaVerifier);
@@ -142,7 +180,8 @@ async function sendVerificationCode() {
             errorMessage = 'Забагато спроб. Спробуйте пізніше';
         } else if (error.code === 'auth/quota-exceeded') {
             errorMessage = 'Перевищено ліміт SMS. Спробуйте пізніше';
-        } else if (error.code === 'auth/captcha-check-failed') {
+        } else if (error.code === 'auth/captcha-check-failed' ||
+                   (error.message && error.message.includes('reCAPTCHA'))) {
             errorMessage = 'Помилка reCAPTCHA. Спробуйте знову';
             resetRecaptcha();
         }
