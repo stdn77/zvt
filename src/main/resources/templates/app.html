@@ -968,6 +968,14 @@
         .toggle.active::after {
             transform: translateX(22px);
         }
+
+        /* Hide reCAPTCHA badge */
+        .grecaptcha-badge {
+            visibility: hidden !important;
+            opacity: 0 !important;
+            position: absolute !important;
+            right: -9999px !important;
+        }
     </style>
 </head>
 <body>
@@ -987,8 +995,9 @@
             <button type="button" class="btn btn-primary" id="sendCodeBtn" onclick="sendVerificationCode()" style="margin-top: 16px;">
                 Надіслати код
             </button>
-            <p class="auth-link" style="margin-top: 16px; font-size: 12px; color: var(--text-secondary);">
-                Для захисту від шахрайства кожен пристрій прив'язується до номера телефону
+            <p class="auth-link" style="margin-top: 16px; font-size: 11px; color: var(--text-secondary); line-height: 1.4;">
+                Для захисту від шахрайства кожен пристрій прив'язується до номера телефону.
+                Захищено reCAPTCHA. <a href="https://policies.google.com/privacy" target="_blank" style="color: var(--primary);">Конфіденційність</a> та <a href="https://policies.google.com/terms" target="_blank" style="color: var(--primary);">Умови</a>.
             </p>
         </div>
 
