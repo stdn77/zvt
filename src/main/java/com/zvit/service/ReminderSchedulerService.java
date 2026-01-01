@@ -126,11 +126,11 @@ public class ReminderSchedulerService {
      * Надсилає нагадування всім учасникам групи, які використовують тільки PWA
      */
     private int sendRemindersForGroup(Group group) {
-        log.debug("Sending reminders for group: {}", group.getName());
+        log.debug("Sending reminders for group: {}", group.getExternalName());
 
         // Get all active members of the group
         List<GroupMember> members = groupMemberRepository.findByGroupIdAndStatus(
-                group.getId(), GroupMember.MemberStatus.ACTIVE);
+                group.getId(), GroupMember.MemberStatus.ACCEPTED);
 
         if (members.isEmpty()) {
             return 0;
@@ -140,12 +140,12 @@ public class ReminderSchedulerService {
         List<String> webTokens = new ArrayList<>();
         Map<String, String> data = new HashMap<>();
         data.put("groupId", group.getId());
-        data.put("groupName", group.getName());
+        data.put("groupName", group.getExternalName());
         data.put("type", "REMINDER");
 
         for (GroupMember member : members) {
             try {
-                User user = userRepository.findById(member.getUserId()).orElse(null);
+                User user = member.getUser();
                 if (user == null) continue;
 
                 // Skip users who disabled notifications
@@ -166,7 +166,7 @@ public class ReminderSchedulerService {
                 }
 
             } catch (Exception e) {
-                log.debug("Error processing member {}: {}", member.getUserId(), e.getMessage());
+                log.debug("Error processing member {}: {}", member.getUser().getId(), e.getMessage());
             }
         }
 
@@ -176,10 +176,10 @@ public class ReminderSchedulerService {
 
         // Send notifications
         String title = "⏰ Час звітувати!";
-        String body = group.getName() + " - надішліть свій звіт";
+        String body = group.getExternalName() + " - надішліть свій звіт";
 
         int sent = firebaseService.sendPushNotificationToMultiple(webTokens, title, body, data);
-        log.debug("Sent {} web reminders for group {}", sent, group.getName());
+        log.debug("Sent {} web reminders for group {}", sent, group.getExternalName());
 
         return sent;
     }
