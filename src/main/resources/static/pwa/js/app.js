@@ -6,6 +6,10 @@ let currentGroup = null;
 let selectedReportResponse = 'OK';
 let deferredPrompt = null;
 
+// Navigation history for back button
+let navigationStack = ['reportsScreen'];
+let lastBackPressTime = 0;
+
 // Phone verification state
 let phoneVerificationId = null;
 let phoneVerificationPhone = null;
@@ -397,6 +401,9 @@ function setupPhoneInput(input) {
 
 // Initialize app
 document.addEventListener('DOMContentLoaded', () => {
+    // Initialize history state for back button
+    history.replaceState({ screen: 'reportsScreen' }, '', '');
+
     initApp();
     registerServiceWorker();
     setupInstallPrompt();
@@ -494,7 +501,7 @@ function dismissInstallModal(event) {
 }
 
 // Screen Navigation
-function showScreen(screenId) {
+function showScreen(screenId, addToHistory = true) {
     document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
     document.getElementById(screenId).classList.add('active');
 
@@ -511,6 +518,20 @@ function showScreen(screenId) {
             item.classList.add('active');
         }
     });
+
+    // Track navigation history (but not for auth screens or when going back)
+    if (addToHistory && !authScreens.includes(screenId)) {
+        // Avoid duplicates at the end of stack
+        if (navigationStack[navigationStack.length - 1] !== screenId) {
+            navigationStack.push(screenId);
+            // Keep stack reasonable size
+            if (navigationStack.length > 20) {
+                navigationStack = navigationStack.slice(-15);
+            }
+        }
+        // Push state to enable system back button
+        history.pushState({ screen: screenId }, '', '');
+    }
 }
 
 // Navigation with data loading
@@ -2130,7 +2151,10 @@ async function openMyReportsInGroup(groupId, groupName) {
     currentReportUser = null; // Це мої звіти, не потрібен телефон
 
     // Оновлюємо заголовок - назва групи
-    document.getElementById('userReportsTitle').textContent = groupName || 'Мої звіти';
+    document.getElementById('userReportsTitle').textContent = groupName || 'Група';
+
+    // Показуємо субтитр "Мої звіти"
+    document.getElementById('userReportsSubtitle').style.display = 'block';
 
     // Ховаємо телефон (це мої звіти)
     document.getElementById('userReportsPhoneHeader').style.display = 'none';
@@ -2300,6 +2324,9 @@ async function openUserReports(userId, userName, userPhone) {
 
     // Оновлюємо заголовок
     document.getElementById('userReportsTitle').textContent = userName;
+
+    // Ховаємо субтитр "Мої звіти" (це звіти іншого користувача)
+    document.getElementById('userReportsSubtitle').style.display = 'none';
 
     // Показуємо телефон якщо є
     const phoneHeader = document.getElementById('userReportsPhoneHeader');
@@ -2885,15 +2912,61 @@ function formatTime(dateString) {
     return date.toLocaleDateString('uk-UA', { day: 'numeric', month: 'short' });
 }
 
-// Handle back button
-window.addEventListener('popstate', () => {
-    const currentScreen = document.querySelector('.screen.active');
-    if (currentScreen.id === 'groupScreen') {
-        showScreen('mainScreen');
-    } else if (currentScreen.id === 'settingsScreen') {
-        showScreen('mainScreen');
-    }
+// Handle system back button
+window.addEventListener('popstate', (e) => {
+    e.preventDefault();
+    handleSystemBack();
 });
+
+function handleSystemBack() {
+    const currentScreen = document.querySelector('.screen.active');
+    const authScreens = ['loginScreen', 'registerScreen', 'verifyScreen'];
+    const mainScreens = ['mainScreen', 'reportsScreen', 'settingsScreen'];
+
+    // If on auth screens, do nothing
+    if (authScreens.includes(currentScreen.id)) {
+        return;
+    }
+
+    // Check if any modal is open - close it first
+    const activeModal = document.querySelector('.modal.active');
+    if (activeModal) {
+        activeModal.classList.remove('active');
+        history.pushState({}, '', ''); // Re-push state
+        return;
+    }
+
+    // If on main tabs (reportsScreen, mainScreen, settingsScreen)
+    if (mainScreens.includes(currentScreen.id)) {
+        // Double-press to exit
+        const now = Date.now();
+        if (now - lastBackPressTime < 2000) {
+            // User pressed back twice within 2 seconds - allow exit
+            // On PWA we can't really exit, but we can let the default behavior happen
+            window.close(); // This may not work on all browsers
+            return;
+        } else {
+            lastBackPressTime = now;
+            showToast('Натисніть ще раз для виходу', 'info');
+            history.pushState({}, '', ''); // Re-push state to prevent actual back
+            return;
+        }
+    }
+
+    // For other screens, navigate back in history
+    if (navigationStack.length > 1) {
+        navigationStack.pop(); // Remove current screen
+        const previousScreen = navigationStack[navigationStack.length - 1];
+        showScreen(previousScreen, false);
+    } else {
+        // Fallback to reports screen
+        showScreen('reportsScreen', false);
+        navigationStack = ['reportsScreen'];
+    }
+
+    // Re-push state to maintain navigation
+    history.pushState({}, '', '');
+}
 
 // Prevent zoom on input focus (iOS)
 document.addEventListener('gesturestart', (e) => e.preventDefault());
