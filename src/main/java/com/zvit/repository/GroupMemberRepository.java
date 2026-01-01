@@ -18,6 +18,8 @@ public interface GroupMemberRepository extends JpaRepository<GroupMember, String
 
     List<GroupMember> findByGroupId(String groupId);
 
+    List<GroupMember> findByGroupIdAndStatus(String groupId, GroupMember.MemberStatus status);
+
     Optional<GroupMember> findByGroupIdAndUserId(String groupId, String userId);
 
     long countByGroupId(String groupId);

@@ -1,6 +1,7 @@
 package com.zvit.controller;
 
 import com.zvit.dto.request.CreateGroupRequest;
+import com.zvit.dto.request.FcmTokenRequest;
 import com.zvit.dto.request.JoinGroupRequest;
 import com.zvit.dto.request.LoginRequest;
 import com.zvit.dto.request.RegisterRequest;
@@ -365,5 +366,24 @@ public class PwaController {
         log.info("PWA: Getting user reports in group: {} for user: {} by: {}", groupId, targetUserId, userId);
         List<ReportResponse> reports = reportService.getUserReportsInGroup(groupId, targetUserId, userId);
         return ResponseEntity.ok(ApiResponse.success("Звіти отримано", reports));
+    }
+
+    /**
+     * Зберегти FCM токен для push-сповіщень (PWA/Web)
+     */
+    @PostMapping("/fcm-token")
+    public ResponseEntity<ApiResponse<Void>> saveFcmToken(
+            @RequestBody FcmTokenRequest request,
+            Authentication authentication
+    ) {
+        String userId = authentication.getName();
+        String token = request.getFcmToken() != null ? request.getFcmToken() : request.getToken();
+        String deviceType = request.getDeviceType() != null ? request.getDeviceType() : "WEB";
+
+        log.info("PWA: Saving FCM token for user: {}, deviceType: {}", userId, deviceType);
+
+        userService.updateFcmToken(userId, token, deviceType);
+
+        return ResponseEntity.ok(ApiResponse.success("FCM токен збережено", null));
     }
 }

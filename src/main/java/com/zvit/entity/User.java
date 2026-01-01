@@ -58,4 +58,11 @@ public class User {
 
     @Column(name = "fcm_token", length = 500)
     private String fcmToken;
+
+    @Column(name = "fcm_token_web", length = 500)
+    private String fcmTokenWeb;
+
+    @Column(name = "notifications_enabled", nullable = false)
+    @Builder.Default
+    private boolean notificationsEnabled = true;
 }

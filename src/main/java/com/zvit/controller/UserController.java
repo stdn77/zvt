@@ -34,4 +34,41 @@ public class UserController {
         log.info("✅ Profile updated successfully");
         return ResponseEntity.ok(ApiResponse.success("Профіль оновлено", null));
     }
+
+    /**
+     * Оновлення налаштування сповіщень
+     */
+    @PutMapping("/notifications")
+    public ResponseEntity<ApiResponse<Void>> updateNotifications(
+            @RequestBody java.util.Map<String, Boolean> request,
+            Authentication authentication
+    ) {
+        String userId = authentication.getName();
+        Boolean enabled = request.get("enabled");
+
+        if (enabled == null) {
+            return ResponseEntity.badRequest()
+                    .body(ApiResponse.error("Параметр 'enabled' є обов'язковим"));
+        }
+
+        log.info("🔔 UPDATE NOTIFICATIONS request for user: {}, enabled: {}", userId, enabled);
+        userService.updateNotificationsEnabled(userId, enabled);
+
+        String message = enabled ? "Сповіщення увімкнено" : "Сповіщення вимкнено";
+        return ResponseEntity.ok(ApiResponse.success(message, null));
+    }
+
+    /**
+     * Отримання налаштування сповіщень
+     */
+    @GetMapping("/notifications")
+    public ResponseEntity<ApiResponse<java.util.Map<String, Boolean>>> getNotifications(
+            Authentication authentication
+    ) {
+        String userId = authentication.getName();
+        boolean enabled = userService.areNotificationsEnabled(userId);
+
+        java.util.Map<String, Boolean> result = java.util.Map.of("enabled", enabled);
+        return ResponseEntity.ok(ApiResponse.success(null, result));
+    }
 }

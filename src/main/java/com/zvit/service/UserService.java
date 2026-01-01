@@ -35,10 +35,38 @@ public class UserService {
     }
 
     @Transactional
+    public void updateFcmToken(String userId, String fcmToken, String deviceType) {
+        User user = getUserById(userId);
+        if ("WEB".equalsIgnoreCase(deviceType)) {
+            user.setFcmTokenWeb(fcmToken);
+            log.info("Updated WEB FCM token for user: {}", userId);
+        } else {
+            user.setFcmToken(fcmToken);
+            log.info("Updated ANDROID FCM token for user: {}", userId);
+        }
+        userRepository.save(user);
+    }
+
+    @Transactional
     public void clearFcmToken(String userId) {
         User user = getUserById(userId);
         user.setFcmToken(null);
         userRepository.save(user);
+    }
+
+    @Transactional
+    public void clearFcmTokenWeb(String userId) {
+        User user = getUserById(userId);
+        user.setFcmTokenWeb(null);
+        userRepository.save(user);
+    }
+
+    /**
+     * Check if user has Android FCM token (for deciding whether to send server reminders)
+     */
+    public boolean hasAndroidToken(String userId) {
+        User user = getUserById(userId);
+        return user.getFcmToken() != null && !user.getFcmToken().isEmpty();
     }
 
     /**
@@ -115,5 +143,26 @@ public class UserService {
         } catch (Exception e) {
             throw new RuntimeException("Помилка хешування", e);
         }
+    }
+
+    /**
+     * Оновлення налаштування сповіщень
+     */
+    @Transactional
+    public void updateNotificationsEnabled(String userId, boolean enabled) {
+        log.info("🔔 Updating notifications setting for user {}: {}", userId, enabled);
+        User user = getUserById(userId);
+        user.setNotificationsEnabled(enabled);
+        user.setUpdatedAt(LocalDateTime.now());
+        userRepository.save(user);
+        log.info("   ✅ Notifications setting updated");
+    }
+
+    /**
+     * Отримати налаштування сповіщень
+     */
+    public boolean areNotificationsEnabled(String userId) {
+        User user = getUserById(userId);
+        return user.isNotificationsEnabled();
     }
 }

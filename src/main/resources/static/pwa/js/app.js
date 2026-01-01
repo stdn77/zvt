@@ -527,16 +527,17 @@ function navigateTo(screenId) {
     }
 }
 
-function updateSettingsScreen() {
+async function updateSettingsScreen() {
     if (currentUser) {
         document.getElementById('profileName').textContent = currentUser.name || '-';
         document.getElementById('profilePhone').textContent = currentUser.phone || '-';
         document.getElementById('profileEmail').textContent = currentUser.email || 'Не вказано';
     }
-    updateNotificationsToggle();
+    // Load notification setting from server (synced with server)
+    await loadNotificationsSettingFromServer();
 }
 
-function showMainScreen() {
+async function showMainScreen() {
     // Після входу показуємо екран Звіти (як в Android)
     showScreen('reportsScreen');
     loadReportsScreen();
@@ -548,8 +549,8 @@ function showMainScreen() {
         document.getElementById('profileEmail').textContent = currentUser.email || 'Не вказано';
     }
 
-    // Check notifications permission
-    updateNotificationsToggle();
+    // Load notifications setting from server
+    loadNotificationsSettingFromServer();
 
     // Show install modal if available (reset dismissed state on screen change)
     sessionStorage.removeItem('zvit_install_dismissed');
@@ -2352,18 +2353,48 @@ async function saveReportForSync(reportData) {
 // Notifications
 async function toggleNotifications() {
     const toggle = document.getElementById('notificationsToggle');
+    const isCurrentlyEnabled = toggle.classList.contains('active');
 
-    if (toggle.classList.contains('active')) {
-        // Disable
+    if (isCurrentlyEnabled) {
+        // Disable notifications
         toggle.classList.remove('active');
-        // Unsubscribe logic here
+        await updateNotificationsOnServer(false);
+        showToast('Сповіщення вимкнено', 'success');
     } else {
-        // Enable
+        // Enable notifications - first request browser permission
         const permission = await requestNotificationPermission();
         if (permission === 'granted') {
             toggle.classList.add('active');
             await subscribeToPush();
+            await updateNotificationsOnServer(true);
         }
+    }
+}
+
+async function updateNotificationsOnServer(enabled) {
+    try {
+        const response = await apiRequest('/user/notifications', 'PUT', { enabled });
+        if (!response.success) {
+            console.error('[Notifications] Failed to update on server:', response.message);
+        }
+    } catch (error) {
+        console.error('[Notifications] Error updating on server:', error);
+    }
+}
+
+async function loadNotificationsSettingFromServer() {
+    try {
+        const response = await apiRequest('/user/notifications', 'GET');
+        if (response.success && response.data) {
+            const toggle = document.getElementById('notificationsToggle');
+            if (response.data.enabled) {
+                toggle.classList.add('active');
+            } else {
+                toggle.classList.remove('active');
+            }
+        }
+    } catch (error) {
+        console.error('[Notifications] Error loading setting:', error);
     }
 }
 
@@ -2386,13 +2417,84 @@ async function requestNotificationPermission() {
 
 async function subscribeToPush() {
     try {
-        const registration = await navigator.serviceWorker.ready;
+        console.log('[FCM] Starting push subscription...');
 
-        // Get VAPID public key from server
-        // For now, we'll skip this as it requires backend setup
-        console.log('Push subscription would be set up here');
+        // Register Firebase messaging service worker
+        const registration = await navigator.serviceWorker.register('/firebase-messaging-sw.js');
+        console.log('[FCM] Service worker registered:', registration);
+
+        // Initialize Firebase Messaging
+        const messaging = firebase.messaging();
+
+        // Get FCM token
+        const fcmToken = await messaging.getToken({
+            vapidKey: 'BLBz-YrPqRkZdKfN5M7xNCz1eRlB0Z5fAHDJvTvfGrY_8dZJvZXqxmZPYlKdLTqQWvp_TfLKRKWQXKZQWKZQWKZ', // You may need to generate this in Firebase Console
+            serviceWorkerRegistration: registration
+        });
+
+        if (fcmToken) {
+            console.log('[FCM] Token received:', fcmToken.substring(0, 20) + '...');
+
+            // Send token to backend
+            await sendFcmTokenToBackend(fcmToken);
+
+            // Listen for token refresh
+            messaging.onMessage((payload) => {
+                console.log('[FCM] Foreground message received:', payload);
+                showForegroundNotification(payload);
+            });
+
+            return fcmToken;
+        } else {
+            console.log('[FCM] No token available');
+            return null;
+        }
     } catch (error) {
-        console.error('Push subscription failed:', error);
+        console.error('[FCM] Push subscription failed:', error);
+
+        // Handle specific errors
+        if (error.code === 'messaging/permission-blocked') {
+            showToast('Сповіщення заблоковані браузером', 'error');
+        } else if (error.code === 'messaging/unsupported-browser') {
+            showToast('Браузер не підтримує push-сповіщення', 'error');
+        }
+
+        return null;
+    }
+}
+
+async function sendFcmTokenToBackend(fcmToken) {
+    try {
+        const response = await apiRequest('/pwa/fcm-token', 'POST', {
+            token: fcmToken,
+            deviceType: 'WEB'
+        });
+
+        if (response.success) {
+            console.log('[FCM] Token saved to backend');
+            localStorage.setItem('zvit_fcm_token', fcmToken);
+        } else {
+            console.error('[FCM] Failed to save token:', response.message);
+        }
+    } catch (error) {
+        console.error('[FCM] Error sending token to backend:', error);
+    }
+}
+
+function showForegroundNotification(payload) {
+    const title = payload.notification?.title || payload.data?.title || 'ZVIT';
+    const body = payload.notification?.body || payload.data?.body || '';
+
+    // Show toast for foreground notifications
+    showToast(`${title}: ${body}`, 'info');
+
+    // Also show browser notification if page is not focused
+    if (document.hidden && Notification.permission === 'granted') {
+        new Notification(title, {
+            body: body,
+            icon: '/icons/icon-192x192.png',
+            tag: 'zvit-foreground'
+        });
     }
 }
 
