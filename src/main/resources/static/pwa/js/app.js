@@ -27,6 +27,30 @@ function isStandalonePWA() {
            window.navigator.standalone === true;
 }
 
+// Cookie helpers for iOS PWA persistence
+function setCookie(name, value, days = 365) {
+    const date = new Date();
+    date.setTime(date.getTime() + (days * 24 * 60 * 60 * 1000));
+    const expires = "expires=" + date.toUTCString();
+    document.cookie = name + "=" + encodeURIComponent(value) + ";" + expires + ";path=/;SameSite=Lax";
+}
+
+function getCookie(name) {
+    const nameEQ = name + "=";
+    const ca = document.cookie.split(';');
+    for (let i = 0; i < ca.length; i++) {
+        let c = ca[i].trim();
+        if (c.indexOf(nameEQ) === 0) {
+            return decodeURIComponent(c.substring(nameEQ.length));
+        }
+    }
+    return null;
+}
+
+function deleteCookie(name) {
+    document.cookie = name + "=;expires=Thu, 01 Jan 1970 00:00:00 UTC;path=/;";
+}
+
 // Urgent reports storage
 function getUrgentReportsFromStorage() {
     try {
@@ -337,6 +361,7 @@ async function verifyOtpCode() {
 
         // Success! Save verified phone
         localStorage.setItem('zvit_verified_phone', phoneVerificationPhone);
+        setCookie('zvit_verified_phone', phoneVerificationPhone);
 
         // Sign out from Firebase (we use our own auth system)
         await firebase.auth().signOut();
@@ -478,7 +503,22 @@ async function initApp() {
     // Check if user is logged in
     const token = localStorage.getItem('zvit_token');
     const userData = localStorage.getItem('zvit_user');
-    const verifiedPhone = localStorage.getItem('zvit_verified_phone');
+    let verifiedPhone = localStorage.getItem('zvit_verified_phone');
+
+    // iOS PWA fix: check cookie as fallback for verified phone
+    // (iOS uses different localStorage for standalone PWA)
+    if (!verifiedPhone) {
+        const cookiePhone = getCookie('zvit_verified_phone');
+        if (cookiePhone) {
+            verifiedPhone = cookiePhone;
+            localStorage.setItem('zvit_verified_phone', cookiePhone);
+        }
+    }
+
+    // Sync localStorage to cookie for future iOS PWA opens
+    if (verifiedPhone && !getCookie('zvit_verified_phone')) {
+        setCookie('zvit_verified_phone', verifiedPhone);
+    }
 
     if (token && userData) {
         currentUser = JSON.parse(userData);
@@ -486,6 +526,16 @@ async function initApp() {
     } else if (verifiedPhone) {
         // Phone verified but not logged in - show login screen
         showScreen('loginScreen');
+        // Pre-fill phone number
+        const loginPhoneInput = document.getElementById('loginPhone');
+        if (loginPhoneInput) {
+            loginPhoneInput.value = verifiedPhone;
+        }
+    } else if (isIOS() && isStandalonePWA()) {
+        // iOS standalone PWA without verified phone - show login directly
+        // (user likely has an account, just lost localStorage due to iOS limitation)
+        showScreen('loginScreen');
+        showToast('Увійдіть у свій акаунт', 'info');
     } else {
         // No phone verification - show phone verify screen
         showScreen('phoneVerifyScreen');
@@ -709,6 +759,10 @@ async function handleLogin(e) {
                 phone: formatPhoneDisplay(phone)
             }));
 
+            // Save phone to cookie for iOS PWA persistence
+            localStorage.setItem('zvit_verified_phone', phone);
+            setCookie('zvit_verified_phone', phone);
+
             currentUser = {
                 id: loginData.userId,
                 name: loginData.name,
@@ -784,6 +838,10 @@ async function handleRegister(e) {
                     phone: formatPhoneDisplay(phone)
                 }));
 
+                // Save phone to cookie for iOS PWA persistence
+                localStorage.setItem('zvit_verified_phone', phone);
+                setCookie('zvit_verified_phone', phone);
+
                 currentUser = {
                     id: loginData.userId,
                     name: loginData.name || name,
@@ -836,6 +894,10 @@ async function handleVerify(e) {
                 phone: formatPhoneDisplay(phone)
             }));
 
+            // Save phone to cookie for iOS PWA persistence
+            localStorage.setItem('zvit_verified_phone', phone);
+            setCookie('zvit_verified_phone', phone);
+
             currentUser = {
                 id: loginData.userId,
                 name: loginData.name || name,
@@ -855,6 +917,7 @@ async function handleVerify(e) {
 function logout() {
     localStorage.removeItem('zvit_token');
     localStorage.removeItem('zvit_user');
+    // Keep verified phone in localStorage and cookie for easier re-login
     currentUser = null;
     currentGroup = null;
     showScreen('loginScreen');
