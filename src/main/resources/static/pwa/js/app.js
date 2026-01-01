@@ -27,6 +27,60 @@ function isStandalonePWA() {
            window.navigator.standalone === true;
 }
 
+// Urgent reports storage
+function getUrgentReportsFromStorage() {
+    try {
+        const data = localStorage.getItem('zvit_urgent_reports');
+        return data ? JSON.parse(data) : {};
+    } catch (e) {
+        return {};
+    }
+}
+
+function saveUrgentReportsToStorage(reports) {
+    localStorage.setItem('zvit_urgent_reports', JSON.stringify(reports));
+}
+
+function setUrgentReportForGroup(groupId, deadline, message) {
+    const reports = getUrgentReportsFromStorage();
+    reports[groupId] = {
+        deadline: deadline,
+        message: message,
+        receivedAt: new Date().toISOString()
+    };
+    saveUrgentReportsToStorage(reports);
+}
+
+function getUrgentReportForGroup(groupId) {
+    const reports = getUrgentReportsFromStorage();
+    const report = reports[groupId];
+
+    if (!report) return null;
+
+    // Check if deadline passed
+    const deadline = new Date(report.deadline);
+    if (deadline < new Date()) {
+        // Deadline passed, remove
+        delete reports[groupId];
+        saveUrgentReportsToStorage(reports);
+        return null;
+    }
+
+    return report;
+}
+
+function clearUrgentReportForGroup(groupId) {
+    const reports = getUrgentReportsFromStorage();
+    delete reports[groupId];
+    saveUrgentReportsToStorage(reports);
+}
+
+function formatUrgentDeadline(deadlineStr) {
+    if (!deadlineStr) return '';
+    const deadline = new Date(deadlineStr);
+    return deadline.toLocaleTimeString('uk-UA', { hour: '2-digit', minute: '2-digit' });
+}
+
 // API Base URL
 const API_BASE = '/api/v1';
 
@@ -2110,6 +2164,14 @@ function renderReportGroupCard(group, isAdmin) {
     // Екрануємо для безпечного використання в onclick
     const safeGroupName = groupName.replace(/'/g, "\\'").replace(/"/g, '&quot;');
 
+    // Обраховуємо час наступного звіту
+    const nextReportTime = calculateNextReportTime(group);
+    const nextReportText = nextReportTime ? `Наступний звіт о ${nextReportTime}` : '';
+
+    // Перевіряємо терміновий звіт
+    const urgentReport = getUrgentReportForGroup(groupId);
+    const hasUrgentReport = urgentReport !== null;
+
     // Для адміна: ліва частина - відкриваємо статуси, права - терміновий звіт
     // Для учасника: ліва частина - мої звіти, права - відправка звіту
 
@@ -2126,15 +2188,28 @@ function renderReportGroupCard(group, isAdmin) {
             </div>
         `;
     } else {
-        // Учасник: кнопка "Звіт" (синя)
-        rightSection = `
-            <div style="flex: 0.4; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 12px; cursor: pointer;" onclick="openReportForGroup('${groupId}', '${safeGroupName}', '${group.reportType}', ${isAdmin})">
-                <svg viewBox="0 0 24 24" fill="var(--primary)" width="32" height="32">
-                    <path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"/>
-                </svg>
-                <div style="font-size: 12px; font-weight: bold; color: var(--primary); margin-top: 4px;">Звіт</div>
-            </div>
-        `;
+        // Учасник: кнопка "Звіт" (синя) або терміновий звіт (червона)
+        if (hasUrgentReport) {
+            const deadlineTime = formatUrgentDeadline(urgentReport.deadline);
+            rightSection = `
+                <div style="flex: 0.4; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 12px; cursor: pointer; background: rgba(244, 67, 54, 0.1);" onclick="openReportForGroup('${groupId}', '${safeGroupName}', '${group.reportType}', ${isAdmin})">
+                    <svg viewBox="0 0 24 24" fill="var(--danger)" width="32" height="32">
+                        <path d="M1 21h22L12 2 1 21zm12-3h-2v-2h2v2zm0-4h-2v-4h2v4z"/>
+                    </svg>
+                    <div style="font-size: 11px; font-weight: bold; color: var(--danger); margin-top: 4px;">ТЕРМІНОВО</div>
+                    <div style="font-size: 10px; color: var(--danger);">до ${deadlineTime}</div>
+                </div>
+            `;
+        } else {
+            rightSection = `
+                <div style="flex: 0.4; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 12px; cursor: pointer;" onclick="openReportForGroup('${groupId}', '${safeGroupName}', '${group.reportType}', ${isAdmin})">
+                    <svg viewBox="0 0 24 24" fill="var(--primary)" width="32" height="32">
+                        <path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"/>
+                    </svg>
+                    <div style="font-size: 12px; font-weight: bold; color: var(--primary); margin-top: 4px;">Звіт</div>
+                </div>
+            `;
+        }
     }
 
     // Ліва частина завжди клікабельна
@@ -2143,20 +2218,28 @@ function renderReportGroupCard(group, isAdmin) {
         ? `onclick="openGroupStatuses('${groupId}', '${safeGroupName}')"`
         : `onclick="openMyReportsInGroup('${groupId}', '${safeGroupName}')"`;
 
+    // Індикатор термінового звіту для учасників
+    const urgentIndicator = (!isAdmin && hasUrgentReport) ? `
+        <div style="position: absolute; top: 8px; right: 8px; background: var(--danger); color: white; font-size: 10px; padding: 2px 6px; border-radius: 4px; font-weight: bold;">
+            ТЕРМІНОВО
+        </div>
+    ` : '';
+
     return `
-        <div class="card report-group-card" style="margin-bottom: 8px; padding: 0; overflow: hidden;">
+        <div class="card report-group-card" style="margin-bottom: 8px; padding: 0; overflow: hidden; position: relative;">
+            ${urgentIndicator}
             <div style="display: flex;">
                 <!-- Ліва частина -->
                 <div style="flex: 0.6; display: flex; padding: 16px; cursor: pointer;" ${leftOnclick}>
                     <!-- Кольоровий індикатор -->
-                    <div style="width: 8px; background: var(--primary); border-radius: 4px; margin-right: 12px;"></div>
+                    <div style="width: 8px; background: ${hasUrgentReport && !isAdmin ? 'var(--danger)' : 'var(--primary)'}; border-radius: 4px; margin-right: 12px;"></div>
                     <!-- Інформація -->
                     <div style="flex: 1; min-width: 0;">
                         <div style="font-size: 16px; font-weight: bold; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">
                             ${escapeHtml(groupName)} ${isAdmin ? `(${reportedCount}/${membersCount})` : ''}
                         </div>
                         <div style="font-size: 12px; color: var(--text-secondary); margin-top: 2px;">
-                            ${roleText}
+                            ${roleText}${nextReportText ? ` • ${nextReportText}` : ''}
                         </div>
                     </div>
                 </div>
@@ -2952,6 +3035,63 @@ function escapeHtml(text) {
     const div = document.createElement('div');
     div.textContent = text;
     return div.innerHTML;
+}
+
+// Calculate next report time based on schedule
+function calculateNextReportTime(group) {
+    if (!group || !group.scheduleType) return null;
+
+    const now = new Date();
+    const currentMinutes = now.getHours() * 60 + now.getMinutes();
+
+    if (group.scheduleType === 'FIXED_TIMES' && group.fixedTimes && group.fixedTimes.length > 0) {
+        // Fixed times schedule
+        let nextTime = null;
+        let minDiff = Infinity;
+
+        for (const time of group.fixedTimes) {
+            const [hours, minutes] = time.split(':').map(Number);
+            const timeInMinutes = hours * 60 + minutes;
+            const diff = timeInMinutes - currentMinutes;
+
+            if (diff > 0 && diff < minDiff) {
+                minDiff = diff;
+                nextTime = time;
+            }
+        }
+
+        // If no time found today, take first time (tomorrow)
+        if (!nextTime && group.fixedTimes.length > 0) {
+            nextTime = group.fixedTimes[0];
+        }
+
+        return nextTime;
+
+    } else if (group.scheduleType === 'INTERVAL' && group.intervalMinutes && group.intervalStartTime) {
+        // Interval schedule
+        const [startHours, startMinutes] = group.intervalStartTime.split(':').map(Number);
+        const startTotalMinutes = startHours * 60 + startMinutes;
+        const interval = group.intervalMinutes;
+
+        // Calculate how many intervals have passed since start
+        let minutesSinceStart = currentMinutes - startTotalMinutes;
+        if (minutesSinceStart < 0) {
+            minutesSinceStart += 24 * 60; // Add a day
+        }
+
+        const intervalsPassed = Math.floor(minutesSinceStart / interval);
+        let nextReportMinutes = startTotalMinutes + (intervalsPassed + 1) * interval;
+
+        // Wrap around 24 hours
+        nextReportMinutes = nextReportMinutes % (24 * 60);
+
+        const nextHours = Math.floor(nextReportMinutes / 60);
+        const nextMins = nextReportMinutes % 60;
+
+        return `${nextHours.toString().padStart(2, '0')}:${nextMins.toString().padStart(2, '0')}`;
+    }
+
+    return null;
 }
 
 function formatTime(dateString) {
