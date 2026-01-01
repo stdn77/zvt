@@ -1086,9 +1086,9 @@ function showScheduleDialog() {
     if (currentGroup.intervalStartTime) {
         document.getElementById('intervalStart').value = currentGroup.intervalStartTime;
     }
-    if (currentGroup.intervalMinutes) {
-        document.getElementById('intervalMinutes').value = currentGroup.intervalMinutes;
-    }
+
+    // Ініціалізуємо drum pickers з поточним значенням
+    setIntervalFromMinutes(currentGroup.intervalMinutes || 60);
 
     document.getElementById('scheduleModal').classList.add('active');
 }
@@ -1099,12 +1099,154 @@ function toggleScheduleType() {
     document.getElementById('intervalSection').style.display = isInterval ? 'block' : 'none';
 }
 
+// Drum Picker для інтервалу
+let selectedHours = 0;
+let selectedMinutes = 5;
+
+function initDrumPickers() {
+    const hoursContainer = document.getElementById('hoursPickerItems');
+    const minutesContainer = document.getElementById('minutesPickerItems');
+
+    if (!hoursContainer || !minutesContainer) return;
+
+    // Години: 0-24
+    hoursContainer.innerHTML = '';
+    for (let h = 0; h <= 24; h++) {
+        const item = document.createElement('div');
+        item.className = 'drum-picker-item';
+        item.textContent = h;
+        item.dataset.value = h;
+        item.addEventListener('click', () => selectHour(h));
+        hoursContainer.appendChild(item);
+    }
+
+    // Хвилини: 0, 5, 10, ..., 55
+    minutesContainer.innerHTML = '';
+    for (let m = 0; m <= 55; m += 5) {
+        const item = document.createElement('div');
+        item.className = 'drum-picker-item';
+        item.textContent = m.toString().padStart(2, '0');
+        item.dataset.value = m;
+        item.addEventListener('click', () => selectMinute(m));
+        minutesContainer.appendChild(item);
+    }
+
+    // Ініціалізуємо scroll handlers
+    setupDrumPickerScroll('hoursPicker', 'hours');
+    setupDrumPickerScroll('minutesPicker', 'minutes');
+}
+
+function setupDrumPickerScroll(pickerId, type) {
+    const picker = document.getElementById(pickerId);
+    if (!picker) return;
+
+    let startY = 0;
+    let currentTranslate = 0;
+
+    picker.addEventListener('wheel', (e) => {
+        e.preventDefault();
+        const delta = e.deltaY > 0 ? 1 : -1;
+        if (type === 'hours') {
+            selectHour(Math.max(0, Math.min(24, selectedHours + delta)));
+        } else {
+            const currentIndex = selectedMinutes / 5;
+            const newIndex = Math.max(0, Math.min(11, currentIndex + delta));
+            selectMinute(newIndex * 5);
+        }
+    }, { passive: false });
+
+    // Touch support
+    picker.addEventListener('touchstart', (e) => {
+        startY = e.touches[0].clientY;
+    }, { passive: true });
+
+    picker.addEventListener('touchmove', (e) => {
+        e.preventDefault();
+    }, { passive: false });
+
+    picker.addEventListener('touchend', (e) => {
+        const endY = e.changedTouches[0].clientY;
+        const diff = startY - endY;
+        if (Math.abs(diff) > 20) {
+            const delta = diff > 0 ? 1 : -1;
+            if (type === 'hours') {
+                selectHour(Math.max(0, Math.min(24, selectedHours + delta)));
+            } else {
+                const currentIndex = selectedMinutes / 5;
+                const newIndex = Math.max(0, Math.min(11, currentIndex + delta));
+                selectMinute(newIndex * 5);
+            }
+        }
+    }, { passive: true });
+}
+
+function selectHour(hour) {
+    selectedHours = hour;
+    updateDrumPicker('hoursPickerItems', hour, 25);
+    validateInterval();
+}
+
+function selectMinute(minute) {
+    selectedMinutes = minute;
+    updateDrumPicker('minutesPickerItems', minute / 5, 12);
+    validateInterval();
+}
+
+function updateDrumPicker(containerId, selectedIndex, totalItems) {
+    const container = document.getElementById(containerId);
+    if (!container) return;
+
+    const items = container.querySelectorAll('.drum-picker-item');
+    items.forEach((item, index) => {
+        item.classList.toggle('selected', index === selectedIndex);
+    });
+
+    // Позиціонування для центрування вибраного елемента
+    const offset = -selectedIndex * 50;
+    container.style.transform = `translateY(calc(-50% + ${-offset}px - 25px))`;
+}
+
+function validateInterval() {
+    // Мінімум 5 хвилин, максимум 24 години
+    const totalMinutes = selectedHours * 60 + selectedMinutes;
+
+    if (totalMinutes < 5) {
+        selectedHours = 0;
+        selectedMinutes = 5;
+        updateDrumPicker('hoursPickerItems', 0, 25);
+        updateDrumPicker('minutesPickerItems', 1, 12);
+    } else if (totalMinutes > 24 * 60) {
+        selectedHours = 24;
+        selectedMinutes = 0;
+        updateDrumPicker('hoursPickerItems', 24, 25);
+        updateDrumPicker('minutesPickerItems', 0, 12);
+    }
+}
+
+function setIntervalFromMinutes(totalMinutes) {
+    if (!totalMinutes || totalMinutes < 5) totalMinutes = 60; // default 1 година
+    if (totalMinutes > 24 * 60) totalMinutes = 24 * 60;
+
+    selectedHours = Math.floor(totalMinutes / 60);
+    selectedMinutes = Math.round((totalMinutes % 60) / 5) * 5;
+
+    updateDrumPicker('hoursPickerItems', selectedHours, 25);
+    updateDrumPicker('minutesPickerItems', selectedMinutes / 5, 12);
+}
+
+function getIntervalMinutes() {
+    return selectedHours * 60 + selectedMinutes;
+}
+
 // Слухачі для перемикання типу розкладу
 document.addEventListener('DOMContentLoaded', () => {
     const scheduleFixed = document.getElementById('scheduleFixed');
     const scheduleInterval = document.getElementById('scheduleInterval');
     if (scheduleFixed) scheduleFixed.addEventListener('change', toggleScheduleType);
     if (scheduleInterval) scheduleInterval.addEventListener('change', toggleScheduleType);
+
+    // Ініціалізуємо drum pickers
+    initDrumPickers();
 });
 
 async function saveSchedule() {
@@ -1118,7 +1260,7 @@ async function saveSchedule() {
 
     if (isInterval) {
         request.intervalStartTime = document.getElementById('intervalStart').value;
-        request.intervalMinutes = parseInt(document.getElementById('intervalMinutes').value);
+        request.intervalMinutes = getIntervalMinutes();
     } else {
         const times = [];
         const t1 = document.getElementById('fixedTime1').value;

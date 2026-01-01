@@ -670,6 +670,71 @@
             cursor: pointer;
         }
 
+        /* Drum Picker */
+        .drum-picker-container {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            background: var(--bg-card);
+            border-radius: var(--border-radius);
+            padding: 12px;
+        }
+
+        .drum-picker {
+            position: relative;
+            height: 150px;
+            width: 70px;
+            overflow: hidden;
+            background: rgba(0,0,0,0.2);
+            border-radius: 8px;
+        }
+
+        .drum-picker-items {
+            position: absolute;
+            width: 100%;
+            top: 50%;
+            transform: translateY(-50%);
+            transition: transform 0.15s ease-out;
+        }
+
+        .drum-picker-item {
+            height: 50px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 20px;
+            color: var(--text-secondary);
+            opacity: 0.4;
+            transition: all 0.15s;
+            cursor: pointer;
+        }
+
+        .drum-picker-item.selected {
+            color: var(--primary);
+            font-weight: 600;
+            font-size: 24px;
+            opacity: 1;
+        }
+
+        .drum-picker-highlight {
+            position: absolute;
+            top: 50%;
+            left: 0;
+            right: 0;
+            height: 50px;
+            transform: translateY(-50%);
+            border-top: 2px solid var(--primary);
+            border-bottom: 2px solid var(--primary);
+            pointer-events: none;
+        }
+
+        .drum-picker-label {
+            font-size: 14px;
+            color: var(--text-secondary);
+            min-width: 30px;
+        }
+
         /* Report options */
         .report-options {
             display: grid;
@@ -1380,7 +1445,7 @@
         <div class="card">
             <div class="settings-item">
                 <span class="settings-label">Версія</span>
-                <span class="settings-value">PWA 1.0.19</span>
+                <span class="settings-value">PWA 1.0.20</span>
             </div>
         </div>
 
@@ -1772,17 +1837,19 @@
                     <input type="time" class="form-input" id="intervalStart">
                 </div>
                 <div class="form-group">
-                    <label class="form-label">Інтервал (хвилини)</label>
-                    <select class="form-input" id="intervalMinutes">
-                        <option value="30">30 хвилин</option>
-                        <option value="60">1 година</option>
-                        <option value="120">2 години</option>
-                        <option value="180">3 години</option>
-                        <option value="240">4 години</option>
-                        <option value="360">6 годин</option>
-                        <option value="480">8 годин</option>
-                        <option value="720">12 годин</option>
-                    </select>
+                    <label class="form-label">Інтервал (від 5 хв до 24 год)</label>
+                    <div class="drum-picker-container">
+                        <div class="drum-picker" id="hoursPicker">
+                            <div class="drum-picker-items" id="hoursPickerItems"></div>
+                            <div class="drum-picker-highlight"></div>
+                        </div>
+                        <span class="drum-picker-label">год</span>
+                        <div class="drum-picker" id="minutesPicker">
+                            <div class="drum-picker-items" id="minutesPickerItems"></div>
+                            <div class="drum-picker-highlight"></div>
+                        </div>
+                        <span class="drum-picker-label">хв</span>
+                    </div>
                 </div>
             </div>
 
