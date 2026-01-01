@@ -252,12 +252,27 @@ public class ReportService {
         log.debug("Urgent report - Group: {}, Admin: {}, Members: {}",
                 group.getExternalName(), userId, members.size());
 
-        List<String> fcmTokens = members.stream()
-                .filter(member -> member.getStatus() == GroupMember.MemberStatus.ACCEPTED)
-                .filter(member -> !member.getUser().getId().equals(userId)) // Виключаємо адміна
-                .map(member -> member.getUser().getFcmToken())
-                .filter(token -> token != null && !token.isEmpty())
-                .collect(Collectors.toList());
+        List<String> fcmTokens = new java.util.ArrayList<>();
+
+        for (GroupMember member : members) {
+            if (member.getStatus() != GroupMember.MemberStatus.ACCEPTED) continue;
+            if (member.getUser().getId().equals(userId)) continue; // Виключаємо адміна
+
+            // Перевіряємо чи сповіщення увімкнені
+            if (!member.getUser().isNotificationsEnabled()) continue;
+
+            // Додаємо Android токен
+            String androidToken = member.getUser().getFcmToken();
+            if (androidToken != null && !androidToken.isEmpty()) {
+                fcmTokens.add(androidToken);
+            }
+
+            // Додаємо Web токен (для PWA)
+            String webToken = member.getUser().getFcmTokenWeb();
+            if (webToken != null && !webToken.isEmpty()) {
+                fcmTokens.add(webToken);
+            }
+        }
 
         log.debug("FCM tokens to send: {}", fcmTokens.size());
 

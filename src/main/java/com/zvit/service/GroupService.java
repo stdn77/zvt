@@ -345,12 +345,27 @@ public class GroupService {
     private void sendSettingsUpdateNotification(Group group, String adminUserId) {
         List<GroupMember> members = groupMemberRepository.findByGroupId(group.getId());
 
-        List<String> fcmTokens = members.stream()
-                .filter(member -> member.getStatus() == GroupMember.MemberStatus.ACCEPTED)
-                .filter(member -> !member.getUser().getId().equals(adminUserId))
-                .map(member -> member.getUser().getFcmToken())
-                .filter(token -> token != null && !token.isEmpty())
-                .collect(Collectors.toList());
+        List<String> fcmTokens = new java.util.ArrayList<>();
+
+        for (GroupMember member : members) {
+            if (member.getStatus() != GroupMember.MemberStatus.ACCEPTED) continue;
+            if (member.getUser().getId().equals(adminUserId)) continue;
+
+            // Перевіряємо чи сповіщення увімкнені
+            if (!member.getUser().isNotificationsEnabled()) continue;
+
+            // Додаємо Android токен
+            String androidToken = member.getUser().getFcmToken();
+            if (androidToken != null && !androidToken.isEmpty()) {
+                fcmTokens.add(androidToken);
+            }
+
+            // Додаємо Web токен (для PWA)
+            String webToken = member.getUser().getFcmTokenWeb();
+            if (webToken != null && !webToken.isEmpty()) {
+                fcmTokens.add(webToken);
+            }
+        }
 
         if (fcmTokens.isEmpty()) {
             log.debug("Settings update: No FCM tokens to send notifications");
