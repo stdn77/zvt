@@ -1224,9 +1224,9 @@
                     <span class="group-info-label">Розклад</span>
                     <span class="group-info-value" id="groupSchedule">-</span>
                 </div>
-                <div class="group-info-row" id="groupWordsRow" style="display: none;">
+                <div class="group-info-row" id="groupWordsRow" onclick="showChangeReportWordsDialog()" style="display: none; cursor: pointer;">
                     <span class="group-info-label">Слова звіту</span>
-                    <span class="group-info-value" id="groupWords">ОК / НЕ ОК</span>
+                    <span class="group-info-value clickable" id="groupWords">ОК / НЕ ОК</span>
                 </div>
             </div>
 
@@ -1375,7 +1375,7 @@
         <div class="card">
             <div class="settings-item">
                 <span class="settings-label">Версія</span>
-                <span class="settings-value">PWA 1.0.17</span>
+                <span class="settings-value">PWA 1.0.18</span>
             </div>
         </div>
 
@@ -1836,6 +1836,55 @@
                 </label>
             </div>
             <button class="btn btn-primary" style="margin-top: 20px;" onclick="saveReportType()">Зберегти</button>
+        </div>
+    </div>
+
+    <!-- Change Report Words Modal -->
+    <div class="modal" id="changeReportWordsModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>Слова звіту</h2>
+                <button class="modal-close" onclick="closeModal('changeReportWordsModal')">&times;</button>
+            </div>
+            <p style="color: var(--text-secondary); margin-bottom: 16px; font-size: 14px;">
+                Виберіть пару слів для простих звітів
+            </p>
+            <div class="radio-group" id="reportWordsOptions">
+                <label class="radio-option">
+                    <input type="radio" name="reportWords" value="ОК|НЕ ОК" checked>
+                    <span>ОК / НЕ ОК (за замовчуванням)</span>
+                </label>
+                <label class="radio-option">
+                    <input type="radio" name="reportWords" value="ДОБРЕ|ПОГАНО">
+                    <span>ДОБРЕ / ПОГАНО</span>
+                </label>
+                <label class="radio-option">
+                    <input type="radio" name="reportWords" value="ГАРАЗД|ПРОБЛЕМА">
+                    <span>ГАРАЗД / ПРОБЛЕМА</span>
+                </label>
+                <label class="radio-option">
+                    <input type="radio" name="reportWords" value="ТАК|НІ">
+                    <span>ТАК / НІ</span>
+                </label>
+                <label class="radio-option">
+                    <input type="radio" name="reportWords" value="CUSTOM">
+                    <span>Власні слова...</span>
+                </label>
+            </div>
+
+            <!-- Custom Words Input (hidden by default) -->
+            <div id="customWordsSection" style="display: none; margin-top: 16px;">
+                <div class="form-group">
+                    <label class="form-label">Позитивне слово</label>
+                    <input type="text" class="form-input" id="customPositiveWord" placeholder="напр. ОК, ДОБРЕ" maxlength="20">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Негативне слово</label>
+                    <input type="text" class="form-input" id="customNegativeWord" placeholder="напр. НЕ ОК, ПОГАНО" maxlength="20">
+                </div>
+            </div>
+
+            <button class="btn btn-primary" style="margin-top: 20px;" onclick="saveReportWords()">Зберегти</button>
         </div>
     </div>
 

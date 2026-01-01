@@ -1154,6 +1154,106 @@ async function saveReportType() {
     }
 }
 
+// Показати діалог зміни слів звіту
+function showChangeReportWordsDialog() {
+    if (!currentGroup || !currentGroup.isAdmin) return;
+
+    const currentPositive = currentGroup.positiveWord || 'ОК';
+    const currentNegative = currentGroup.negativeWord || 'НЕ ОК';
+    const currentPair = `${currentPositive}|${currentNegative}`;
+
+    // Скидаємо всі радіо-кнопки
+    const radios = document.querySelectorAll('input[name="reportWords"]');
+    let found = false;
+
+    radios.forEach(radio => {
+        if (radio.value === currentPair) {
+            radio.checked = true;
+            found = true;
+        } else if (radio.value !== 'CUSTOM') {
+            radio.checked = false;
+        }
+    });
+
+    // Якщо не знайдено стандартний варіант - вибираємо "Власні слова"
+    if (!found) {
+        document.querySelector('input[name="reportWords"][value="CUSTOM"]').checked = true;
+        document.getElementById('customPositiveWord').value = currentPositive;
+        document.getElementById('customNegativeWord').value = currentNegative;
+        document.getElementById('customWordsSection').style.display = 'block';
+    } else {
+        document.getElementById('customWordsSection').style.display = 'none';
+        document.getElementById('customPositiveWord').value = '';
+        document.getElementById('customNegativeWord').value = '';
+    }
+
+    // Обробник зміни вибору
+    radios.forEach(radio => {
+        radio.onchange = function() {
+            const customSection = document.getElementById('customWordsSection');
+            if (this.value === 'CUSTOM') {
+                customSection.style.display = 'block';
+                document.getElementById('customPositiveWord').value = currentGroup.positiveWord || '';
+                document.getElementById('customNegativeWord').value = currentGroup.negativeWord || '';
+            } else {
+                customSection.style.display = 'none';
+            }
+        };
+    });
+
+    document.getElementById('changeReportWordsModal').classList.add('active');
+}
+
+// Зберегти слова звіту
+async function saveReportWords() {
+    if (!currentGroup) return;
+
+    const selectedRadio = document.querySelector('input[name="reportWords"]:checked');
+    if (!selectedRadio) return;
+
+    let positiveWord, negativeWord;
+
+    if (selectedRadio.value === 'CUSTOM') {
+        positiveWord = document.getElementById('customPositiveWord').value.trim();
+        negativeWord = document.getElementById('customNegativeWord').value.trim();
+
+        if (!positiveWord || !negativeWord) {
+            showToast('Введіть обидва слова', 'error');
+            return;
+        }
+
+        if (positiveWord.length > 20 || negativeWord.length > 20) {
+            showToast('Максимум 20 символів', 'error');
+            return;
+        }
+    } else {
+        const words = selectedRadio.value.split('|');
+        positiveWord = words[0];
+        negativeWord = words[1];
+    }
+
+    try {
+        const response = await apiRequest(`/pwa/groups/${currentGroup.id}`, 'PUT', {
+            positiveWord: positiveWord,
+            negativeWord: negativeWord
+        });
+
+        if (response.success) {
+            currentGroup.positiveWord = positiveWord;
+            currentGroup.negativeWord = negativeWord;
+
+            document.getElementById('groupWords').textContent = `${positiveWord} / ${negativeWord}`;
+
+            closeModal('changeReportWordsModal');
+            showToast('Слова звіту змінено', 'success');
+        } else {
+            showToast(response.message || 'Помилка збереження', 'error');
+        }
+    } catch (error) {
+        showToast(error.message || 'Помилка збереження', 'error');
+    }
+}
+
 function showEditGroupNameDialog() {
     if (!currentGroup) return;
     document.getElementById('editGroupNameInput').value = currentGroup.name || '';
