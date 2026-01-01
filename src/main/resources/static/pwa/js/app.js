@@ -16,6 +16,17 @@ let phoneVerificationPhone = null;
 let phoneVerificationTimer = null;
 let recaptchaVerifier = null;
 
+// Device detection
+function isIOS() {
+    return /iPad|iPhone|iPod/.test(navigator.userAgent) ||
+           (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+}
+
+function isStandalonePWA() {
+    return window.matchMedia('(display-mode: standalone)').matches ||
+           window.navigator.standalone === true;
+}
+
 // API Base URL
 const API_BASE = '/api/v1';
 
@@ -459,6 +470,7 @@ async function registerServiceWorker() {
 
 // Install PWA
 function setupInstallPrompt() {
+    // Android Chrome - use beforeinstallprompt
     window.addEventListener('beforeinstallprompt', (e) => {
         e.preventDefault();
         deferredPrompt = e;
@@ -474,13 +486,27 @@ function setupInstallPrompt() {
         document.getElementById('installModal').classList.remove('show');
         deferredPrompt = null;
     });
+
+    // iOS Safari - show custom instructions after delay
+    if (isIOS() && !isStandalonePWA()) {
+        setTimeout(() => {
+            if (currentUser && !sessionStorage.getItem('zvit_install_dismissed_ios')) {
+                document.getElementById('installModalIOS').classList.add('show');
+            }
+        }, 3000);
+    }
 }
 
 async function installPWA() {
     if (!deferredPrompt) {
-        // iOS Safari
-        showToast('Натисніть "Поділитися" → "На Початковий екран"', 'info');
-        document.getElementById('installModal').classList.remove('show');
+        // iOS Safari - show iOS modal
+        if (isIOS()) {
+            document.getElementById('installModal').classList.remove('show');
+            document.getElementById('installModalIOS').classList.add('show');
+        } else {
+            showToast('Натисніть меню браузера → "Встановити додаток"', 'info');
+            document.getElementById('installModal').classList.remove('show');
+        }
         return;
     }
 
@@ -498,6 +524,11 @@ function dismissInstallModal(event) {
         // Зберігаємо в sessionStorage - закрито до наступного відкриття екрану
         sessionStorage.setItem('zvit_install_dismissed', 'true');
     }
+}
+
+function dismissInstallModalIOS(event) {
+    document.getElementById('installModalIOS').classList.remove('show');
+    sessionStorage.setItem('zvit_install_dismissed_ios', 'true');
 }
 
 // Screen Navigation
@@ -681,13 +712,36 @@ async function handleRegister(e) {
         });
 
         if (response.success) {
-            // Store phone for verification
-            localStorage.setItem('zvit_pending_phone', phone);
-            localStorage.setItem('zvit_pending_password', password);
-            localStorage.setItem('zvit_pending_name', name);
+            // Реєстрація успішна - автоматично логінимось
+            showToast('Реєстрація успішна!', 'success');
 
-            showToast('Код відправлено на ваш телефон', 'success');
-            showScreen('verifyScreen');
+            // Виконуємо логін
+            const loginResponse = await apiRequest('/pwa/login', 'POST', {
+                phone: phone,
+                password: password
+            });
+
+            if (loginResponse.success && loginResponse.data) {
+                const loginData = loginResponse.data;
+                localStorage.setItem('zvit_token', loginData.token);
+                localStorage.setItem('zvit_user', JSON.stringify({
+                    id: loginData.userId,
+                    name: loginData.name || name,
+                    phone: formatPhoneDisplay(phone)
+                }));
+
+                currentUser = {
+                    id: loginData.userId,
+                    name: loginData.name || name,
+                    phone: formatPhoneDisplay(phone)
+                };
+
+                showMainScreen();
+            } else {
+                // Якщо автологін не вдався - переходимо на логін
+                showToast('Увійдіть з новим паролем', 'info');
+                showScreen('loginScreen');
+            }
         } else {
             showToast(response.message || 'Помилка реєстрації', 'error');
         }
@@ -2711,6 +2765,20 @@ async function loadNotificationsSettingFromServer() {
 }
 
 async function requestNotificationPermission() {
+    // Check if iOS
+    if (isIOS()) {
+        if (!isStandalonePWA()) {
+            // iOS but not installed as PWA
+            showToast('Спочатку встановіть додаток: Поділитися → На Початковий екран', 'info');
+            return 'denied';
+        }
+        // iOS 16.4+ supports push in standalone mode
+        if (!('Notification' in window)) {
+            showToast('Оновіть iOS до версії 16.4+ для сповіщень', 'info');
+            return 'denied';
+        }
+    }
+
     if (!('Notification' in window)) {
         showToast('Браузер не підтримує сповіщення', 'error');
         return 'denied';
