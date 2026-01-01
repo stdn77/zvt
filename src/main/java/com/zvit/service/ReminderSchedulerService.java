@@ -2,7 +2,6 @@ package com.zvit.service;
 
 import com.zvit.entity.Group;
 import com.zvit.entity.GroupMember;
-import com.zvit.entity.ScheduleType;
 import com.zvit.entity.User;
 import com.zvit.repository.GroupMemberRepository;
 import com.zvit.repository.GroupRepository;
@@ -77,7 +76,7 @@ public class ReminderSchedulerService {
 
         String currentTime = now.format(TIME_FORMATTER);
 
-        if (group.getScheduleType() == ScheduleType.FIXED_TIMES) {
+        if (group.getScheduleType() == Group.ScheduleType.FIXED_TIMES) {
             // Check if current time matches any fixed time
             return currentTime.equals(group.getFixedTime1()) ||
                    currentTime.equals(group.getFixedTime2()) ||
@@ -85,7 +84,7 @@ public class ReminderSchedulerService {
                    currentTime.equals(group.getFixedTime4()) ||
                    currentTime.equals(group.getFixedTime5());
 
-        } else if (group.getScheduleType() == ScheduleType.INTERVAL) {
+        } else if (group.getScheduleType() == Group.ScheduleType.INTERVAL) {
             // Check if current time matches the interval pattern
             return isIntervalMatch(now, group.getIntervalStartTime(), group.getIntervalMinutes());
         }
