@@ -732,6 +732,49 @@ function logout() {
     showToast('Ви вийшли з акаунту', 'success');
 }
 
+// Clear App Cache (for PWA)
+async function clearAppCache() {
+    if (!confirm('Скинути кеш додатку? Сторінка буде перезавантажена.')) {
+        return;
+    }
+
+    try {
+        // Clear Service Worker caches
+        if ('caches' in window) {
+            const cacheNames = await caches.keys();
+            await Promise.all(cacheNames.map(cacheName => caches.delete(cacheName)));
+            console.log('Service Worker caches cleared');
+        }
+
+        // Unregister Service Worker
+        if ('serviceWorker' in navigator) {
+            const registrations = await navigator.serviceWorker.getRegistrations();
+            for (const registration of registrations) {
+                await registration.unregister();
+            }
+            console.log('Service Worker unregistered');
+        }
+
+        // Clear localStorage (except auth token)
+        const token = localStorage.getItem('zvit_token');
+        const user = localStorage.getItem('zvit_user');
+        localStorage.clear();
+        if (token) localStorage.setItem('zvit_token', token);
+        if (user) localStorage.setItem('zvit_user', user);
+
+        showToast('Кеш скинуто. Перезавантаження...', 'success');
+
+        // Reload page after short delay
+        setTimeout(() => {
+            window.location.reload(true);
+        }, 1000);
+
+    } catch (error) {
+        console.error('Error clearing cache:', error);
+        showToast('Помилка скидання кешу', 'error');
+    }
+}
+
 // Profile Editing
 function showEditNameDialog() {
     const currentName = currentUser?.name || '';
