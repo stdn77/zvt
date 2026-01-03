@@ -2255,7 +2255,7 @@ function renderReportGroupCard(group, isAdmin) {
         if (hasUrgentReport) {
             const deadlineTime = formatUrgentDeadline(urgentReport.deadline);
             rightSection = `
-                <div style="flex: 0.4; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 12px; cursor: pointer; background: rgba(244, 67, 54, 0.1);" onclick="openReportForGroup('${groupId}', '${safeGroupName}', '${group.reportType}', ${isAdmin})">
+                <div style="flex: 0.4; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 12px; cursor: pointer; background: rgba(244, 67, 54, 0.1);" onclick="openReportForGroup('${groupId}', '${safeGroupName}', '${group.reportType}', ${isAdmin}, '${(group.positiveWord || 'ОК').replace(/'/g, "\\'")}', '${(group.negativeWord || 'НЕ ОК').replace(/'/g, "\\'")}')">
                     <svg viewBox="0 0 24 24" fill="var(--danger)" width="32" height="32">
                         <path d="M1 21h22L12 2 1 21zm12-3h-2v-2h2v2zm0-4h-2v-4h2v4z"/>
                     </svg>
@@ -2265,7 +2265,7 @@ function renderReportGroupCard(group, isAdmin) {
             `;
         } else {
             rightSection = `
-                <div style="flex: 0.4; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 12px; cursor: pointer;" onclick="openReportForGroup('${groupId}', '${safeGroupName}', '${group.reportType}', ${isAdmin})">
+                <div style="flex: 0.4; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 12px; cursor: pointer;" onclick="openReportForGroup('${groupId}', '${safeGroupName}', '${group.reportType}', ${isAdmin}, '${(group.positiveWord || 'ОК').replace(/'/g, "\\'")}', '${(group.negativeWord || 'НЕ ОК').replace(/'/g, "\\'")}')">
                     <svg viewBox="0 0 24 24" fill="var(--primary)" width="32" height="32">
                         <path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"/>
                     </svg>
@@ -2761,61 +2761,104 @@ function getPlural(n, one, few, many) {
     return many;
 }
 
-function openReportForGroup(groupId, groupName, reportType, isAdmin) {
+function openReportForGroup(groupId, groupName, reportType, isAdmin, positiveWord, negativeWord) {
     // Зберігаємо вибрану групу для звіту
-    currentGroup = { id: groupId, name: groupName, reportType: reportType, isAdmin: isAdmin };
+    currentGroup = {
+        id: groupId,
+        name: groupName,
+        reportType: reportType,
+        isAdmin: isAdmin,
+        positiveWord: positiveWord || 'ОК',
+        negativeWord: negativeWord || 'НЕ ОК'
+    };
 
-    // Відкриваємо модальне вікно звіту (для всіх - і адмінів, і учасників)
-    document.getElementById('reportModalTitle').textContent = groupName;
-    document.getElementById('reportModal').classList.add('active');
-    document.getElementById('reportComment').value = '';
-    selectedReportResponse = 'OK';
-
-    // Reset selection
-    document.querySelectorAll('.report-option').forEach(opt => {
-        opt.classList.remove('selected');
-        if (opt.dataset.response === 'OK') {
-            opt.classList.add('selected');
-        }
-    });
+    // Визначаємо який модал відкрити в залежності від типу звіту
+    if (reportType === 'EXTENDED') {
+        openExtendedReportModal();
+    } else {
+        openSimpleReportModal();
+    }
 }
 
-// Report Modal
-function openReportModal() {
-    if (!currentGroup && !currentUser) {
+// Simple Report Modal
+function openSimpleReportModal() {
+    if (!currentGroup) {
         showToast('Спочатку оберіть групу', 'error');
         return;
     }
-    document.getElementById('reportModal').classList.add('active');
-    document.getElementById('reportComment').value = '';
+
+    // Встановлюємо назву групи
+    document.getElementById('simpleReportGroupName').textContent = currentGroup.name;
+
+    // Встановлюємо власні слова групи
+    const positiveWord = currentGroup.positiveWord || 'ОК';
+    const negativeWord = currentGroup.negativeWord || 'НЕ ОК';
+    document.getElementById('simpleReportOkLabel').textContent = `✅ ${positiveWord} - Все добре`;
+    document.getElementById('simpleReportNotOkLabel').textContent = `❌ ${negativeWord} - Потрібна допомога`;
+
+    // Скидаємо форму
+    document.getElementById('simpleReportComment').value = '';
     selectedReportResponse = 'OK';
 
-    // Reset selection
-    document.querySelectorAll('.report-option').forEach(opt => {
+    // Скидаємо вибір на OK
+    document.querySelectorAll('.simple-report-options .radio-option').forEach(opt => {
         opt.classList.remove('selected');
-        if (opt.dataset.response === 'OK') {
-            opt.classList.add('selected');
-        }
     });
+    document.querySelector('.simple-report-options .radio-option').classList.add('selected');
+
+    document.getElementById('simpleReportModal').classList.add('active');
 }
 
-function closeReportModal() {
-    document.getElementById('reportModal').classList.remove('active');
+// Extended Report Modal
+function openExtendedReportModal() {
+    if (!currentGroup) {
+        showToast('Спочатку оберіть групу', 'error');
+        return;
+    }
+
+    // Встановлюємо назву групи
+    document.getElementById('extendedReportGroupName').textContent = currentGroup.name;
+
+    // Скидаємо форму
+    document.getElementById('extendedField1').value = '';
+    document.getElementById('extendedField2').value = '';
+    document.getElementById('extendedField3').value = '';
+    document.getElementById('extendedField4').value = '';
+    document.getElementById('extendedField5').value = '';
+    document.getElementById('extendedReportComment').value = '';
+
+    // Встановлюємо назви полів (якщо є в групі)
+    const labels = ['Поле 1', 'Поле 2', 'Поле 3', 'Поле 4', 'Поле 5'];
+    if (currentGroup.field1Name) labels[0] = currentGroup.field1Name;
+    if (currentGroup.field2Name) labels[1] = currentGroup.field2Name;
+    if (currentGroup.field3Name) labels[2] = currentGroup.field3Name;
+    if (currentGroup.field4Name) labels[3] = currentGroup.field4Name;
+    if (currentGroup.field5Name) labels[4] = currentGroup.field5Name;
+
+    document.getElementById('extendedField1Label').textContent = labels[0];
+    document.getElementById('extendedField2Label').textContent = labels[1];
+    document.getElementById('extendedField3Label').textContent = labels[2];
+    document.getElementById('extendedField4Label').textContent = labels[3];
+    document.getElementById('extendedField5Label').textContent = labels[4];
+
+    document.getElementById('extendedReportModal').classList.add('active');
 }
 
-function selectReportOption(element) {
-    document.querySelectorAll('.report-option').forEach(opt => opt.classList.remove('selected'));
+function selectSimpleReportOption(element, value) {
+    document.querySelectorAll('.simple-report-options .radio-option').forEach(opt => {
+        opt.classList.remove('selected');
+    });
     element.classList.add('selected');
-    selectedReportResponse = element.dataset.response;
+    selectedReportResponse = value;
 }
 
-async function sendReport() {
+async function submitSimpleReport() {
     if (!currentGroup) {
         showToast('Оберіть групу', 'error');
         return;
     }
 
-    const comment = document.getElementById('reportComment').value;
+    const comment = document.getElementById('simpleReportComment').value;
 
     try {
         const response = await apiRequest(`/pwa/groups/${currentGroup.id}/reports/simple`, 'POST', {
@@ -2826,8 +2869,11 @@ async function sendReport() {
 
         if (response.success) {
             showToast('Звіт відправлено!', 'success');
-            closeReportModal();
-            loadReports(currentGroup.id);
+            closeModal('simpleReportModal');
+            // Оновлюємо список звітів якщо є
+            if (typeof loadReportsScreen === 'function') {
+                loadReportsScreen();
+            }
         } else {
             showToast(response.message || 'Помилка відправки', 'error');
         }
@@ -2840,10 +2886,66 @@ async function sendReport() {
                 comment: comment
             });
             showToast('Звіт збережено, буде відправлено при підключенні', 'info');
-            closeReportModal();
+            closeModal('simpleReportModal');
         } else {
             showToast(error.message || 'Помилка відправки', 'error');
         }
+    }
+}
+
+async function submitExtendedReport() {
+    if (!currentGroup) {
+        showToast('Оберіть групу', 'error');
+        return;
+    }
+
+    const field1 = document.getElementById('extendedField1').value.trim();
+    const field2 = document.getElementById('extendedField2').value.trim();
+    const field3 = document.getElementById('extendedField3').value.trim();
+    const field4 = document.getElementById('extendedField4').value.trim();
+    const field5 = document.getElementById('extendedField5').value.trim();
+    const comment = document.getElementById('extendedReportComment').value.trim();
+
+    try {
+        // Шифруємо поля якщо є публічний ключ
+        let encryptedField1 = field1;
+        let encryptedField2 = field2;
+        let encryptedField3 = field3;
+        let encryptedField4 = field4;
+        let encryptedField5 = field5;
+        let encryptedComment = comment;
+
+        if (typeof encryptText === 'function' && publicKey) {
+            if (field1) encryptedField1 = await encryptText(field1);
+            if (field2) encryptedField2 = await encryptText(field2);
+            if (field3) encryptedField3 = await encryptText(field3);
+            if (field4) encryptedField4 = await encryptText(field4);
+            if (field5) encryptedField5 = await encryptText(field5);
+            if (comment) encryptedComment = await encryptText(comment);
+        }
+
+        const response = await apiRequest(`/pwa/groups/${currentGroup.id}/reports/extended`, 'POST', {
+            groupId: currentGroup.id,
+            field1Value: encryptedField1 || null,
+            field2Value: encryptedField2 || null,
+            field3Value: encryptedField3 || null,
+            field4Value: encryptedField4 || null,
+            field5Value: encryptedField5 || null,
+            comment: encryptedComment || null
+        });
+
+        if (response.success) {
+            showToast('Розширений звіт відправлено!', 'success');
+            closeModal('extendedReportModal');
+            // Оновлюємо список звітів якщо є
+            if (typeof loadReportsScreen === 'function') {
+                loadReportsScreen();
+            }
+        } else {
+            showToast(response.message || 'Помилка відправки', 'error');
+        }
+    } catch (error) {
+        showToast(error.message || 'Помилка відправки', 'error');
     }
 }
 

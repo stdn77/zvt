@@ -1,6 +1,7 @@
 package com.zvit.controller;
 
 import com.zvit.dto.request.CreateGroupRequest;
+import com.zvit.dto.request.ExtendedReportRequest;
 import com.zvit.dto.request.FcmTokenRequest;
 import com.zvit.dto.request.JoinGroupRequest;
 import com.zvit.dto.request.LoginRequest;
@@ -143,6 +144,25 @@ public class PwaController {
         return ResponseEntity
                 .status(HttpStatus.CREATED)
                 .body(ApiResponse.success("Звіт надіслано", response));
+    }
+
+    /**
+     * Надіслати розширений звіт
+     */
+    @PostMapping("/groups/{groupId}/reports/extended")
+    public ResponseEntity<ApiResponse<ReportResponse>> submitExtendedReport(
+            @PathVariable String groupId,
+            @Valid @RequestBody ExtendedReportRequest request,
+            Authentication authentication
+    ) {
+        String userId = authentication.getName();
+        // Ensure groupId from path matches request
+        request.setGroupId(groupId);
+        log.info("PWA: Submitting extended report to group: {} by user: {}", groupId, userId);
+        ReportResponse response = reportService.createExtendedReport(request, userId);
+        return ResponseEntity
+                .status(HttpStatus.CREATED)
+                .body(ApiResponse.success("Розширений звіт надіслано", response));
     }
 
     /**

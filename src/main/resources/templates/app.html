@@ -778,6 +778,38 @@
             font-size: 14px;
         }
 
+        /* Radio options for simple report */
+        .simple-report-options {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .radio-option {
+            display: flex;
+            align-items: center;
+            padding: 16px;
+            border-radius: var(--border-radius);
+            background: rgba(255,255,255,0.05);
+            border: 2px solid transparent;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .radio-option:hover {
+            background: rgba(255,255,255,0.1);
+        }
+
+        .radio-option.selected {
+            border-color: var(--primary);
+            background: rgba(102, 126, 234, 0.2);
+        }
+
+        .radio-label {
+            font-size: 16px;
+            color: var(--text-primary);
+        }
+
         /* Textarea */
         .form-textarea {
             width: 100%;
@@ -1447,46 +1479,96 @@
         <div class="card">
             <div class="settings-item">
                 <span class="settings-label">Версія</span>
-                <span class="settings-value">PWA 1.0.27</span>
+                <span class="settings-value">PWA 1.0.28</span>
             </div>
         </div>
 
         <button class="btn btn-secondary" style="margin-top: 20px;" onclick="logout()">Вийти</button>
     </div>
 
-    <!-- Report Modal -->
-    <div id="reportModal" class="modal">
+    <!-- Simple Report Modal -->
+    <div id="simpleReportModal" class="modal">
         <div class="modal-content">
             <div class="modal-header">
-                <h2 class="modal-title" id="reportModalTitle">Відправити звіт</h2>
-                <button class="modal-close" onclick="closeReportModal()">&times;</button>
+                <h2 class="modal-title" id="simpleReportModalTitle">Відправити звіт</h2>
+                <button class="modal-close" onclick="closeModal('simpleReportModal')">&times;</button>
             </div>
 
-            <div class="report-options" id="reportOptions">
-                <div class="report-option selected" data-response="OK" onclick="selectReportOption(this)">
-                    <div class="report-emoji">👍</div>
-                    <div class="report-label">OK</div>
-                </div>
-                <div class="report-option" data-response="Так" onclick="selectReportOption(this)">
-                    <div class="report-emoji">✅</div>
-                    <div class="report-label">Так</div>
-                </div>
-                <div class="report-option" data-response="Ні" onclick="selectReportOption(this)">
-                    <div class="report-emoji">❌</div>
-                    <div class="report-label">Ні</div>
-                </div>
-                <div class="report-option urgent" data-response="ТЕРМІНОВО" onclick="selectReportOption(this)">
-                    <div class="report-emoji">🚨</div>
-                    <div class="report-label">ТЕРМІНОВО</div>
-                </div>
+            <div style="margin-bottom: 16px; color: var(--text-secondary); font-size: 14px;">
+                Група: <strong id="simpleReportGroupName" style="color: var(--text-primary);"></strong>
+            </div>
+
+            <div style="margin-bottom: 8px; color: var(--text-primary);">Ваш стан:</div>
+
+            <div class="simple-report-options" style="margin-bottom: 16px;">
+                <label class="radio-option selected" onclick="selectSimpleReportOption(this, 'OK')">
+                    <input type="radio" name="simpleResponse" value="OK" checked style="display: none;">
+                    <span class="radio-label" id="simpleReportOkLabel">OK - Все добре</span>
+                </label>
+                <label class="radio-option" onclick="selectSimpleReportOption(this, 'NOT_OK')">
+                    <input type="radio" name="simpleResponse" value="NOT_OK" style="display: none;">
+                    <span class="radio-label" id="simpleReportNotOkLabel">НЕ ОК - Потрібна допомога</span>
+                </label>
             </div>
 
             <div class="form-group">
                 <label class="form-label">Коментар (необов'язково)</label>
-                <textarea class="form-textarea" id="reportComment" placeholder="Додатковий коментар..."></textarea>
+                <textarea class="form-textarea" id="simpleReportComment" placeholder="Додатковий коментар..."></textarea>
             </div>
 
-            <button class="btn btn-primary" onclick="sendReport()">Відправити звіт</button>
+            <div style="display: flex; gap: 12px;">
+                <button class="btn btn-secondary" style="flex: 1;" onclick="closeModal('simpleReportModal')">Скасувати</button>
+                <button class="btn btn-primary" style="flex: 1;" onclick="submitSimpleReport()">Відправити</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Extended Report Modal -->
+    <div id="extendedReportModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 class="modal-title">Розширений звіт</h2>
+                <button class="modal-close" onclick="closeModal('extendedReportModal')">&times;</button>
+            </div>
+
+            <div style="margin-bottom: 16px; color: var(--text-secondary); font-size: 14px;">
+                Група: <strong id="extendedReportGroupName" style="color: var(--text-primary);"></strong>
+            </div>
+
+            <div class="form-group">
+                <label class="form-label" id="extendedField1Label">Поле 1</label>
+                <input type="text" class="form-input" id="extendedField1" placeholder="">
+            </div>
+
+            <div class="form-group">
+                <label class="form-label" id="extendedField2Label">Поле 2</label>
+                <input type="text" class="form-input" id="extendedField2" placeholder="">
+            </div>
+
+            <div class="form-group">
+                <label class="form-label" id="extendedField3Label">Поле 3</label>
+                <input type="text" class="form-input" id="extendedField3" placeholder="">
+            </div>
+
+            <div class="form-group">
+                <label class="form-label" id="extendedField4Label">Поле 4</label>
+                <input type="text" class="form-input" id="extendedField4" placeholder="">
+            </div>
+
+            <div class="form-group">
+                <label class="form-label" id="extendedField5Label">Поле 5</label>
+                <input type="text" class="form-input" id="extendedField5" placeholder="">
+            </div>
+
+            <div class="form-group">
+                <label class="form-label">Коментар (необов'язково)</label>
+                <textarea class="form-textarea" id="extendedReportComment" placeholder="Додатковий коментар..."></textarea>
+            </div>
+
+            <div style="display: flex; gap: 12px;">
+                <button class="btn btn-secondary" style="flex: 1;" onclick="closeModal('extendedReportModal')">Скасувати</button>
+                <button class="btn btn-primary" style="flex: 1;" onclick="submitExtendedReport()">Надіслати</button>
+            </div>
         </div>
     </div>
 
