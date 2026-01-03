@@ -29,6 +29,9 @@ spring:
   # Jackson JSON encoding
   jackson:
     default-property-inclusion: non_null
+    time-zone: Europe/Kiev
+    serialization:
+      write-dates-as-timestamps: false
 
 server:
   port: 8080

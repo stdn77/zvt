@@ -82,8 +82,8 @@ function getUrgentReportForGroup(groupId) {
     if (!report) return null;
 
     // Check if deadline passed
-    const deadline = new Date(report.deadline);
-    if (deadline < new Date()) {
+    const deadline = parseServerDate(report.deadline);
+    if (!deadline || deadline < new Date()) {
         // Deadline passed, remove
         delete reports[groupId];
         saveUrgentReportsToStorage(reports);
@@ -101,7 +101,8 @@ function clearUrgentReportForGroup(groupId) {
 
 function formatUrgentDeadline(deadlineStr) {
     if (!deadlineStr) return '';
-    const deadline = new Date(deadlineStr);
+    const deadline = parseServerDate(deadlineStr);
+    if (!deadline) return '';
     return deadline.toLocaleTimeString('uk-UA', { hour: '2-digit', minute: '2-digit' });
 }
 
@@ -2463,11 +2464,13 @@ function renderUserTiles(users) {
         // Форматуємо час та дату останнього звіту (DD.MM, HH:MM)
         let timeDateText = '';
         if (!isAdmin && user.lastReportAt) {
-            const reportDate = new Date(user.lastReportAt);
-            const time = reportDate.toLocaleTimeString('uk-UA', { hour: '2-digit', minute: '2-digit' });
-            const day = String(reportDate.getDate()).padStart(2, '0');
-            const month = String(reportDate.getMonth() + 1).padStart(2, '0');
-            timeDateText = `${time}   ${day}.${month}`;
+            const reportDate = parseServerDate(user.lastReportAt);
+            if (reportDate) {
+                const time = reportDate.toLocaleTimeString('uk-UA', { hour: '2-digit', minute: '2-digit' });
+                const day = String(reportDate.getDate()).padStart(2, '0');
+                const month = String(reportDate.getMonth() + 1).padStart(2, '0');
+                timeDateText = `${time}   ${day}.${month}`;
+            }
         }
 
         // Визначаємо колір тексту в залежності від яскравості фону
@@ -2631,7 +2634,8 @@ function renderUserReportsList(reports) {
 
     let html = '';
     reports.forEach(report => {
-        const date = new Date(report.submittedAt);
+        const date = parseServerDate(report.submittedAt);
+        if (!date) return;
         const day = String(date.getDate()).padStart(2, '0');
         const month = String(date.getMonth() + 1).padStart(2, '0');
         const time = date.toLocaleTimeString('uk-UA', { hour: '2-digit', minute: '2-digit' });
@@ -3267,9 +3271,50 @@ function calculateNextReportTime(group) {
     return null;
 }
 
+function parseServerDate(dateString) {
+    if (!dateString) return null;
+    // Якщо дата без таймзони - трактуємо як Київський час
+    if (dateString.includes('T') && !dateString.includes('Z') && !dateString.includes('+') && !dateString.includes('-', 10)) {
+        // Формат "2025-01-03T14:30:00" - сервер надсилає час в Europe/Kiev
+        // Визначаємо offset для Києва на цю дату
+        const tempDate = new Date(dateString + 'Z'); // Парсимо як UTC
+        const kyivOffset = getKyivOffset(tempDate);
+        // Віднімаємо offset щоб отримати правильний UTC
+        return new Date(tempDate.getTime() - kyivOffset * 60 * 1000);
+    }
+    return new Date(dateString);
+}
+
+function getKyivOffset(date) {
+    // Київ: UTC+2 взимку (EET), UTC+3 влітку (EEST)
+    // Літній час: остання неділя березня о 03:00 -> 04:00
+    // Зимовий час: остання неділя жовтня о 04:00 -> 03:00
+    const year = date.getUTCFullYear();
+    const marchLastSunday = getLastSunday(year, 2); // березень = 2
+    const octoberLastSunday = getLastSunday(year, 9); // жовтень = 9
+
+    // Літній час починається о 01:00 UTC останньої неділі березня
+    const dstStart = new Date(Date.UTC(year, 2, marchLastSunday, 1, 0, 0));
+    // Зимовий час починається о 01:00 UTC останньої неділі жовтня
+    const dstEnd = new Date(Date.UTC(year, 9, octoberLastSunday, 1, 0, 0));
+
+    if (date >= dstStart && date < dstEnd) {
+        return 180; // UTC+3 (EEST) = 180 хвилин
+    }
+    return 120; // UTC+2 (EET) = 120 хвилин
+}
+
+function getLastSunday(year, month) {
+    // Знаходимо останню неділю місяця
+    const lastDay = new Date(Date.UTC(year, month + 1, 0)); // останній день місяця
+    const dayOfWeek = lastDay.getUTCDay(); // 0 = неділя
+    return lastDay.getUTCDate() - dayOfWeek;
+}
+
 function formatTime(dateString) {
     if (!dateString) return '';
-    const date = new Date(dateString);
+    const date = parseServerDate(dateString);
+    if (!date) return '';
     const now = new Date();
     const diff = now - date;
 
