@@ -8,6 +8,6 @@ import lombok.Data;
 public class ChangeRoleRequest {
 
     @NotBlank(message = "Роль обов'язкова")
-    @Pattern(regexp = "^(ADMIN|MEMBER)$", message = "Роль має бути ADMIN або MEMBER")
+    @Pattern(regexp = "^(ADMIN|MODERATOR|MEMBER)$", message = "Роль має бути ADMIN, MODERATOR або MEMBER")
     private String role;
 }

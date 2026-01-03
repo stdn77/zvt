@@ -1101,14 +1101,15 @@ function renderGroups(groups) {
         const name = group.externalName || group.name || 'Група';
         const id = group.groupId || group.id;
         const members = group.currentMembers || group.memberCount || 0;
-        const isAdmin = group.userRole === 'ADMIN';
-        const role = isAdmin ? 'Адміністратор' : 'Учасник';
-        const roleClass = isAdmin ? 'admin-role' : '';
-        const cardClass = isAdmin ? 'admin' : 'member';
+        const hasAdminRights = group.userRole === 'ADMIN' || group.userRole === 'MODERATOR';
+        const roleLabels = { 'ADMIN': 'Адміністратор', 'MODERATOR': 'Модератор', 'MEMBER': 'Учасник' };
+        const role = roleLabels[group.userRole] || 'Учасник';
+        const roleClass = hasAdminRights ? 'admin-role' : '';
+        const cardClass = hasAdminRights ? 'admin' : 'member';
         const reportType = group.reportType === 'EXTENDED' ? 'Розширений' : 'Простий';
 
-        // Only admins can click to open group
-        const onclick = isAdmin ? `onclick="openGroup('${id}', '${escapeHtml(name)}')"` : '';
+        // Admins and moderators can click to open group
+        const onclick = hasAdminRights ? `onclick="openGroup('${id}', '${escapeHtml(name)}')"` : '';
 
         return `
         <div class="card group-card ${cardClass}" ${onclick}>
@@ -1140,7 +1141,8 @@ async function loadGroupDetails(groupId) {
             currentGroup = {
                 id: group.groupId || groupId,
                 name: group.externalName || currentGroup.name,
-                isAdmin: group.userRole === 'ADMIN',
+                userRole: group.userRole,
+                isAdmin: group.userRole === 'ADMIN' || group.userRole === 'MODERATOR',
                 accessCode: group.accessCode,
                 reportType: group.reportType,
                 membersCount: group.currentMembers || 0,
@@ -1764,15 +1766,19 @@ function renderMembersForAdmin(members) {
         const phone = member.phoneNumber || '';
         const role = member.role || 'MEMBER';
         const isAdmin = role === 'ADMIN';
+        const isModerator = role === 'MODERATOR';
         const isPending = member.status === 'PENDING';
         const memberId = member.id || member.userId;
 
-        // Role button styles
-        const roleStyle = isAdmin
-            ? 'background: var(--primary); color: white;'
-            : isPending
-                ? 'background: var(--warning); color: white;'
-                : 'background: rgba(255,255,255,0.15); color: var(--text-secondary);';
+        // Role button styles and labels
+        const roleStyles = {
+            'ADMIN': 'background: var(--primary); color: white;',
+            'MODERATOR': 'background: #7B1FA2; color: white;',
+            'MEMBER': 'background: rgba(255,255,255,0.15); color: var(--text-secondary);'
+        };
+        const roleLabels = { 'ADMIN': 'Адмін', 'MODERATOR': 'Модер', 'MEMBER': 'Учасник' };
+        const roleStyle = isPending ? 'background: var(--warning); color: white;' : (roleStyles[role] || roleStyles['MEMBER']);
+        const roleLabel = isPending ? 'Очікує' : (roleLabels[role] || 'Учасник');
 
         return `
             <div class="report-item" style="align-items: center; gap: 12px;">
@@ -1787,9 +1793,9 @@ function renderMembersForAdmin(members) {
                 </div>
                 <div style="display: flex; align-items: center; gap: 12px;">
                     <button onclick="${isPending ? '' : `showRoleChangeDialog('${memberId}', '${role}')`}" style="border: none; padding: 8px 14px; border-radius: 8px; font-size: 13px; font-weight: 500; cursor: ${isPending ? 'default' : 'pointer'}; ${roleStyle}">
-                        ${isAdmin ? 'Адмін' : isPending ? 'Очікує' : 'Учасник'}
+                        ${roleLabel}
                     </button>
-                    ${!isAdmin && !isPending ? `
+                    ${!isAdmin && !isModerator && !isPending ? `
                         <button onclick="removeMember('${memberId}')" style="background: rgba(229, 115, 115, 0.15); border: none; color: var(--danger); width: 40px; height: 40px; border-radius: 8px; cursor: pointer; display: flex; align-items: center; justify-content: center;">
                             <svg viewBox="0 0 24 24" fill="currentColor" width="22" height="22">
                                 <path d="M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zM19 4h-3.5l-1-1h-5l-1 1H5v2h14V4z"/>
@@ -1864,21 +1870,46 @@ function openWhatsApp(phone) {
 function showRoleChangeDialog(memberId, currentRole) {
     if (currentRole === 'PENDING') return;
 
-    const isAdmin = currentRole === 'ADMIN';
     const adminCount = currentGroup.adminCount || 1;
 
     // Якщо це єдиний адмін - не можна змінити роль
-    if (isAdmin && adminCount <= 1) {
+    if (currentRole === 'ADMIN' && adminCount <= 1) {
         showToast('Неможливо змінити роль єдиного адміністратора', 'error');
         return;
     }
 
-    const newRole = isAdmin ? 'MEMBER' : 'ADMIN';
-    const newRoleText = isAdmin ? 'Учасника' : 'Адміністратора';
+    // Показуємо модальне вікно вибору ролі
+    const roleOptions = [
+        { value: 'ADMIN', label: 'Адміністратор', desc: 'Повний доступ, не звітує' },
+        { value: 'MODERATOR', label: 'Модератор', desc: 'Повний доступ, звітує' },
+        { value: 'MEMBER', label: 'Учасник', desc: 'Тільки звітує' }
+    ];
 
-    if (confirm(`Змінити роль на "${newRoleText}"?`)) {
-        changeMemberRole(memberId, newRole);
+    let optionsHtml = roleOptions.map(opt => `
+        <div class="role-option ${currentRole === opt.value ? 'selected' : ''}" onclick="selectNewRole('${memberId}', '${opt.value}', '${currentRole}')">
+            <div class="role-option-title">${opt.label}</div>
+            <div class="role-option-desc">${opt.desc}</div>
+        </div>
+    `).join('');
+
+    document.getElementById('roleSelectOptions').innerHTML = optionsHtml;
+    document.getElementById('roleSelectModal').style.display = 'flex';
+}
+
+function selectNewRole(memberId, newRole, currentRole) {
+    if (newRole === currentRole) {
+        closeModal('roleSelectModal');
+        return;
     }
+
+    const adminCount = currentGroup.adminCount || 1;
+    if (currentRole === 'ADMIN' && newRole !== 'ADMIN' && adminCount <= 1) {
+        showToast('Неможливо змінити роль єдиного адміністратора', 'error');
+        return;
+    }
+
+    changeMemberRole(memberId, newRole);
+    closeModal('roleSelectModal');
 }
 
 async function changeMemberRole(memberId, newRole) {
@@ -2191,27 +2222,36 @@ function renderReportGroups(groups) {
     const acceptedGroups = groups.filter(g => g.userRole);
     console.log('[PWA] Accepted groups:', acceptedGroups);
 
-    // Розділяємо на групи де адмін і де учасник
+    // Розділяємо на групи за роллю
     const adminGroups = acceptedGroups.filter(g => g.userRole === 'ADMIN');
+    const moderatorGroups = acceptedGroups.filter(g => g.userRole === 'MODERATOR');
     const memberGroups = acceptedGroups.filter(g => g.userRole === 'MEMBER');
 
-    console.log('[PWA] Admin groups:', adminGroups.length, 'Member groups:', memberGroups.length);
+    console.log('[PWA] Admin groups:', adminGroups.length, 'Moderator groups:', moderatorGroups.length, 'Member groups:', memberGroups.length);
 
     let html = '';
 
-    // Групи де адмін
+    // Групи де адмін (тільки статуси, без кнопки звіту)
     if (adminGroups.length > 0) {
         html += `<div class="section-title" style="padding: 8px 0; font-size: 16px; font-weight: bold;">Групи де я адміністратор</div>`;
         adminGroups.forEach(group => {
-            html += renderReportGroupCard(group, true);
+            html += renderReportGroupCard(group, 'ADMIN');
         });
     }
 
-    // Групи де учасник
+    // Групи де модератор (статуси + кнопка звіту)
+    if (moderatorGroups.length > 0) {
+        html += `<div class="section-title" style="padding: 8px 0; font-size: 16px; font-weight: bold; margin-top: 8px;">Групи де я модератор</div>`;
+        moderatorGroups.forEach(group => {
+            html += renderReportGroupCard(group, 'MODERATOR');
+        });
+    }
+
+    // Групи де учасник (тільки кнопка звіту)
     if (memberGroups.length > 0) {
         html += `<div class="section-title" style="padding: 8px 0; font-size: 16px; font-weight: bold; margin-top: 8px;">Групи де я учасник</div>`;
         memberGroups.forEach(group => {
-            html += renderReportGroupCard(group, false);
+            html += renderReportGroupCard(group, 'MEMBER');
         });
     }
 
@@ -2226,12 +2266,18 @@ function renderReportGroups(groups) {
     container.innerHTML = html;
 }
 
-function renderReportGroupCard(group, isAdmin) {
+function renderReportGroupCard(group, role) {
     const membersCount = group.currentMembers || 0;
     const reportedCount = group.reportedCount || 0;
-    const roleText = isAdmin ? 'Адміністратор' : 'Учасник';
+    const roleLabels = { 'ADMIN': 'Адміністратор', 'MODERATOR': 'Модератор', 'MEMBER': 'Учасник' };
+    const roleText = roleLabels[role] || 'Учасник';
     const groupName = group.externalName || group.name || 'Група';
     const groupId = group.groupId || group.id;
+
+    const isAdmin = role === 'ADMIN';
+    const isModerator = role === 'MODERATOR';
+    const hasAdminRights = isAdmin || isModerator;
+    const mustReport = isModerator || role === 'MEMBER';
 
     // Екрануємо для безпечного використання в onclick
     const safeGroupName = groupName.replace(/'/g, "\\'").replace(/"/g, '&quot;');
@@ -2244,27 +2290,26 @@ function renderReportGroupCard(group, isAdmin) {
     const urgentReport = getUrgentReportForGroup(groupId);
     const hasUrgentReport = urgentReport !== null;
 
-    // Для адміна: ліва частина - відкриваємо статуси, права - терміновий звіт
-    // Для учасника: ліва частина - мої звіти, права - відправка звіту
-
-    // Права частина: адмін - терміновий звіт, учасник - звичайний звіт
+    // Права частина залежить від ролі:
+    // - ADMIN: нічого (терміновий звіт переноситься в групу)
+    // - MODERATOR/MEMBER: кнопка звіту
     let rightSection;
     if (isAdmin) {
-        // Адмін: кнопка "Терміновий" (червона)
+        // Адмін: пусто справа (тільки статуси зліва)
         rightSection = `
-            <div style="flex: 0.4; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 12px; cursor: pointer;" onclick="openUrgentReportDialog('${groupId}', '${safeGroupName}')">
-                <svg viewBox="0 0 24 24" fill="var(--danger)" width="32" height="32">
-                    <path d="M1 21h22L12 2 1 21zm12-3h-2v-2h2v2zm0-4h-2v-4h2v4z"/>
+            <div style="flex: 0.4; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 12px;">
+                <svg viewBox="0 0 24 24" fill="var(--text-secondary)" width="28" height="28" style="opacity: 0.3;">
+                    <path d="M12 4.5C7 4.5 2.73 7.61 1 12c1.73 4.39 6 7.5 11 7.5s9.27-3.11 11-7.5c-1.73-4.39-6-7.5-11-7.5zM12 17c-2.76 0-5-2.24-5-5s2.24-5 5-5 5 2.24 5 5-2.24 5-5 5zm0-8c-1.66 0-3 1.34-3 3s1.34 3 3 3 3-1.34 3-3-1.34-3-3-3z"/>
                 </svg>
-                <div style="font-size: 12px; font-weight: bold; color: var(--danger); margin-top: 4px;">Терміновий</div>
+                <div style="font-size: 11px; color: var(--text-secondary); margin-top: 4px; opacity: 0.5;">Статуси</div>
             </div>
         `;
     } else {
-        // Учасник: кнопка "Звіт" (синя) або терміновий звіт (червона)
+        // Модератор/Учасник: кнопка "Звіт" або терміновий звіт
         if (hasUrgentReport) {
             const deadlineTime = formatUrgentDeadline(urgentReport.deadline);
             rightSection = `
-                <div style="flex: 0.4; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 12px; cursor: pointer; background: rgba(244, 67, 54, 0.1);" onclick="openReportForGroup('${groupId}', '${safeGroupName}', '${group.reportType}', ${isAdmin}, '${(group.positiveWord || 'ОК').replace(/'/g, "\\'")}', '${(group.negativeWord || 'НЕ ОК').replace(/'/g, "\\'")}')">
+                <div style="flex: 0.4; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 12px; cursor: pointer; background: rgba(244, 67, 54, 0.1);" onclick="openReportForGroup('${groupId}', '${safeGroupName}', '${group.reportType}', ${hasAdminRights}, '${(group.positiveWord || 'ОК').replace(/'/g, "\\'")}', '${(group.negativeWord || 'НЕ ОК').replace(/'/g, "\\'")}')">
                     <svg viewBox="0 0 24 24" fill="var(--danger)" width="32" height="32">
                         <path d="M1 21h22L12 2 1 21zm12-3h-2v-2h2v2zm0-4h-2v-4h2v4z"/>
                     </svg>
@@ -2274,7 +2319,7 @@ function renderReportGroupCard(group, isAdmin) {
             `;
         } else {
             rightSection = `
-                <div style="flex: 0.4; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 12px; cursor: pointer;" onclick="openReportForGroup('${groupId}', '${safeGroupName}', '${group.reportType}', ${isAdmin}, '${(group.positiveWord || 'ОК').replace(/'/g, "\\'")}', '${(group.negativeWord || 'НЕ ОК').replace(/'/g, "\\'")}')">
+                <div style="flex: 0.4; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 12px; cursor: pointer;" onclick="openReportForGroup('${groupId}', '${safeGroupName}', '${group.reportType}', ${hasAdminRights}, '${(group.positiveWord || 'ОК').replace(/'/g, "\\'")}', '${(group.negativeWord || 'НЕ ОК').replace(/'/g, "\\'")}')">
                     <svg viewBox="0 0 24 24" fill="var(--primary)" width="32" height="32">
                         <path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"/>
                     </svg>
@@ -2284,14 +2329,15 @@ function renderReportGroupCard(group, isAdmin) {
         }
     }
 
-    // Ліва частина завжди клікабельна
-    // Адмін - відкриває статуси, Учасник - відкриває свої звіти
-    const leftOnclick = isAdmin
+    // Ліва частина:
+    // - ADMIN/MODERATOR: відкриває статуси
+    // - MEMBER: відкриває свої звіти
+    const leftOnclick = hasAdminRights
         ? `onclick="openGroupStatuses('${groupId}', '${safeGroupName}')"`
         : `onclick="openMyReportsInGroup('${groupId}', '${safeGroupName}')"`;
 
-    // Індикатор термінового звіту для учасників
-    const urgentIndicator = (!isAdmin && hasUrgentReport) ? `
+    // Індикатор термінового звіту для тих хто має звітувати
+    const urgentIndicator = (mustReport && hasUrgentReport) ? `
         <div style="position: absolute; top: 8px; right: 8px; background: var(--danger); color: white; font-size: 10px; padding: 2px 6px; border-radius: 4px; font-weight: bold;">
             ТЕРМІНОВО
         </div>
@@ -2304,11 +2350,11 @@ function renderReportGroupCard(group, isAdmin) {
                 <!-- Ліва частина -->
                 <div style="flex: 0.6; display: flex; padding: 16px; cursor: pointer;" ${leftOnclick}>
                     <!-- Кольоровий індикатор -->
-                    <div style="width: 8px; background: ${hasUrgentReport && !isAdmin ? 'var(--danger)' : 'var(--primary)'}; border-radius: 4px; margin-right: 12px;"></div>
+                    <div style="width: 8px; background: ${hasUrgentReport && mustReport ? 'var(--danger)' : 'var(--primary)'}; border-radius: 4px; margin-right: 12px;"></div>
                     <!-- Інформація -->
                     <div style="flex: 1; min-width: 0;">
                         <div style="font-size: 16px; font-weight: bold; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">
-                            ${escapeHtml(groupName)} ${isAdmin ? `(${reportedCount}/${membersCount})` : ''}
+                            ${escapeHtml(groupName)} ${hasAdminRights ? `(${reportedCount}/${membersCount})` : ''}
                         </div>
                         <div style="font-size: 12px; color: var(--text-secondary); margin-top: 2px;">
                             ${roleText}${nextReportText ? ` • ${nextReportText}` : ''}
@@ -2721,6 +2767,15 @@ function openUrgentReportDialog(groupId, groupName) {
     document.getElementById('urgentDeadlineSelect').value = '30';
     document.getElementById('urgentMessage').value = '';
     document.getElementById('urgentReportModal').classList.add('active');
+}
+
+// Відкрити діалог термінового звіту з екрану групи
+function openUrgentReportDialogFromGroup() {
+    if (!currentGroup || !currentGroup.id) {
+        showToast('Помилка: група не вибрана', 'error');
+        return;
+    }
+    openUrgentReportDialog(currentGroup.id, currentGroup.name);
 }
 
 // Надіслати терміновий запит

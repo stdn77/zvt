@@ -47,6 +47,14 @@ public class ReportService {
 
     private static final int REPORT_WINDOW_HOURS = 24;
 
+    /**
+     * Перевіряє чи користувач має права адміністратора (ADMIN або MODERATOR)
+     */
+    private boolean hasAdminRights(GroupMember member) {
+        return member.getRole() == GroupMember.Role.ADMIN ||
+               member.getRole() == GroupMember.Role.MODERATOR;
+    }
+
     @Transactional
     public ReportResponse createSimpleReport(SimpleReportRequest request, String userId) {
         Group group = groupRepository.findById(request.getGroupId())
@@ -150,8 +158,8 @@ public class ReportService {
         GroupMember requesterMember = groupMemberRepository.findByGroupIdAndUserId(groupId, userId)
                 .orElseThrow(() -> new RuntimeException("Ви не є учасником цієї групи"));
 
-        // Перевіряємо чи запитувач є адміністратором
-        boolean isAdmin = requesterMember.getRole() == GroupMember.Role.ADMIN;
+        // Перевіряємо чи запитувач є адміністратором або модератором
+        boolean isAdmin = hasAdminRights(requesterMember);
 
         Group group = groupRepository.findById(groupId)
                 .orElseThrow(() -> new RuntimeException("Групу не знайдено"));
@@ -212,8 +220,8 @@ public class ReportService {
         GroupMember adminMember = groupMemberRepository.findByGroupIdAndUserId(request.getGroupId(), userId)
                 .orElseThrow(() -> new RuntimeException("Ви не є учасником цієї групи"));
 
-        if (adminMember.getRole() != GroupMember.Role.ADMIN) {
-            throw new RuntimeException("Тільки адміністратор може створювати термінові запити");
+        if (!hasAdminRights(adminMember)) {
+            throw new RuntimeException("Тільки адміністратор або модератор може створювати термінові запити");
         }
 
         // Перевіряємо чи немає вже активної термінової сесії
@@ -307,8 +315,8 @@ public class ReportService {
         GroupMember adminMember = groupMemberRepository.findByGroupIdAndUserId(groupId, userId)
                 .orElseThrow(() -> new RuntimeException("Ви не є учасником цієї групи"));
 
-        if (adminMember.getRole() != GroupMember.Role.ADMIN) {
-            throw new RuntimeException("Тільки адміністратор може завершувати терміновий збір");
+        if (!hasAdminRights(adminMember)) {
+            throw new RuntimeException("Тільки адміністратор або модератор може завершувати терміновий збір");
         }
 
         if (group.getUrgentSessionId() == null) {
@@ -330,8 +338,8 @@ public class ReportService {
         GroupMember adminMember = groupMemberRepository.findByGroupIdAndUserId(groupId, userId)
                 .orElseThrow(() -> new RuntimeException("Ви не є учасником цієї групи"));
 
-        if (adminMember.getRole() != GroupMember.Role.ADMIN) {
-            throw new RuntimeException("Тільки адміністратор може переглядати всі звіти");
+        if (!hasAdminRights(adminMember)) {
+            throw new RuntimeException("Тільки адміністратор або модератор може переглядати всі звіти");
         }
 
         List<Report> reports = reportRepository.findByGroup_IdOrderBySubmittedAtDesc(groupId);
@@ -345,8 +353,8 @@ public class ReportService {
         GroupMember requesterMember = groupMemberRepository.findByGroupIdAndUserId(groupId, requesterId)
                 .orElseThrow(() -> new RuntimeException("Ви не є учасником цієї групи"));
 
-        if (requesterMember.getRole() != GroupMember.Role.ADMIN) {
-            throw new RuntimeException("Тільки адміністратор може переглядати звіти інших учасників");
+        if (!hasAdminRights(requesterMember)) {
+            throw new RuntimeException("Тільки адміністратор або модератор може переглядати звіти інших учасників");
         }
 
         groupMemberRepository.findByGroupIdAndUserId(groupId, targetUserId)

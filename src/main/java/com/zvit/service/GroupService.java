@@ -36,6 +36,14 @@ public class GroupService {
     private final EncryptionService encryptionService;
     private final FirebaseService firebaseService;
 
+    /**
+     * Перевіряє чи користувач має права адміністратора (ADMIN або MODERATOR)
+     */
+    private boolean hasAdminRights(GroupMember member) {
+        return member.getRole() == GroupMember.Role.ADMIN ||
+               member.getRole() == GroupMember.Role.MODERATOR;
+    }
+
     @Transactional
     public GroupResponse createGroup(CreateGroupRequest request, String userId) {
         User user = userRepository.findById(userId)
@@ -95,8 +103,8 @@ public class GroupService {
         GroupMember adminMember = groupMemberRepository.findByGroupIdAndUserId(groupId, adminUserId)
                 .orElseThrow(() -> new RuntimeException("Ви не є учасником цієї групи"));
 
-        if (adminMember.getRole() != GroupMember.Role.ADMIN) {
-            throw new RuntimeException("Тільки адміністратор може додавати учасників");
+        if (!hasAdminRights(adminMember)) {
+            throw new RuntimeException("Тільки адміністратор або модератор може додавати учасників");
         }
 
         long currentMembers = groupMemberRepository.countByGroupId(groupId);
@@ -155,8 +163,8 @@ public class GroupService {
         GroupMember requesterMember = groupMemberRepository.findByGroupIdAndUserId(groupId, userId)
                 .orElseThrow(() -> new RuntimeException("Ви не є учасником цієї групи"));
 
-        // Перевіряємо чи запитувач є адміністратором
-        boolean isAdmin = requesterMember.getRole() == GroupMember.Role.ADMIN;
+        // Перевіряємо чи запитувач є адміністратором або модератором
+        boolean isAdmin = hasAdminRights(requesterMember);
 
         List<GroupMember> members = groupMemberRepository.findByGroupId(groupId);
 
@@ -173,8 +181,8 @@ public class GroupService {
         GroupMember adminMember = groupMemberRepository.findByGroupIdAndUserId(groupId, adminUserId)
                 .orElseThrow(() -> new RuntimeException("Ви не є учасником цієї групи"));
 
-        if (adminMember.getRole() != GroupMember.Role.ADMIN) {
-            throw new RuntimeException("Тільки адміністратор може видаляти учасників");
+        if (!hasAdminRights(adminMember)) {
+            throw new RuntimeException("Тільки адміністратор або модератор може видаляти учасників");
         }
 
         if (memberUserId.equals(adminUserId)) {
@@ -241,16 +249,16 @@ public class GroupService {
         GroupMember adminMember = groupMemberRepository.findByGroupIdAndUserId(groupId, adminUserId)
                 .orElseThrow(() -> new RuntimeException("Ви не є учасником цієї групи"));
 
-        if (adminMember.getRole() != GroupMember.Role.ADMIN) {
-            throw new RuntimeException("Тільки адміністратор може змінювати ролі");
+        if (!hasAdminRights(adminMember)) {
+            throw new RuntimeException("Тільки адміністратор або модератор може змінювати ролі");
         }
 
         // Знаходимо учасника, роль якого потрібно змінити
         GroupMember memberToChange = groupMemberRepository.findByGroupIdAndUserId(groupId, memberUserId)
                 .orElseThrow(() -> new RuntimeException("Учасника не знайдено в групі"));
 
-        // Якщо змінюємо адміністратора на користувача, перевіряємо що це не останній адмін
-        if (memberToChange.getRole() == GroupMember.Role.ADMIN && newRole == GroupMember.Role.MEMBER) {
+        // Якщо змінюємо адміністратора на не-адміна, перевіряємо що це не останній адмін
+        if (memberToChange.getRole() == GroupMember.Role.ADMIN && newRole != GroupMember.Role.ADMIN) {
             long adminCount = groupMemberRepository.findByGroupId(groupId).stream()
                     .filter(m -> m.getRole() == GroupMember.Role.ADMIN)
                     .count();
@@ -274,8 +282,8 @@ public class GroupService {
         GroupMember adminMember = groupMemberRepository.findByGroupIdAndUserId(groupId, adminUserId)
                 .orElseThrow(() -> new RuntimeException("Ви не є учасником цієї групи"));
 
-        if (adminMember.getRole() != GroupMember.Role.ADMIN) {
-            throw new RuntimeException("Тільки адміністратор може змінювати налаштування групи");
+        if (!hasAdminRights(adminMember)) {
+            throw new RuntimeException("Тільки адміністратор або модератор може змінювати налаштування групи");
         }
 
         // Зберігаємо старі значення для порівняння
@@ -443,8 +451,8 @@ public class GroupService {
         GroupMember adminMember = groupMemberRepository.findByGroupIdAndUserId(groupId, adminUserId)
                 .orElseThrow(() -> new RuntimeException("Ви не є учасником цієї групи"));
 
-        if (adminMember.getRole() != GroupMember.Role.ADMIN) {
-            throw new RuntimeException("Тільки адміністратор може затверджувати учасників");
+        if (!hasAdminRights(adminMember)) {
+            throw new RuntimeException("Тільки адміністратор або модератор може затверджувати учасників");
         }
 
         // Знаходимо учасника що очікує затвердження
@@ -466,8 +474,8 @@ public class GroupService {
         GroupMember adminMember = groupMemberRepository.findByGroupIdAndUserId(groupId, adminUserId)
                 .orElseThrow(() -> new RuntimeException("Ви не є учасником цієї групи"));
 
-        if (adminMember.getRole() != GroupMember.Role.ADMIN) {
-            throw new RuntimeException("Тільки адміністратор може відхиляти учасників");
+        if (!hasAdminRights(adminMember)) {
+            throw new RuntimeException("Тільки адміністратор або модератор може відхиляти учасників");
         }
 
         // Знаходимо учасника що очікує затвердження
@@ -490,8 +498,8 @@ public class GroupService {
         GroupMember adminMember = groupMemberRepository.findByGroupIdAndUserId(groupId, adminUserId)
                 .orElseThrow(() -> new RuntimeException("Ви не є учасником цієї групи"));
 
-        if (adminMember.getRole() != GroupMember.Role.ADMIN) {
-            throw new RuntimeException("Тільки адміністратор може змінювати код доступу");
+        if (!hasAdminRights(adminMember)) {
+            throw new RuntimeException("Тільки адміністратор або модератор може змінювати код доступу");
         }
 
         group.regenerateAccessCode();
@@ -501,7 +509,7 @@ public class GroupService {
     }
 
     private GroupResponse mapToGroupResponse(Group group, GroupMember member) {
-        boolean isAdmin = member.getRole() == GroupMember.Role.ADMIN;
+        boolean isAdmin = hasAdminRights(member);
         boolean isAccepted = member.getStatus() == GroupMember.MemberStatus.ACCEPTED;
         long currentMembers = groupMemberRepository.countByGroupId(group.getId());
 

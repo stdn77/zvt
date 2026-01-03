@@ -413,9 +413,45 @@
             color: var(--text-secondary);
         }
 
+        .member-role.moderator {
+            background: #7B1FA2;
+            color: white;
+        }
+
         .member-role.pending {
             background: var(--warning);
             color: white;
+        }
+
+        /* Role selection options */
+        .role-option {
+            background: var(--surface);
+            border: 2px solid var(--border-color);
+            border-radius: 12px;
+            padding: 16px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .role-option:hover {
+            border-color: var(--primary);
+            background: rgba(103, 80, 164, 0.1);
+        }
+
+        .role-option.selected {
+            border-color: var(--primary);
+            background: rgba(103, 80, 164, 0.2);
+        }
+
+        .role-option-title {
+            font-weight: 600;
+            color: var(--text-primary);
+            margin-bottom: 4px;
+        }
+
+        .role-option-desc {
+            font-size: 13px;
+            color: var(--text-secondary);
         }
 
         .member-actions {
@@ -1329,6 +1365,14 @@
                 </div>
             </div>
 
+            <!-- Кнопка термінового звіту (для адмінів і модераторів) -->
+            <button id="urgentReportBtn" class="btn" style="background: var(--danger); width: 100%; margin-bottom: 16px; display: flex; align-items: center; justify-content: center; gap: 8px;" onclick="openUrgentReportDialogFromGroup()">
+                <svg viewBox="0 0 24 24" fill="currentColor" width="20" height="20">
+                    <path d="M1 21h22L12 2 1 21zm12-3h-2v-2h2v2zm0-4h-2v-4h2v4z"/>
+                </svg>
+                Запит на терміновий звіт
+            </button>
+
             <!-- Кнопки адміністрування -->
             <div style="display: flex; gap: 12px; margin-bottom: 16px;">
                 <button class="btn btn-secondary" style="flex: 1;" onclick="showAddMemberDialog()">
@@ -1662,6 +1706,19 @@
                     </svg>
                     WhatsApp
                 </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Role Select Modal -->
+    <div id="roleSelectModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 class="modal-title">Змінити роль</h2>
+                <button class="modal-close" onclick="closeModal('roleSelectModal')">&times;</button>
+            </div>
+            <div id="roleSelectOptions" style="display: flex; flex-direction: column; gap: 12px;">
+                <!-- Options will be inserted by JS -->
             </div>
         </div>
     </div>

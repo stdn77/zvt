@@ -29,7 +29,7 @@ public class GroupMember {
     private User user;
 
     @Enumerated(EnumType.STRING)
-    @Column(nullable = false, length = 10)
+    @Column(nullable = false, length = 15)
     private Role role;
 
     @Enumerated(EnumType.STRING)
@@ -41,8 +41,9 @@ public class GroupMember {
     private LocalDateTime joinedAt;
 
     public enum Role {
-        ADMIN,   // Адміністратор групи
-        MEMBER   // Звичайний учасник
+        ADMIN,      // Адміністратор групи
+        MODERATOR,  // Модератор - може адмініструвати, але має звітувати
+        MEMBER      // Звичайний учасник
     }
 
     public enum MemberStatus {
