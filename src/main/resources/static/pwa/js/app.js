@@ -51,37 +51,6 @@ function deleteCookie(name) {
     document.cookie = name + "=;expires=Thu, 01 Jan 1970 00:00:00 UTC;path=/;";
 }
 
-// AdSense - завантажуємо тільки для залогінених користувачів
-let adSenseLoaded = false;
-function loadAdSense() {
-    if (adSenseLoaded) return;
-    adSenseLoaded = true;
-
-    const script = document.createElement('script');
-    script.async = true;
-    script.src = 'https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-7963216972025059';
-    script.crossOrigin = 'anonymous';
-    document.head.appendChild(script);
-
-    script.onload = () => {
-        // Ініціалізуємо рекламні блоки після завантаження
-        initAdSlots();
-    };
-}
-
-function initAdSlots() {
-    try {
-        const adContainers = document.querySelectorAll('.adsbygoogle');
-        adContainers.forEach(ad => {
-            if (!ad.getAttribute('data-ad-status')) {
-                (adsbygoogle = window.adsbygoogle || []).push({});
-            }
-        });
-    } catch (e) {
-        console.log('AdSense init error:', e);
-    }
-}
-
 // Urgent reports storage
 function getUrgentReportsFromStorage() {
     try {
@@ -728,9 +697,6 @@ async function showMainScreen() {
     // Після входу показуємо екран Звіти (як в Android)
     showScreen('reportsScreen');
     loadReportsScreen();
-
-    // Завантажуємо AdSense тільки для залогінених користувачів
-    loadAdSense();
 
     // Update settings
     if (currentUser) {
