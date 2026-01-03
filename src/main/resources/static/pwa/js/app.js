@@ -1067,6 +1067,10 @@ async function loadGroups() {
         }
     } catch (error) {
         console.error('[PWA] Groups loading error:', error);
+        // Не показуємо помилку якщо сесія закінчилась (logout вже обробив це)
+        if (!localStorage.getItem('zvit_token')) {
+            return; // Користувач вже розлогінений, не показуємо помилку
+        }
         container.innerHTML = `
             <div class="card" style="text-align: center; color: var(--danger);">
                 <p>Помилка завантаження груп</p>
@@ -2163,6 +2167,10 @@ async function loadReportsScreen() {
         }
     } catch (error) {
         console.error('[PWA] Groups loading error:', error);
+        // Не показуємо помилку якщо сесія закінчилась (logout вже обробив це)
+        if (!localStorage.getItem('zvit_token')) {
+            return; // Користувач вже розлогінений, не показуємо помилку
+        }
         container.innerHTML = `
             <div class="card" style="text-align: center; color: var(--danger);">
                 <p>Помилка завантаження груп</p>
