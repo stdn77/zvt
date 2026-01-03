@@ -1101,8 +1101,8 @@ function renderGroups(groups) {
         const name = group.externalName || group.name || 'Група';
         const id = group.groupId || group.id;
         const members = group.currentMembers || group.memberCount || 0;
-        const hasAdminRights = group.userRole === 'ADMIN' || group.userRole === 'MODERATOR';
-        const roleLabels = { 'ADMIN': 'Адміністратор', 'MODERATOR': 'Модератор', 'MEMBER': 'Учасник' };
+        const hasAdminRights = group.userRole === 'ADMIN' || group.userRole === 'MODER';
+        const roleLabels = { 'ADMIN': 'Адміністратор', 'MODER': 'Модератор', 'MEMBER': 'Учасник' };
         const role = roleLabels[group.userRole] || 'Учасник';
         const roleClass = hasAdminRights ? 'admin-role' : '';
         const cardClass = hasAdminRights ? 'admin' : 'member';
@@ -1142,7 +1142,7 @@ async function loadGroupDetails(groupId) {
                 id: group.groupId || groupId,
                 name: group.externalName || currentGroup.name,
                 userRole: group.userRole,
-                isAdmin: group.userRole === 'ADMIN' || group.userRole === 'MODERATOR',
+                isAdmin: group.userRole === 'ADMIN' || group.userRole === 'MODER',
                 accessCode: group.accessCode,
                 reportType: group.reportType,
                 membersCount: group.currentMembers || 0,
@@ -1766,17 +1766,17 @@ function renderMembersForAdmin(members) {
         const phone = member.phoneNumber || '';
         const role = member.role || 'MEMBER';
         const isAdmin = role === 'ADMIN';
-        const isModerator = role === 'MODERATOR';
+        const isModerator = role === 'MODER';
         const isPending = member.status === 'PENDING';
         const memberId = member.id || member.userId;
 
         // Role button styles and labels
         const roleStyles = {
             'ADMIN': 'background: var(--primary); color: white;',
-            'MODERATOR': 'background: #7B1FA2; color: white;',
+            'MODER': 'background: #7B1FA2; color: white;',
             'MEMBER': 'background: rgba(255,255,255,0.15); color: var(--text-secondary);'
         };
-        const roleLabels = { 'ADMIN': 'Адмін', 'MODERATOR': 'Модер', 'MEMBER': 'Учасник' };
+        const roleLabels = { 'ADMIN': 'Адмін', 'MODER': 'Модер', 'MEMBER': 'Учасник' };
         const roleStyle = isPending ? 'background: var(--warning); color: white;' : (roleStyles[role] || roleStyles['MEMBER']);
         const roleLabel = isPending ? 'Очікує' : (roleLabels[role] || 'Учасник');
 
@@ -1881,7 +1881,7 @@ function showRoleChangeDialog(memberId, currentRole) {
     // Показуємо модальне вікно вибору ролі
     const roleOptions = [
         { value: 'ADMIN', label: 'Адміністратор', desc: 'Повний доступ, не звітує' },
-        { value: 'MODERATOR', label: 'Модератор', desc: 'Повний доступ, звітує' },
+        { value: 'MODER', label: 'Модератор', desc: 'Повний доступ, звітує' },
         { value: 'MEMBER', label: 'Учасник', desc: 'Тільки звітує' }
     ];
 
@@ -2224,7 +2224,7 @@ function renderReportGroups(groups) {
 
     // Розділяємо на групи за роллю
     const adminGroups = acceptedGroups.filter(g => g.userRole === 'ADMIN');
-    const moderatorGroups = acceptedGroups.filter(g => g.userRole === 'MODERATOR');
+    const moderatorGroups = acceptedGroups.filter(g => g.userRole === 'MODER');
     const memberGroups = acceptedGroups.filter(g => g.userRole === 'MEMBER');
 
     console.log('[PWA] Admin groups:', adminGroups.length, 'Moderator groups:', moderatorGroups.length, 'Member groups:', memberGroups.length);
@@ -2243,7 +2243,7 @@ function renderReportGroups(groups) {
     if (moderatorGroups.length > 0) {
         html += `<div class="section-title" style="padding: 8px 0; font-size: 16px; font-weight: bold; margin-top: 8px;">Групи де я модератор</div>`;
         moderatorGroups.forEach(group => {
-            html += renderReportGroupCard(group, 'MODERATOR');
+            html += renderReportGroupCard(group, 'MODER');
         });
     }
 
@@ -2269,13 +2269,13 @@ function renderReportGroups(groups) {
 function renderReportGroupCard(group, role) {
     const membersCount = group.currentMembers || 0;
     const reportedCount = group.reportedCount || 0;
-    const roleLabels = { 'ADMIN': 'Адміністратор', 'MODERATOR': 'Модератор', 'MEMBER': 'Учасник' };
+    const roleLabels = { 'ADMIN': 'Адміністратор', 'MODER': 'Модератор', 'MEMBER': 'Учасник' };
     const roleText = roleLabels[role] || 'Учасник';
     const groupName = group.externalName || group.name || 'Група';
     const groupId = group.groupId || group.id;
 
     const isAdmin = role === 'ADMIN';
-    const isModerator = role === 'MODERATOR';
+    const isModerator = role === 'MODER';
     const hasAdminRights = isAdmin || isModerator;
     const mustReport = isModerator || role === 'MEMBER';
 
@@ -2292,7 +2292,7 @@ function renderReportGroupCard(group, role) {
 
     // Права частина залежить від ролі:
     // - ADMIN: нічого (терміновий звіт переноситься в групу)
-    // - MODERATOR/MEMBER: кнопка звіту
+    // - MODER/MEMBER: кнопка звіту
     let rightSection;
     if (isAdmin) {
         // Адмін: пусто справа (тільки статуси зліва)
@@ -2330,7 +2330,7 @@ function renderReportGroupCard(group, role) {
     }
 
     // Ліва частина:
-    // - ADMIN/MODERATOR: відкриває статуси
+    // - ADMIN/MODER: відкриває статуси
     // - MEMBER: відкриває свої звіти
     const leftOnclick = hasAdminRights
         ? `onclick="openGroupStatuses('${groupId}', '${safeGroupName}')"`

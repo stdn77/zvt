@@ -48,11 +48,11 @@ public class ReportService {
     private static final int REPORT_WINDOW_HOURS = 24;
 
     /**
-     * Перевіряє чи користувач має права адміністратора (ADMIN або MODERATOR)
+     * Перевіряє чи користувач має права адміністратора (ADMIN або MODER)
      */
     private boolean hasAdminRights(GroupMember member) {
         return member.getRole() == GroupMember.Role.ADMIN ||
-               member.getRole() == GroupMember.Role.MODERATOR;
+               member.getRole() == GroupMember.Role.MODER;
     }
 
     @Transactional
