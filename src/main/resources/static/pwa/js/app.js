@@ -2414,6 +2414,12 @@ async function openMyReportsInGroup(groupId, groupName) {
     // Ховаємо телефон (це мої звіти)
     document.getElementById('userReportsPhoneHeader').style.display = 'none';
 
+    // Ховаємо кнопку видалення (це мої звіти)
+    const deleteBtn = document.getElementById('btnDeleteUserReports');
+    if (deleteBtn) {
+        deleteBtn.style.display = 'none';
+    }
+
     // Переходимо на екран
     showScreen('userReportsScreen');
 
@@ -2594,6 +2600,12 @@ async function openUserReports(userId, userName, userPhone) {
         phoneHeader.style.display = 'none';
     }
 
+    // Показуємо кнопку видалення звітів (це звіти іншого користувача, ми адмін/модератор)
+    const deleteBtn = document.getElementById('btnDeleteUserReports');
+    if (deleteBtn) {
+        deleteBtn.style.display = 'block';
+    }
+
     // Переходимо на екран
     showScreen('userReportsScreen');
 
@@ -2641,6 +2653,50 @@ function showUserCallOptions() {
 
     document.getElementById('callOptionsPhone').textContent = currentReportUser.phone;
     document.getElementById('callOptionsModal').classList.add('active');
+}
+
+// Підтвердити видалення звітів користувача
+function confirmDeleteUserReports() {
+    if (!currentReportUser || !currentGroup) {
+        showToast('Помилка: користувач або група не вибрані', 'error');
+        return;
+    }
+
+    const userName = currentReportUser.name || 'цього користувача';
+
+    if (confirm(`Ви впевнені, що хочете видалити ВСІ звіти користувача "${userName}"?\n\nЦю дію неможливо скасувати!`)) {
+        deleteUserReports();
+    }
+}
+
+// Видалити звіти користувача
+async function deleteUserReports() {
+    if (!currentReportUser || !currentGroup) return;
+
+    try {
+        const groupId = currentGroup.id;
+        const userId = currentReportUser.id;
+
+        const response = await apiRequest(`/reports/group/${groupId}/user/${userId}`, 'DELETE');
+
+        if (response.success) {
+            const deletedCount = response.data || 0;
+            showToast(`Видалено ${deletedCount} звітів`, 'success');
+
+            // Оновити список (буде порожній)
+            const container = document.getElementById('userReportsList');
+            container.innerHTML = `
+                <div style="text-align: center; padding: 32px; color: var(--text-secondary);">
+                    <p>Немає звітів</p>
+                </div>
+            `;
+        } else {
+            showToast(response.message || 'Помилка видалення', 'error');
+        }
+    } catch (error) {
+        console.error('[PWA] Delete reports error:', error);
+        showToast('Помилка видалення звітів', 'error');
+    }
 }
 
 // Мобільний зв'язок

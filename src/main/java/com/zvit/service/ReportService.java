@@ -367,6 +367,26 @@ public class ReportService {
                 .collect(Collectors.toList());
     }
 
+    @Transactional
+    public int deleteUserReportsInGroup(String groupId, String targetUserId, String requesterId) {
+        GroupMember requesterMember = groupMemberRepository.findByGroupIdAndUserId(groupId, requesterId)
+                .orElseThrow(() -> new RuntimeException("Ви не є учасником цієї групи"));
+
+        if (!hasAdminRights(requesterMember)) {
+            throw new RuntimeException("Тільки адміністратор або модератор може видаляти звіти");
+        }
+
+        groupMemberRepository.findByGroupIdAndUserId(groupId, targetUserId)
+                .orElseThrow(() -> new RuntimeException("Користувач не є учасником цієї групи"));
+
+        List<Report> reports = reportRepository.findByGroup_IdAndUser_IdOrderBySubmittedAtDesc(groupId, targetUserId);
+        int count = reports.size();
+
+        reportRepository.deleteAll(reports);
+
+        return count;
+    }
+
     private UserStatusResponse createStatusResponse(
             GroupMember member,
             Report lastReport,

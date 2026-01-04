@@ -141,4 +141,15 @@ public class ReportController {
         String encryptedPayload = encryptionService.encryptObject(reports);
         return ResponseEntity.ok(ApiResponse.success("Звіти користувача отримано", EncryptedData.of(encryptedPayload)));
     }
+
+    @DeleteMapping("/group/{groupId}/user/{targetUserId}")
+    public ResponseEntity<ApiResponse<Integer>> deleteUserReportsInGroup(
+            @PathVariable String groupId,
+            @PathVariable String targetUserId,
+            Authentication authentication
+    ) {
+        String userId = authentication.getName();
+        int deletedCount = reportService.deleteUserReportsInGroup(groupId, targetUserId, userId);
+        return ResponseEntity.ok(ApiResponse.success("Видалено звітів: " + deletedCount, deletedCount));
+    }
 }
