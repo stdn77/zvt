@@ -290,6 +290,11 @@ public class GroupService {
         Group.ReportType oldReportType = group.getReportType();
         Group.ScheduleType oldScheduleType = group.getScheduleType();
 
+        // Оновлюємо назву групи
+        if (request.getExternalName() != null && !request.getExternalName().trim().isEmpty()) {
+            group.setExternalName(request.getExternalName().trim());
+        }
+
         // Оновлюємо тип звіту
         if (request.getReportType() != null) {
             group.setReportType(Group.ReportType.valueOf(request.getReportType()));

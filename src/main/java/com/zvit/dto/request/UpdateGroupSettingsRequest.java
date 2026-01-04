@@ -10,6 +10,9 @@ import java.util.List;
 @Data
 public class UpdateGroupSettingsRequest {
 
+    // Назва групи (зовнішня)
+    private String externalName;
+
     @Pattern(regexp = "^(SIMPLE|EXTENDED|URGENT)$", message = "Тип звіту має бути SIMPLE, EXTENDED або URGENT")
     private String reportType;
 
