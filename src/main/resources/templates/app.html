@@ -254,7 +254,7 @@
             -webkit-user-select: none;
         }
 
-        /* Збільшена зона натискання */
+        /* Збільшена зона натискання з прозорим фоном */
         .header-icon::before {
             content: '';
             position: absolute;
@@ -262,15 +262,28 @@
             left: -8px;
             right: -8px;
             bottom: -8px;
+            background: transparent;
+            z-index: 1;
         }
 
         .header-icon svg {
             pointer-events: none;
+            position: relative;
+            z-index: 0;
         }
 
         .header-icon:active {
             background: rgba(102, 126, 234, 0.3);
             transform: scale(0.95);
+        }
+
+        /* Уніфікована кнопка назад */
+        .back-button {
+            background-color: var(--bg-card);
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%23667eea'%3E%3Cpath d='M20 11H7.83l5.59-5.59L12 4l-8 8 8 8 1.41-1.41L7.83 13H20v-2z'/%3E%3C/svg%3E");
+            background-repeat: no-repeat;
+            background-position: center;
+            background-size: 24px 24px;
         }
 
         .header-actions {
@@ -1354,11 +1367,7 @@
         </div>
         <div class="header">
             <div style="display: flex; align-items: center; gap: 12px;">
-                <div class="header-icon" onclick="navigateTo('mainScreen')">
-                    <svg viewBox="0 0 24 24" fill="currentColor" width="24" height="24">
-                        <path d="M20 11H7.83l5.59-5.59L12 4l-8 8 8 8 1.41-1.41L7.83 13H20v-2z"/>
-                    </svg>
-                </div>
+                <div class="header-icon back-button" onclick="navigateTo('mainScreen')"></div>
                 <h1 class="header-title" id="groupTitle">Група</h1>
             </div>
             <div class="header-actions">
@@ -1479,11 +1488,7 @@
         </div>
         <div class="header">
             <div style="display: flex; align-items: center; gap: 12px;">
-                <div class="header-icon" onclick="navigateTo('reportsScreen')">
-                    <svg viewBox="0 0 24 24" fill="currentColor" width="24" height="24">
-                        <path d="M20 11H7.83l5.59-5.59L12 4l-8 8 8 8 1.41-1.41L7.83 13H20v-2z"/>
-                    </svg>
-                </div>
+                <div class="header-icon back-button" onclick="navigateTo('reportsScreen')"></div>
                 <h1 class="header-title" id="groupStatusTitle">Статус групи</h1>
             </div>
             <div class="header-actions">
@@ -1694,11 +1699,7 @@
     <div id="userReportsScreen" class="screen">
         <div class="header">
             <div style="display: flex; align-items: center; gap: 12px;">
-                <div class="header-icon" onclick="navigateBackFromUserReports()">
-                    <svg viewBox="0 0 24 24" fill="currentColor" width="24" height="24">
-                        <path d="M20 11H7.83l5.59-5.59L12 4l-8 8 8 8 1.41-1.41L7.83 13H20v-2z"/>
-                    </svg>
-                </div>
+                <div class="header-icon back-button" onclick="navigateBackFromUserReports()"></div>
                 <div>
                     <h1 class="header-title" id="userReportsTitle" style="margin: 0;">Звіти</h1>
                     <div id="userReportsSubtitle" style="font-size: 12px; color: var(--text-secondary); display: none;">Мої звіти</div>
