@@ -2356,17 +2356,18 @@ function renderReportGroupCard(group, role) {
             ${urgentIndicator}
             <div style="display: flex;">
                 <!-- Ліва частина -->
-                <div style="flex: 0.6; display: flex; padding: 16px; cursor: pointer;" ${leftOnclick}>
+                <div style="flex: 0.6; display: flex; padding: 12px; cursor: pointer;" ${leftOnclick}>
                     <!-- Кольоровий індикатор -->
-                    <div style="width: 8px; background: ${hasUrgentReport && mustReport ? 'var(--danger)' : 'var(--primary)'}; border-radius: 4px; margin-right: 12px;"></div>
+                    <div style="width: 6px; background: ${hasUrgentReport && mustReport ? 'var(--danger)' : 'var(--primary)'}; border-radius: 3px; margin-right: 10px;"></div>
                     <!-- Інформація -->
                     <div style="flex: 1; min-width: 0;">
-                        <div style="font-size: 16px; font-weight: bold; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">
-                            ${escapeHtml(groupName)} ${hasAdminRights ? `(${reportedCount}/${membersCount})` : ''}
+                        <div style="font-size: 15px; font-weight: bold; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">
+                            ${escapeHtml(groupName)} ${hasAdminRights ? `(${membersCount})` : ''}
                         </div>
                         <div style="font-size: 12px; color: var(--text-secondary); margin-top: 2px;">
-                            ${roleText}${nextReportText ? ` • ${nextReportText}` : ''}
+                            ${roleText}
                         </div>
+                        ${nextReportText ? `<div style="font-size: 11px; color: var(--text-secondary); margin-top: 2px;">${nextReportText}</div>` : ''}
                     </div>
                 </div>
                 <!-- Розділювач -->
@@ -2390,6 +2391,13 @@ async function openGroupStatuses(groupId, groupName) {
     console.log('[PWA] openGroupStatuses called:', groupId, groupName);
     currentGroup = { id: groupId, name: groupName };
     document.getElementById('groupStatusTitle').textContent = groupName || 'Статус групи';
+
+    // Показуємо кнопку термінового звіту
+    const urgentBtn = document.getElementById('urgentReportBtn');
+    if (urgentBtn) {
+        urgentBtn.style.display = 'flex';
+    }
+
     showScreen('groupStatusScreen');
 
     // Завантажуємо деталі групи для власних слів
