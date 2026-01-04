@@ -1167,8 +1167,7 @@ async function loadGroupDetails(groupId) {
                 settingsBtn.style.display = 'flex';
 
                 // Оновлюємо інформацію
-                document.getElementById('groupMembersInfo').textContent =
-                    `${group.currentMembers || 0}/${group.maxMembers || 10}`;
+                document.getElementById('groupMembersInfo').textContent = group.currentMembers || 0;
                 document.getElementById('groupReportType').textContent =
                     group.reportType === 'SIMPLE' ? 'Простий' : 'Розширений';
                 document.getElementById('groupAccessCode').textContent = group.accessCode || '-';
@@ -1747,7 +1746,7 @@ async function loadGroupMembersForAdmin() {
             // Оновлюємо лічильник у інфо-блоці
             const membersInfo = document.getElementById('groupMembersInfo');
             if (membersInfo) {
-                membersInfo.textContent = `${response.data.length}/${currentGroup.maxMembers || 10}`;
+                membersInfo.textContent = response.data.length;
             }
         } else {
             container.innerHTML = '<p style="color: var(--text-secondary); text-align: center; padding: 20px;">Не вдалося завантажити учасників</p>';
