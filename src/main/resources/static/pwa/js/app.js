@@ -2647,6 +2647,7 @@ async function openUserReports(userId, userName, userPhone) {
 
 // Повернутись назад з екрану звітів користувача
 function navigateBackFromUserReports() {
+    console.log('navigateBackFromUserReports called, currentReportUser:', currentReportUser);
     // Якщо це мої звіти (currentReportUser null) - повертаємось на екран звітів
     // Якщо це звіти іншого користувача - повертаємось на статуси групи
     if (currentReportUser) {
