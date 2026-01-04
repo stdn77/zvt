@@ -1365,14 +1365,6 @@
                 </div>
             </div>
 
-            <!-- Кнопка термінового звіту (для адмінів і модераторів) -->
-            <button id="urgentReportBtn" class="btn" style="background: var(--danger); width: 100%; margin-bottom: 16px; display: flex; align-items: center; justify-content: center; gap: 8px;" onclick="openUrgentReportDialogFromGroup()">
-                <svg viewBox="0 0 24 24" fill="currentColor" width="20" height="20">
-                    <path d="M1 21h22L12 2 1 21zm12-3h-2v-2h2v2zm0-4h-2v-4h2v4z"/>
-                </svg>
-                Запит на терміновий звіт
-            </button>
-
             <!-- Кнопки адміністрування -->
             <div style="display: flex; gap: 12px; margin-bottom: 16px;">
                 <button class="btn btn-secondary" style="flex: 1;" onclick="showAddMemberDialog()">
@@ -1466,6 +1458,14 @@
                 </div>
             </div>
         </div>
+
+        <!-- Кнопка термінового звіту (для адмінів і модераторів) -->
+        <button id="urgentReportBtn" class="btn" style="background: var(--danger); width: calc(100% - 32px); margin: 0 16px 12px 16px; display: flex; align-items: center; justify-content: center; gap: 8px;" onclick="openUrgentReportDialogFromGroup()">
+            <svg viewBox="0 0 24 24" fill="currentColor" width="20" height="20">
+                <path d="M1 21h22L12 2 1 21zm12-3h-2v-2h2v2zm0-4h-2v-4h2v4z"/>
+            </svg>
+            Запит на терміновий звіт
+        </button>
 
         <!-- Grid з плитками користувачів (4 колонки, адаптивно) -->
         <div id="userTilesGrid" style="padding: 6px; display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 6px;">
