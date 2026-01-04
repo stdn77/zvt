@@ -250,6 +250,18 @@
             touch-action: manipulation;
             position: relative;
             z-index: 10;
+            user-select: none;
+            -webkit-user-select: none;
+        }
+
+        /* Збільшена зона натискання */
+        .header-icon::before {
+            content: '';
+            position: absolute;
+            top: -8px;
+            left: -8px;
+            right: -8px;
+            bottom: -8px;
         }
 
         .header-icon svg {
@@ -258,6 +270,7 @@
 
         .header-icon:active {
             background: rgba(102, 126, 234, 0.3);
+            transform: scale(0.95);
         }
 
         .header-actions {
@@ -698,14 +711,37 @@
         }
 
         .modal-close {
-            width: 32px;
-            height: 32px;
+            width: 44px;
+            height: 44px;
+            min-width: 44px;
+            min-height: 44px;
             border-radius: 50%;
             background: rgba(255,255,255,0.1);
             border: none;
             color: white;
-            font-size: 20px;
+            font-size: 24px;
             cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            touch-action: manipulation;
+            user-select: none;
+            -webkit-user-select: none;
+            position: relative;
+        }
+
+        .modal-close::before {
+            content: '';
+            position: absolute;
+            top: -8px;
+            left: -8px;
+            right: -8px;
+            bottom: -8px;
+        }
+
+        .modal-close:active {
+            background: rgba(255,255,255,0.2);
+            transform: scale(0.95);
         }
 
         /* Drum Picker */

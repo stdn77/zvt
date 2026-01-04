@@ -2071,6 +2071,7 @@ function closeModal(modalId) {
     const modal = document.getElementById(modalId);
     if (modal) {
         modal.classList.remove('active');
+        modal.style.display = 'none';
         // Видаляємо динамічно створені модалки
         if (modalId === 'contactOptionsModal') {
             setTimeout(() => modal.remove(), 300);
