@@ -269,10 +269,6 @@
 
         /* Уніфікована кнопка назад */
         .back-button {
-            width: 56px;
-            height: 56px;
-            min-width: 56px;
-            min-height: 56px;
             background-color: var(--bg-card);
             background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%23667eea'%3E%3Cpath d='M20 11H7.83l5.59-5.59L12 4l-8 8 8 8 1.41-1.41L7.83 13H20v-2z'/%3E%3C/svg%3E");
             background-repeat: no-repeat;
@@ -1365,16 +1361,16 @@
                 <h1 class="header-title" id="groupTitle">Група</h1>
             </div>
             <div class="header-actions">
-                <div class="header-icon" id="groupSettingsBtn" onclick="showGroupSettings()" title="Налаштування" style="display: none;">
+                <button type="button" class="header-icon" id="groupSettingsBtn" onclick="showGroupSettings()" title="Налаштування" style="display: none;">
                     <svg viewBox="0 0 24 24" fill="currentColor" width="24" height="24">
                         <path d="M12 15.5A3.5 3.5 0 0 1 8.5 12 3.5 3.5 0 0 1 12 8.5a3.5 3.5 0 0 1 3.5 3.5 3.5 3.5 0 0 1-3.5 3.5m7.43-2.53c.04-.32.07-.64.07-.97 0-.33-.03-.66-.07-1l2.11-1.63c.19-.15.24-.42.12-.64l-2-3.46c-.12-.22-.39-.31-.61-.22l-2.49 1c-.52-.39-1.06-.73-1.69-.98l-.37-2.65A.506.506 0 0 0 14 2h-4c-.25 0-.46.18-.5.42l-.37 2.65c-.63.25-1.17.59-1.69.98l-2.49-1c-.22-.09-.49 0-.61.22l-2 3.46c-.13.22-.07.49.12.64L4.57 11c-.04.34-.07.67-.07 1 0 .33.03.65.07.97l-2.11 1.66c-.19.15-.25.42-.12.64l2 3.46c.12.22.39.3.61.22l2.49-1.01c.52.4 1.06.74 1.69.99l.37 2.65c.04.24.25.42.5.42h4c.25 0 .46-.18.5-.42l.37-2.65c.63-.26 1.17-.59 1.69-.99l2.49 1.01c.22.08.49 0 .61-.22l2-3.46c.12-.22.07-.49-.12-.64l-2.11-1.66Z"/>
                     </svg>
-                </div>
-                <div class="header-icon" onclick="showLeaveGroupConfirm()" title="Вийти з групи" style="color: var(--danger);">
+                </button>
+                <button type="button" class="header-icon" onclick="showLeaveGroupConfirm()" title="Вийти з групи" style="color: var(--danger);">
                     <svg viewBox="0 0 24 24" fill="currentColor" width="24" height="24">
                         <path d="M10.09 15.59L11.5 17l5-5-5-5-1.41 1.41L12.67 11H3v2h9.67l-2.58 2.59zM19 3H5c-1.11 0-2 .9-2 2v4h2V5h14v14H5v-4H3v4c0 1.1.89 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2z"/>
                     </svg>
-                </div>
+                </button>
             </div>
         </div>
 
@@ -1419,12 +1415,6 @@
                     Період
                 </button>
             </div>
-            <div style="margin-bottom: 16px;">
-                <button class="btn" style="background: var(--danger); width: 100%;" onclick="showDeleteGroupConfirm()">
-                    Видалити групу
-                </button>
-            </div>
-
             <!-- Заголовок учасників -->
             <div style="margin-bottom: 8px; display: flex; justify-content: space-between; align-items: center;">
                 <span style="font-weight: 500;">Учасники групи</span>
@@ -1558,7 +1548,7 @@
         <div class="card">
             <div class="settings-item">
                 <span class="settings-label">Версія</span>
-                <span class="settings-value">PWA 1.0.33</span>
+                <span class="settings-value">PWA 1.0.34</span>
             </div>
         </div>
 
@@ -2082,6 +2072,13 @@
                 <span class="settings-label">Змінити код доступу</span>
                 <svg viewBox="0 0 24 24" fill="currentColor" width="20" height="20" style="opacity: 0.5;">
                     <path d="M17.65 6.35C16.2 4.9 14.21 4 12 4c-4.42 0-7.99 3.58-7.99 8s3.57 8 7.99 8c3.73 0 6.84-2.55 7.73-6h-2.08c-.82 2.33-3.04 4-5.65 4-3.31 0-6-2.69-6-6s2.69-6 6-6c1.66 0 3.14.69 4.22 1.78L13 11h7V4l-2.35 2.35z"/>
+                </svg>
+            </div>
+
+            <div class="settings-item" onclick="showDeleteGroupConfirm()" style="cursor: pointer; color: var(--danger); margin-top: 16px;">
+                <span class="settings-label" style="color: var(--danger);">Видалити групу</span>
+                <svg viewBox="0 0 24 24" fill="currentColor" width="20" height="20" style="opacity: 0.7;">
+                    <path d="M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zM19 4h-3.5l-1-1h-5l-1 1H5v2h14V4z"/>
                 </svg>
             </div>
         </div>

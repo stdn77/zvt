@@ -1700,6 +1700,14 @@ async function regenerateAccessCode() {
     }
 }
 
+function showGroupSettings() {
+    if (!currentGroup) return;
+    document.getElementById('settingsGroupName').textContent = currentGroup.name;
+    const modal = document.getElementById('groupSettingsModal');
+    modal.classList.add('active');
+    modal.style.display = 'flex';
+}
+
 function showDeleteGroupConfirm() {
     closeModal('groupSettingsModal');
     document.getElementById('deleteGroupModal').classList.add('active');
