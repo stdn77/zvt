@@ -81,6 +81,9 @@ public class QrSessionService {
      */
     @Transactional
     public void authorizeSession(AuthorizeQrRequest request, String userId) {
+        log.info("authorizeSession called: sessionToken={}, groupId={}, userId={}",
+                 request.getSessionToken(), request.getGroupId(), userId);
+
         // Знайти користувача
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Користувача не знайдено"));
@@ -104,9 +107,9 @@ public class QrSessionService {
         Group group = groupRepository.findById(groupId)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Групу не знайдено"));
 
-        // Перевірка через GroupMemberRepository
-        if (!groupMemberRepository.isUserAdminOfGroup(groupId, userId)) {
-            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Тільки адміністратор групи може авторизувати веб сесію");
+        // Перевірка через GroupMemberRepository (ADMIN або MODER)
+        if (!groupMemberRepository.isUserAdminOrModerOfGroup(groupId, userId)) {
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Тільки адміністратор або модератор групи може авторизувати веб сесію");
         }
 
         // Авторизувати сесію

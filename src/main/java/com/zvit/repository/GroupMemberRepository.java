@@ -31,6 +31,13 @@ public interface GroupMemberRepository extends JpaRepository<GroupMember, String
            "AND gm.role = com.zvit.entity.GroupMember$Role.ADMIN")
     boolean isUserAdminOfGroup(@Param("groupId") String groupId, @Param("userId") String userId);
 
+    @Query("SELECT CASE WHEN COUNT(gm) > 0 THEN true ELSE false END " +
+           "FROM GroupMember gm " +
+           "WHERE gm.group.id = :groupId " +
+           "AND gm.user.id = :userId " +
+           "AND gm.role IN (com.zvit.entity.GroupMember$Role.ADMIN, com.zvit.entity.GroupMember$Role.MODER)")
+    boolean isUserAdminOrModerOfGroup(@Param("groupId") String groupId, @Param("userId") String userId);
+
     /**
      * Видаляє всі pending запити старші за вказану дату
      */
