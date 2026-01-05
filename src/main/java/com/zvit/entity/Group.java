@@ -131,8 +131,27 @@ public class Group {
 
     private String generateAccessCode() {
         Random random = new Random();
-        int number = 10000 + random.nextInt(90000); // 10000-99999
-        return "GROUP-" + number;
+        String letters = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+
+        // Формат: ABC-1234-XYZ (3 букви - 4 цифри - 3 букви)
+        StringBuilder code = new StringBuilder();
+
+        // Перші 3 букви
+        for (int i = 0; i < 3; i++) {
+            code.append(letters.charAt(random.nextInt(letters.length())));
+        }
+        code.append("-");
+
+        // 4 цифри
+        code.append(String.format("%04d", random.nextInt(10000)));
+        code.append("-");
+
+        // Останні 3 букви
+        for (int i = 0; i < 3; i++) {
+            code.append(letters.charAt(random.nextInt(letters.length())));
+        }
+
+        return code.toString();
     }
 
     private String generateInternalCode() {
