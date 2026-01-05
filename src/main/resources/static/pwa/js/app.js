@@ -3703,10 +3703,20 @@ async function authorizeQrSession(sessionToken) {
     }
 
     try {
-        const response = await apiRequest('/api/web-auth/authorize', 'POST', {
-            sessionToken: sessionToken,
-            groupId: currentGroup.id
+        // Використовуємо fetch напряму, бо endpoint не має /v1 префіксу
+        const token = localStorage.getItem('zvit_token');
+        const fetchResponse = await fetch('/api/web-auth/authorize', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${token}`
+            },
+            body: JSON.stringify({
+                sessionToken: sessionToken,
+                groupId: currentGroup.id
+            })
         });
+        const response = await fetchResponse.json();
 
         if (response.success) {
             showToast('✅ Веб сесію авторизовано!', 'success');
