@@ -1499,7 +1499,7 @@
                 <h1 class="header-title" id="groupStatusTitle">Статус групи</h1>
             </div>
             <div class="header-actions">
-                <button type="button" id="qrScannerBtn" class="header-icon" style="display: none;" onclick="openQrScanner()" title="Сканувати QR">
+                <button type="button" id="qrScannerBtn" class="header-icon" style="display: none; background: var(--primary); color: white;" onclick="openQrScanner()" title="Сканувати QR">
                     <svg viewBox="0 0 24 24" fill="currentColor" width="24" height="24">
                         <path d="M4 4h6v6H4V4zm2 2v2h2V6H6zm8-2h6v6h-6V4zm2 2v2h2V6h-2zM4 14h6v6H4v-6zm2 2v2h2v-2H6zm13-2h1v2h-2v-1h1v-1zm-3 0h1v1h-1v-1zm-1 1h1v1h-1v-1zm2 1h1v1h-1v-1zm1 1h1v1h-2v-1h1zm-3 0h1v1h-1v-1zm3 1h2v2h-1v-1h-1v-1zm-2 1h1v2h-1v-2zm1 0h1v1h-1v-1z"/>
                     </svg>
@@ -1512,7 +1512,7 @@
                         <span style="font-size: 9px;">ТЗ</span>
                     </div>
                 </button>
-                <button type="button" class="header-icon" onclick="loadGroupStatuses(currentGroup.id)" title="Оновити">
+                <button type="button" class="header-icon" style="background: var(--primary); color: white;" onclick="loadGroupStatuses(currentGroup.id)" title="Оновити">
                     <svg viewBox="0 0 24 24" fill="currentColor" width="24" height="24">
                         <path d="M17.65 6.35C16.2 4.9 14.21 4 12 4c-4.42 0-7.99 3.58-7.99 8s3.57 8 7.99 8c3.73 0 6.84-2.55 7.73-6h-2.08c-.82 2.33-3.04 4-5.65 4-3.31 0-6-2.69-6-6s2.69-6 6-6c1.66 0 3.14.69 4.22 1.78L13 11h7V4l-2.35 2.35z"/>
                     </svg>
@@ -1576,7 +1576,7 @@
         <div class="card">
             <div class="settings-item">
                 <span class="settings-label">Версія</span>
-                <span class="settings-value">PWA 1.0.41</span>
+                <span class="settings-value">PWA 1.0.42</span>
             </div>
         </div>
 
@@ -2240,6 +2240,6 @@
     <div class="toast" id="toast"></div>
 
     <script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
-    <script src="/pwa/js/app.js?v=1.0.41"></script>
+    <script src="/pwa/js/app.js?v=1.0.42"></script>
 </body>
 </html>
