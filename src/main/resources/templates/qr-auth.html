@@ -141,7 +141,7 @@
         </div>
 
         <div class="timer">
-            QR код дійсний: <span id="timer">5:00</span>
+            QR код дійсний: <span id="timer">10:00</span>
         </div>
     </div>
 
@@ -149,7 +149,7 @@
     <script th:inline="javascript">
         const sessionToken = /*[[${sessionToken}]]*/ '';
         const qrUrl = /*[[${qrUrl}]]*/ '';
-        let expiresIn = /*[[${expiresIn}]]*/ 300;
+        let expiresIn = /*[[${expiresIn}]]*/ 600;
 
         // Generate QR code
         new QRCode(document.getElementById("qrcode"), {

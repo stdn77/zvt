@@ -37,7 +37,7 @@ public class QrSessionService {
     @Value("${app.base-url:http://localhost:8080}")
     private String baseUrl;
 
-    private static final int QR_EXPIRY_MINUTES = 5; // QR код дійсний 5 хвилин
+    private static final int QR_EXPIRY_MINUTES = 10; // QR код дійсний 10 хвилин
     private static final int SESSION_EXPIRY_HOURS = 24; // Авторизована сесія дійсна 24 години
 
     /**
