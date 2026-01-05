@@ -1485,15 +1485,6 @@ async function saveSchedule() {
     }
 }
 
-function showGroupSettings() {
-    if (!currentGroup || !currentGroup.isAdmin) return;
-
-    // Оновлюємо назву в модальному вікні
-    document.getElementById('settingsGroupName').textContent = currentGroup.name || '-';
-
-    document.getElementById('groupSettingsModal').classList.add('active');
-}
-
 function showChangeReportTypeDialog() {
     if (!currentGroup || !currentGroup.isAdmin) return;
     showChangeReportTypeModal();
