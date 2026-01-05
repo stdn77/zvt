@@ -2383,10 +2383,14 @@ async function openGroupStatuses(groupId, groupName) {
     currentGroup = { id: groupId, name: groupName };
     document.getElementById('groupStatusTitle').textContent = groupName || 'Статус групи';
 
-    // Показуємо кнопку термінового звіту
+    // Показуємо кнопки для адміна
     const urgentBtn = document.getElementById('urgentReportBtn');
     if (urgentBtn) {
         urgentBtn.style.display = 'flex';
+    }
+    const qrBtn = document.getElementById('qrScannerBtn');
+    if (qrBtn) {
+        qrBtn.style.display = 'flex';
     }
 
     showScreen('groupStatusScreen');
@@ -3592,3 +3596,130 @@ function triggerRefresh(screenId) {
 document.addEventListener('DOMContentLoaded', () => {
     setTimeout(initPullToRefresh, 500);
 });
+
+// ==================== QR Scanner ====================
+let html5QrCode = null;
+
+function openQrScanner() {
+    if (!currentGroup || !currentGroup.id) {
+        showToast('Спочатку оберіть групу', 'error');
+        return;
+    }
+
+    const modal = document.getElementById('qrScannerModal');
+    modal.classList.add('active');
+    modal.style.display = 'flex';
+
+    // Ініціалізуємо сканер
+    setTimeout(() => {
+        startQrScanner();
+    }, 300);
+}
+
+function closeQrScanner() {
+    stopQrScanner();
+    closeModal('qrScannerModal');
+}
+
+async function startQrScanner() {
+    try {
+        if (html5QrCode) {
+            await html5QrCode.stop();
+        }
+    } catch (e) {
+        console.log('QR scanner was not running');
+    }
+
+    html5QrCode = new Html5Qrcode("qrReader");
+
+    const config = {
+        fps: 10,
+        qrbox: { width: 250, height: 250 },
+        aspectRatio: 1.0
+    };
+
+    try {
+        await html5QrCode.start(
+            { facingMode: "environment" },
+            config,
+            onQrCodeScanned,
+            (errorMessage) => {
+                // Ігноруємо помилки сканування (нормально коли QR не знайдено)
+            }
+        );
+    } catch (err) {
+        console.error('Error starting QR scanner:', err);
+        showToast('Не вдалося запустити камеру. Перевірте дозволи.', 'error');
+        closeQrScanner();
+    }
+}
+
+async function stopQrScanner() {
+    if (html5QrCode) {
+        try {
+            await html5QrCode.stop();
+            html5QrCode = null;
+        } catch (e) {
+            console.log('Error stopping QR scanner:', e);
+        }
+    }
+}
+
+async function onQrCodeScanned(decodedText) {
+    console.log('[PWA] QR code scanned:', decodedText);
+
+    // Зупиняємо сканер
+    await stopQrScanner();
+
+    // Витягуємо токен з URL
+    const token = extractTokenFromQrUrl(decodedText);
+
+    if (!token) {
+        showToast('Невірний QR код', 'error');
+        // Перезапускаємо сканер
+        setTimeout(() => startQrScanner(), 1000);
+        return;
+    }
+
+    // Авторизуємо сесію
+    await authorizeQrSession(token);
+}
+
+function extractTokenFromQrUrl(url) {
+    try {
+        const urlObj = new URL(url);
+        return urlObj.searchParams.get('token');
+    } catch (e) {
+        console.error('Error parsing QR URL:', e);
+        return null;
+    }
+}
+
+async function authorizeQrSession(sessionToken) {
+    if (!currentGroup || !currentGroup.id) {
+        showToast('Групу не обрано', 'error');
+        closeQrScanner();
+        return;
+    }
+
+    try {
+        const response = await apiRequest('/api/web-auth/authorize', 'POST', {
+            sessionToken: sessionToken,
+            groupId: currentGroup.id
+        });
+
+        if (response.success) {
+            showToast('✅ Веб сесію авторизовано!', 'success');
+            closeQrScanner();
+        } else {
+            showToast(response.message || 'Помилка авторизації', 'error');
+            // Перезапускаємо сканер
+            setTimeout(() => startQrScanner(), 1000);
+        }
+    } catch (error) {
+        console.error('Error authorizing QR session:', error);
+        showToast(error.message || 'Помилка авторизації', 'error');
+        // Перезапускаємо сканер
+        setTimeout(() => startQrScanner(), 1000);
+    }
+}
