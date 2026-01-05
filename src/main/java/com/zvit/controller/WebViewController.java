@@ -5,6 +5,7 @@ import com.zvit.entity.QrSession;
 import com.zvit.service.QrSessionService;
 import com.zvit.service.ReportService;
 import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Controller;
@@ -97,7 +98,12 @@ public class WebViewController {
      * Сторінка для адміністраторів з rate limiting (1 раз на 5 хв)
      */
     @GetMapping("/admin/qr-access")
-    public String adminQrAccess(HttpServletRequest request, Model model) {
+    public String adminQrAccess(HttpServletRequest request, HttpServletResponse response, Model model) {
+        // Заборонити кешування - кожен раз потрібен новий QR
+        response.setHeader("Cache-Control", "no-cache, no-store, must-revalidate");
+        response.setHeader("Pragma", "no-cache");
+        response.setHeader("Expires", "0");
+
         String clientIp = getClientIp(request);
 
         // Перевірка rate limit
@@ -108,6 +114,7 @@ public class WebViewController {
             long timeSinceLastAccess = now - lastAccess;
             if (timeSinceLastAccess < RATE_LIMIT_MS) {
                 long remainingSeconds = (RATE_LIMIT_MS - timeSinceLastAccess) / 1000;
+                log.info("QR Access rate limited for IP: {}, remaining: {}s", clientIp, remainingSeconds);
                 model.addAttribute("rateLimited", true);
                 model.addAttribute("remainingSeconds", remainingSeconds);
                 return "rate-limited";
@@ -122,6 +129,7 @@ public class WebViewController {
 
         // Створюємо QR сесію
         QrSessionResponse session = qrSessionService.createSession();
+        log.info("Created new QR session for IP: {}, token: {}", clientIp, session.getSessionToken());
         model.addAttribute("sessionToken", session.getSessionToken());
         model.addAttribute("qrUrl", session.getQrUrl());
         model.addAttribute("expiresIn", session.getExpiresIn());
