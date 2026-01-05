@@ -1189,6 +1189,28 @@
             position: absolute !important;
             right: -9999px !important;
         }
+
+        /* QR Scanner buttons styling */
+        #qrReader button {
+            background: var(--primary) !important;
+            color: white !important;
+            border: none !important;
+            border-radius: 8px !important;
+            padding: 10px 20px !important;
+            font-weight: 500 !important;
+            cursor: pointer !important;
+            margin: 5px !important;
+        }
+        #qrReader button:hover {
+            background: var(--primary-dark) !important;
+        }
+        #qrReader select {
+            background: var(--card-bg) !important;
+            color: var(--text-primary) !important;
+            border: 1px solid var(--border-color) !important;
+            border-radius: 8px !important;
+            padding: 8px 12px !important;
+        }
     </style>
 </head>
 <body>
@@ -1554,7 +1576,7 @@
         <div class="card">
             <div class="settings-item">
                 <span class="settings-label">Версія</span>
-                <span class="settings-value">PWA 1.0.40</span>
+                <span class="settings-value">PWA 1.0.41</span>
             </div>
         </div>
 
@@ -2218,6 +2240,6 @@
     <div class="toast" id="toast"></div>
 
     <script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
-    <script src="/pwa/js/app.js?v=1.0.40"></script>
+    <script src="/pwa/js/app.js?v=1.0.41"></script>
 </body>
 </html>
