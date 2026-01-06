@@ -108,10 +108,10 @@ function formatUrgentDeadline(deadlineStr) {
 
 // Обробка термінового звіту з push-повідомлення
 function handleUrgentReportFromPush(data) {
-    console.log('[PWA] Urgent report from push:', data);
+    console.log('[URGENT] handleUrgentReportFromPush called with:', JSON.stringify(data));
 
     if (!data || !data.groupId) {
-        console.warn('[PWA] Invalid urgent report data');
+        console.warn('[URGENT] Invalid urgent report data - missing groupId');
         return;
     }
 
@@ -120,6 +120,8 @@ function handleUrgentReportFromPush(data) {
     const deadline = new Date();
     deadline.setMinutes(deadline.getMinutes() + deadlineMinutes);
 
+    console.log('[URGENT] Saving to localStorage: groupId=' + data.groupId + ', deadline=' + deadline.toISOString());
+
     // Зберігаємо терміновий звіт
     setUrgentReportForGroup(data.groupId, deadline.toISOString(), data.message || '');
 
@@ -127,7 +129,9 @@ function handleUrgentReportFromPush(data) {
     showToast(`🚨 Терміновий звіт: ${data.groupName || 'Група'}`, 'warning');
 
     // Оновлюємо UI якщо на екрані звітів
-    if (document.getElementById('reportsScreen')?.classList.contains('active')) {
+    const reportsScreen = document.getElementById('reportsScreen');
+    if (reportsScreen?.classList.contains('active')) {
+        console.log('[URGENT] Reloading reports screen...');
         loadReportsScreen();
     }
 }
@@ -2353,15 +2357,20 @@ function renderReportGroupCard(group, role) {
 
     // Якщо сервер повідомив про активну сесію - синхронізуємо localStorage
     if (group.hasActiveUrgentSession && group.urgentExpiresAt) {
+        console.log('[URGENT] Server reports active session for group', groupId, ':', group.urgentExpiresAt);
         const serverDeadline = parseServerDate(group.urgentExpiresAt);
         if (serverDeadline && serverDeadline > new Date()) {
             // Оновлюємо/зберігаємо інформацію з сервера
+            console.log('[URGENT] Syncing to localStorage from server data');
             setUrgentReportForGroup(groupId, group.urgentExpiresAt, group.urgentMessage || '');
             urgentReport = { deadline: group.urgentExpiresAt, message: group.urgentMessage || '' };
         }
     }
 
     const hasUrgentReport = urgentReport !== null;
+    if (hasUrgentReport) {
+        console.log('[URGENT] Group', groupId, 'has urgent report:', urgentReport);
+    }
 
     // Права частина залежить від ролі:
     // - ADMIN: нічого (терміновий звіт переноситься в групу)
@@ -2633,12 +2642,17 @@ function showUrgentBanner(session) {
     if (session.message) {
         infoText += ` 💬 "${session.message}"`;
     }
+    // Додаємо статистику (як в Android)
+    if (session.totalMembers !== undefined && session.respondedCount !== undefined) {
+        infoText += ` | Відповіли: ${session.respondedCount} / ${session.totalMembers}`;
+    }
+
     if (infoEl) infoEl.textContent = infoText;
 
     banner.style.display = 'block';
 
-    // Запустити таймер
-    startUrgentTimer(session.expiresAt);
+    // Запустити таймер (використовуємо remainingSeconds для точності)
+    startUrgentTimer(session.remainingSeconds);
 }
 
 // Сховати банер термінового збору
@@ -2654,21 +2668,25 @@ function hideUrgentBanner() {
 }
 
 // Запустити таймер зворотного відліку
-function startUrgentTimer(expiresAt) {
+function startUrgentTimer(remainingSeconds) {
     const timerEl = document.getElementById('urgentTimer');
-    if (!timerEl || !expiresAt) return;
+    if (!timerEl) return;
 
     // Зупинити попередній таймер
     if (urgentTimerInterval) {
         clearInterval(urgentTimerInterval);
     }
 
-    const updateTimer = () => {
-        const now = new Date();
-        const expires = new Date(expiresAt);
-        const diff = expires - now;
+    // Якщо remainingSeconds не передано або <= 0
+    if (!remainingSeconds || remainingSeconds <= 0) {
+        timerEl.textContent = '00:00';
+        return;
+    }
 
-        if (diff <= 0) {
+    let secondsLeft = Math.floor(remainingSeconds);
+
+    const updateTimer = () => {
+        if (secondsLeft <= 0) {
             timerEl.textContent = '00:00';
             clearInterval(urgentTimerInterval);
             // Оновити статуси після закінчення часу
@@ -2678,9 +2696,10 @@ function startUrgentTimer(expiresAt) {
             return;
         }
 
-        const minutes = Math.floor(diff / 60000);
-        const seconds = Math.floor((diff % 60000) / 1000);
+        const minutes = Math.floor(secondsLeft / 60);
+        const seconds = secondsLeft % 60;
         timerEl.textContent = `${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
+        secondsLeft--;
     };
 
     updateTimer();

@@ -541,6 +541,7 @@ public class GroupService {
                 hasActiveUrgentSession = true;
                 urgentExpiresAt = group.getUrgentExpiresAt();
                 urgentMessage = group.getUrgentMessage();
+                log.debug("[URGENT] Active session for group {}: expiresAt={}", group.getExternalName(), urgentExpiresAt);
             }
         }
 

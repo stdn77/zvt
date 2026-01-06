@@ -18,18 +18,22 @@ const messaging = firebase.messaging();
 
 // Handle background messages
 messaging.onBackgroundMessage((payload) => {
-    console.log('[firebase-messaging-sw.js] Received background message:', payload);
+    console.log('[URGENT] firebase-messaging-sw.js received background message');
+    console.log('[URGENT] Payload:', JSON.stringify(payload));
 
     const data = payload.data || {};
     const messageType = data.type;
+    console.log('[URGENT] Message type:', messageType, 'groupId:', data.groupId);
 
     // Повідомляємо клієнтів про терміновий звіт
     if (messageType === 'URGENT_REPORT') {
+        console.log('[URGENT] Notifying clients about URGENT_REPORT');
         notifyClientsAboutMessage('URGENT_REPORT_RECEIVED', data);
     }
 
     // Повідомляємо клієнтів про зміну налаштувань
     if (messageType === 'SETTINGS_UPDATE') {
+        console.log('[URGENT] Notifying clients about SETTINGS_UPDATE');
         notifyClientsAboutMessage('SETTINGS_UPDATE_RECEIVED', data);
     }
 
@@ -61,10 +65,16 @@ messaging.onBackgroundMessage((payload) => {
 // Notify all clients about a message
 async function notifyClientsAboutMessage(type, data) {
     const windowClients = await clients.matchAll({ type: 'window', includeUncontrolled: true });
-    console.log('[firebase-messaging-sw.js] Notifying', windowClients.length, 'clients about', type);
+    console.log('[URGENT] notifyClientsAboutMessage: found', windowClients.length, 'clients, sending', type);
+    console.log('[URGENT] Data to send:', JSON.stringify(data));
 
     for (const client of windowClients) {
+        console.log('[URGENT] Posting message to client:', client.url);
         client.postMessage({ type, data });
+    }
+
+    if (windowClients.length === 0) {
+        console.log('[URGENT] No clients found! App may be closed or in background.');
     }
 }
 

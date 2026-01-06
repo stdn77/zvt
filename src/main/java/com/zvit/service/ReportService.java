@@ -252,37 +252,45 @@ public class ReportService {
         group.setUrgentMessage(message);
         groupRepository.save(group);
 
-        log.info("Urgent session created: {} for group {}", sessionId, group.getExternalName());
+        log.info("[URGENT] Session created: sessionId={}, group={}, expiresAt={}, deadlineMinutes={}",
+                sessionId, group.getExternalName(), group.getUrgentExpiresAt(), deadlineMinutes);
 
         // Отримуємо всіх учасників групи (крім адміна, який надіслав)
         List<GroupMember> members = groupMemberRepository.findByGroupId(request.getGroupId());
 
-        log.debug("Urgent report - Group: {}, Admin: {}, Members: {}",
-                group.getExternalName(), userId, members.size());
+        log.info("[URGENT] Group {} has {} members total", group.getExternalName(), members.size());
 
         List<String> fcmTokens = new java.util.ArrayList<>();
+        List<String> androidTokens = new java.util.ArrayList<>();
+        List<String> webTokens = new java.util.ArrayList<>();
 
         for (GroupMember member : members) {
             if (member.getStatus() != GroupMember.MemberStatus.ACCEPTED) continue;
             if (member.getUser().getId().equals(userId)) continue; // Виключаємо адміна
 
             // Перевіряємо чи сповіщення увімкнені
-            if (!member.getUser().isNotificationsEnabled()) continue;
+            if (!member.getUser().isNotificationsEnabled()) {
+                log.debug("[URGENT] User {} has notifications disabled", member.getUser().getName());
+                continue;
+            }
 
             // Додаємо Android токен
             String androidToken = member.getUser().getFcmToken();
             if (androidToken != null && !androidToken.isEmpty()) {
                 fcmTokens.add(androidToken);
+                androidTokens.add(androidToken);
             }
 
             // Додаємо Web токен (для PWA)
             String webToken = member.getUser().getFcmTokenWeb();
             if (webToken != null && !webToken.isEmpty()) {
                 fcmTokens.add(webToken);
+                webTokens.add(webToken);
             }
         }
 
-        log.debug("FCM tokens to send: {}", fcmTokens.size());
+        log.info("[URGENT] Tokens collected: {} total (Android: {}, Web/PWA: {})",
+                fcmTokens.size(), androidTokens.size(), webTokens.size());
 
         // Формуємо повідомлення
         String title = "Терміновий звіт: " + group.getExternalName();
@@ -297,9 +305,10 @@ public class ReportService {
         data.put("urgentSessionId", sessionId);
 
         // Відправляємо Push-сповіщення
+        log.info("[URGENT] Sending push notifications via Firebase...");
         int sentCount = firebaseService.sendPushNotificationToMultiple(fcmTokens, title, body, data);
 
-        log.info("Urgent report sent: {} of {} notifications", sentCount, fcmTokens.size());
+        log.info("[URGENT] Push notifications result: {} sent of {} total", sentCount, fcmTokens.size());
 
         return sentCount;
     }
