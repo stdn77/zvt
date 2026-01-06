@@ -106,6 +106,32 @@ function formatUrgentDeadline(deadlineStr) {
     return deadline.toLocaleTimeString('uk-UA', { hour: '2-digit', minute: '2-digit' });
 }
 
+// Обробка термінового звіту з push-повідомлення
+function handleUrgentReportFromPush(data) {
+    console.log('[PWA] Urgent report from push:', data);
+
+    if (!data || !data.groupId) {
+        console.warn('[PWA] Invalid urgent report data');
+        return;
+    }
+
+    // Розраховуємо deadline
+    const deadlineMinutes = parseInt(data.deadlineMinutes) || 30;
+    const deadline = new Date();
+    deadline.setMinutes(deadline.getMinutes() + deadlineMinutes);
+
+    // Зберігаємо терміновий звіт
+    setUrgentReportForGroup(data.groupId, deadline.toISOString(), data.message || '');
+
+    // Показуємо toast
+    showToast(`🚨 Терміновий звіт: ${data.groupName || 'Група'}`, 'warning');
+
+    // Оновлюємо UI якщо на екрані звітів
+    if (document.getElementById('reportsScreen')?.classList.contains('active')) {
+        loadReportsScreen();
+    }
+}
+
 // API Base URL
 const API_BASE = '/api/v1';
 
@@ -563,8 +589,15 @@ async function registerServiceWorker() {
 
             // Listen for messages from SW
             navigator.serviceWorker.addEventListener('message', (event) => {
+                console.log('[PWA] Message from SW:', event.data);
+
                 if (event.data.type === 'NOTIFICATION_CLICK') {
                     handleNotificationClick(event.data.data);
+                }
+
+                // Терміновий звіт отримано
+                if (event.data.type === 'URGENT_REPORT_RECEIVED') {
+                    handleUrgentReportFromPush(event.data.data);
                 }
             });
         } catch (error) {
@@ -2472,6 +2505,9 @@ async function openMyReportsInGroup(groupId, groupName) {
     }
 }
 
+// Глобальна змінна для таймера термінового збору
+let urgentTimerInterval = null;
+
 // Завантажити статуси учасників групи
 async function loadGroupStatuses(groupId) {
     const container = document.getElementById('userTilesGrid');
@@ -2482,9 +2518,22 @@ async function loadGroupStatuses(groupId) {
         const response = await apiRequest(`/pwa/groups/${groupId}/statuses`, 'GET');
         console.log('[PWA] Group statuses:', response);
 
-        if (response.success && response.data && response.data.users) {
-            renderUserTiles(response.data.users);
+        if (response.success && response.data) {
+            // Обробка термінового збору
+            handleUrgentSession(response.data.urgentSession);
+
+            // Відображення плиток користувачів
+            if (response.data.users) {
+                renderUserTiles(response.data.users);
+            } else {
+                container.innerHTML = `
+                    <div style="grid-column: 1 / -1; text-align: center; padding: 32px; color: var(--text-secondary);">
+                        <p>Немає учасників у групі</p>
+                    </div>
+                `;
+            }
         } else {
+            hideUrgentBanner();
             container.innerHTML = `
                 <div style="grid-column: 1 / -1; text-align: center; padding: 32px; color: var(--text-secondary);">
                     <p>Немає учасників у групі</p>
@@ -2493,6 +2542,7 @@ async function loadGroupStatuses(groupId) {
         }
     } catch (error) {
         console.error('[PWA] Group statuses error:', error);
+        hideUrgentBanner();
         container.innerHTML = `
             <div style="grid-column: 1 / -1; text-align: center; padding: 32px; color: var(--danger);">
                 <p>Помилка завантаження статусів</p>
@@ -2500,6 +2550,126 @@ async function loadGroupStatuses(groupId) {
                 <button class="btn btn-secondary" style="margin-top: 10px; width: auto;" onclick="loadGroupStatuses('${groupId}')">Спробувати знову</button>
             </div>
         `;
+    }
+}
+
+// Обробка термінового збору
+function handleUrgentSession(urgentSession) {
+    const banner = document.getElementById('urgentSessionBanner');
+    const urgentBtn = document.getElementById('urgentReportBtn');
+
+    if (urgentSession && urgentSession.active) {
+        // Показати банер термінового збору
+        showUrgentBanner(urgentSession);
+        // Сховати кнопку створення термінового запиту
+        if (urgentBtn) urgentBtn.style.display = 'none';
+    } else {
+        // Сховати банер
+        hideUrgentBanner();
+        // Показати кнопку створення термінового запиту
+        if (urgentBtn) urgentBtn.style.display = 'flex';
+    }
+}
+
+// Показати банер термінового збору
+function showUrgentBanner(session) {
+    const banner = document.getElementById('urgentSessionBanner');
+    const infoEl = document.getElementById('urgentSessionInfo');
+
+    if (!banner) return;
+
+    // Інформація про запит
+    let infoText = '';
+    if (session.requestedByUserName) {
+        infoText = `Запит від: ${session.requestedByUserName}`;
+        if (session.requestedAt) {
+            const requestedTime = new Date(session.requestedAt).toLocaleTimeString('uk-UA', {
+                hour: '2-digit', minute: '2-digit'
+            });
+            infoText += ` о ${requestedTime}`;
+        }
+    }
+    if (session.message) {
+        infoText += ` 💬 "${session.message}"`;
+    }
+    if (infoEl) infoEl.textContent = infoText;
+
+    banner.style.display = 'block';
+
+    // Запустити таймер
+    startUrgentTimer(session.expiresAt);
+}
+
+// Сховати банер термінового збору
+function hideUrgentBanner() {
+    const banner = document.getElementById('urgentSessionBanner');
+    if (banner) banner.style.display = 'none';
+
+    // Зупинити таймер
+    if (urgentTimerInterval) {
+        clearInterval(urgentTimerInterval);
+        urgentTimerInterval = null;
+    }
+}
+
+// Запустити таймер зворотного відліку
+function startUrgentTimer(expiresAt) {
+    const timerEl = document.getElementById('urgentTimer');
+    if (!timerEl || !expiresAt) return;
+
+    // Зупинити попередній таймер
+    if (urgentTimerInterval) {
+        clearInterval(urgentTimerInterval);
+    }
+
+    const updateTimer = () => {
+        const now = new Date();
+        const expires = new Date(expiresAt);
+        const diff = expires - now;
+
+        if (diff <= 0) {
+            timerEl.textContent = '00:00';
+            clearInterval(urgentTimerInterval);
+            // Оновити статуси після закінчення часу
+            if (currentGroup && currentGroup.id) {
+                loadGroupStatuses(currentGroup.id);
+            }
+            return;
+        }
+
+        const minutes = Math.floor(diff / 60000);
+        const seconds = Math.floor((diff % 60000) / 1000);
+        timerEl.textContent = `${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
+    };
+
+    updateTimer();
+    urgentTimerInterval = setInterval(updateTimer, 1000);
+}
+
+// Завершити терміновий збір
+async function endUrgentSession() {
+    if (!currentGroup || !currentGroup.id) {
+        showToast('Помилка: група не вибрана', 'error');
+        return;
+    }
+
+    if (!confirm('Ви впевнені, що хочете завершити терміновий збір?')) {
+        return;
+    }
+
+    try {
+        const response = await apiRequest(`/pwa/reports/urgent/${currentGroup.id}`, 'DELETE');
+        if (response.success) {
+            showToast('Терміновий збір завершено', 'success');
+            hideUrgentBanner();
+            // Оновити статуси
+            loadGroupStatuses(currentGroup.id);
+        } else {
+            showToast(response.message || 'Помилка завершення збору', 'error');
+        }
+    } catch (error) {
+        console.error('[PWA] End urgent session error:', error);
+        showToast('Помилка завершення збору', 'error');
     }
 }
 

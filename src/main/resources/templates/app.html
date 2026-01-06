@@ -1520,6 +1520,21 @@
             </div>
         </div>
 
+        <!-- Urgent Session Banner (показується коли є активний терміновий збір) -->
+        <div id="urgentSessionBanner" style="display: none; background: linear-gradient(135deg, #D32F2F, #B71C1C); color: white; padding: 12px; margin: 0 6px 8px 6px; border-radius: 12px; box-shadow: 0 2px 8px rgba(211,47,47,0.3);">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+                <div style="display: flex; align-items: center; gap: 8px;">
+                    <span style="font-size: 20px;">🚨</span>
+                    <span style="font-weight: 600;">Терміновий збір</span>
+                </div>
+                <div id="urgentTimer" style="font-size: 24px; font-weight: bold; font-family: monospace;">--:--</div>
+            </div>
+            <div id="urgentSessionInfo" style="font-size: 12px; opacity: 0.9; margin-bottom: 10px;"></div>
+            <button type="button" onclick="endUrgentSession()" style="width: 100%; padding: 10px; background: rgba(255,255,255,0.2); border: 1px solid rgba(255,255,255,0.3); border-radius: 8px; color: white; font-weight: 500; cursor: pointer;">
+                ⏹ Завершити збір
+            </button>
+        </div>
+
         <!-- Grid з плитками користувачів (4 колонки, адаптивно) -->
         <div id="userTilesGrid" style="padding: 6px; display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 6px;">
             <div class="loading" style="grid-column: 1 / -1;">
@@ -2240,6 +2255,6 @@
     <div class="toast" id="toast"></div>
 
     <script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
-    <script src="/pwa/js/app.js?v=1.0.43"></script>
+    <script src="/pwa/js/app.js?v=1.0.44"></script>
 </body>
 </html>

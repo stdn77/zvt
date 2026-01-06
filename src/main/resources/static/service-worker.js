@@ -1,7 +1,7 @@
 // ZVIT PWA Service Worker
-const CACHE_NAME = 'zvit-cache-v43';
-const STATIC_CACHE = 'zvit-static-v43';
-const DYNAMIC_CACHE = 'zvit-dynamic-v43';
+const CACHE_NAME = 'zvit-cache-v44';
+const STATIC_CACHE = 'zvit-static-v44';
+const DYNAMIC_CACHE = 'zvit-dynamic-v44';
 
 // Статичні ресурси для кешування
 const STATIC_ASSETS = [
@@ -120,6 +120,13 @@ self.addEventListener('push', (event) => {
     }
   }
 
+  // Для термінового звіту - повідомляємо клієнта
+  if (data.data && data.data.type === 'URGENT_REPORT') {
+    event.waitUntil(
+      notifyClientsAboutUrgentReport(data.data)
+    );
+  }
+
   const options = {
     body: data.body || data.message,
     icon: '/icons/icon-192x192.png',
@@ -128,13 +135,16 @@ self.addEventListener('push', (event) => {
     data: {
       url: data.url || '/app',
       reportId: data.reportId,
-      groupId: data.groupId
+      groupId: data.groupId,
+      type: data.data?.type,
+      deadlineMinutes: data.data?.deadlineMinutes,
+      urgentSessionId: data.data?.urgentSessionId
     },
     actions: [
       { action: 'open', title: 'Відкрити' },
       { action: 'close', title: 'Закрити' }
     ],
-    tag: data.tag || 'zvit-notification',
+    tag: data.data?.type === 'URGENT_REPORT' ? 'urgent-' + data.data.groupId : 'zvit-notification',
     renotify: true
   };
 
@@ -142,6 +152,18 @@ self.addEventListener('push', (event) => {
     self.registration.showNotification(data.title, options)
   );
 });
+
+// Повідомити клієнтів про терміновий звіт
+async function notifyClientsAboutUrgentReport(urgentData) {
+  const windowClients = await clients.matchAll({ type: 'window', includeUncontrolled: true });
+
+  for (const client of windowClients) {
+    client.postMessage({
+      type: 'URGENT_REPORT_RECEIVED',
+      data: urgentData
+    });
+  }
+}
 
 // Клік по нотифікації
 self.addEventListener('notificationclick', (event) => {
