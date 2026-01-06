@@ -20,19 +20,35 @@ const messaging = firebase.messaging();
 messaging.onBackgroundMessage((payload) => {
     console.log('[firebase-messaging-sw.js] Received background message:', payload);
 
-    const notificationTitle = payload.notification?.title || payload.data?.title || 'ZVIT';
+    const data = payload.data || {};
+    const messageType = data.type;
+
+    // Повідомляємо клієнтів про терміновий звіт
+    if (messageType === 'URGENT_REPORT') {
+        notifyClientsAboutMessage('URGENT_REPORT_RECEIVED', data);
+    }
+
+    // Повідомляємо клієнтів про зміну налаштувань
+    if (messageType === 'SETTINGS_UPDATE') {
+        notifyClientsAboutMessage('SETTINGS_UPDATE_RECEIVED', data);
+    }
+
+    const notificationTitle = payload.notification?.title || data.title || 'ZVIT';
     const notificationOptions = {
-        body: payload.notification?.body || payload.data?.body || 'Час звітувати!',
+        body: payload.notification?.body || data.body || 'Час звітувати!',
         icon: '/icons/icon-192x192.png',
         badge: '/icons/icon-72x72.png',
-        tag: payload.data?.tag || 'zvit-reminder',
+        tag: messageType === 'URGENT_REPORT' ? 'urgent-' + data.groupId : (data.tag || 'zvit-reminder'),
         data: {
-            url: payload.data?.url || '/app',
-            groupId: payload.data?.groupId,
-            groupName: payload.data?.groupName
+            url: data.url || '/app',
+            groupId: data.groupId,
+            groupName: data.groupName,
+            type: messageType,
+            deadlineMinutes: data.deadlineMinutes,
+            urgentSessionId: data.urgentSessionId
         },
         vibrate: [200, 100, 200],
-        requireInteraction: true,
+        requireInteraction: messageType === 'URGENT_REPORT',
         actions: [
             { action: 'open', title: 'Відкрити' },
             { action: 'dismiss', title: 'Закрити' }
@@ -42,13 +58,28 @@ messaging.onBackgroundMessage((payload) => {
     return self.registration.showNotification(notificationTitle, notificationOptions);
 });
 
+// Notify all clients about a message
+async function notifyClientsAboutMessage(type, data) {
+    const windowClients = await clients.matchAll({ type: 'window', includeUncontrolled: true });
+    console.log('[firebase-messaging-sw.js] Notifying', windowClients.length, 'clients about', type);
+
+    for (const client of windowClients) {
+        client.postMessage({ type, data });
+    }
+}
+
 // Handle notification click
 self.addEventListener('notificationclick', (event) => {
     console.log('[firebase-messaging-sw.js] Notification click:', event);
 
     event.notification.close();
 
-    const urlToOpen = event.notification.data?.url || '/app';
+    if (event.action === 'dismiss') {
+        return;
+    }
+
+    const notificationData = event.notification.data || {};
+    const urlToOpen = notificationData.url || '/app';
 
     event.waitUntil(
         clients.matchAll({ type: 'window', includeUncontrolled: true }).then((clientList) => {
@@ -58,8 +89,17 @@ self.addEventListener('notificationclick', (event) => {
                     // Send message to existing client
                     client.postMessage({
                         type: 'NOTIFICATION_CLICK',
-                        data: event.notification.data
+                        data: notificationData
                     });
+
+                    // If urgent report - also send the data to save it
+                    if (notificationData.type === 'URGENT_REPORT') {
+                        client.postMessage({
+                            type: 'URGENT_REPORT_RECEIVED',
+                            data: notificationData
+                        });
+                    }
+
                     return client.focus();
                 }
             }

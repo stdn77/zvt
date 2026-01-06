@@ -530,6 +530,20 @@ public class GroupService {
         Optional<Report> lastReport = reportRepository.findFirstByGroup_IdAndUser_IdOrderBySubmittedAtDesc(
                 group.getId(), member.getUser().getId());
 
+        // Перевіряємо чи є активна термінова сесія
+        boolean hasActiveUrgentSession = false;
+        java.time.LocalDateTime urgentExpiresAt = null;
+        String urgentMessage = null;
+
+        if (group.getUrgentSessionId() != null && group.getUrgentExpiresAt() != null) {
+            java.time.LocalDateTime now = java.time.LocalDateTime.now();
+            if (group.getUrgentExpiresAt().isAfter(now)) {
+                hasActiveUrgentSession = true;
+                urgentExpiresAt = group.getUrgentExpiresAt();
+                urgentMessage = group.getUrgentMessage();
+            }
+        }
+
         return GroupResponse.builder()
                 .groupId(group.getId())
                 .externalName(group.getExternalName())
@@ -549,6 +563,9 @@ public class GroupService {
                 .lastReportAt(lastReport.map(Report::getSubmittedAt).orElse(null))
                 .serverTime(java.time.LocalDateTime.now())  // Серверний час
                 .timezone("Europe/Kiev")                    // Часова зона
+                .hasActiveUrgentSession(hasActiveUrgentSession)
+                .urgentExpiresAt(urgentExpiresAt)
+                .urgentMessage(urgentMessage)
                 .build();
     }
 

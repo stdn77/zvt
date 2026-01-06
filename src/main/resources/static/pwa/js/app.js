@@ -2348,7 +2348,19 @@ function renderReportGroupCard(group, role) {
     const nextReportText = nextReportTime ? `Наступний звіт о ${nextReportTime}` : '';
 
     // Перевіряємо терміновий звіт
-    const urgentReport = getUrgentReportForGroup(groupId);
+    // Спочатку з localStorage (збережено з push), потім з сервера
+    let urgentReport = getUrgentReportForGroup(groupId);
+
+    // Якщо сервер повідомив про активну сесію - синхронізуємо localStorage
+    if (group.hasActiveUrgentSession && group.urgentExpiresAt) {
+        const serverDeadline = parseServerDate(group.urgentExpiresAt);
+        if (serverDeadline && serverDeadline > new Date()) {
+            // Оновлюємо/зберігаємо інформацію з сервера
+            setUrgentReportForGroup(groupId, group.urgentExpiresAt, group.urgentMessage || '');
+            urgentReport = { deadline: group.urgentExpiresAt, message: group.urgentMessage || '' };
+        }
+    }
+
     const hasUrgentReport = urgentReport !== null;
 
     // Права частина залежить від ролі:
@@ -3443,10 +3455,28 @@ async function sendFcmTokenToBackend(fcmToken) {
 }
 
 function showForegroundNotification(payload) {
-    const title = payload.notification?.title || payload.data?.title || 'ZVIT';
-    const body = payload.notification?.body || payload.data?.body || '';
+    console.log('[FCM] showForegroundNotification:', payload);
+    const data = payload.data || {};
+    const messageType = data.type;
 
-    // Show toast for foreground notifications
+    // Обробляємо терміновий звіт
+    if (messageType === 'URGENT_REPORT') {
+        handleUrgentReportFromPush(data);
+        // Показуємо toast вже в handleUrgentReportFromPush
+        return;
+    }
+
+    // Обробляємо оновлення налаштувань
+    if (messageType === 'SETTINGS_UPDATE') {
+        handleSettingsUpdateFromPush(data);
+        // Показуємо toast вже в handleSettingsUpdateFromPush
+        return;
+    }
+
+    // Для інших типів - звичайний toast
+    const title = payload.notification?.title || data.title || 'ZVIT';
+    const body = payload.notification?.body || data.body || '';
+
     showToast(`${title}: ${body}`, 'info');
 
     // Also show browser notification if page is not focused

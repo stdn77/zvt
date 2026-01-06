@@ -39,4 +39,9 @@ public class GroupResponse {
     // Серверний час для синхронізації
     private LocalDateTime serverTime;
     private String timezone;
+
+    // Терміновий збір - для відображення індикатора
+    private boolean hasActiveUrgentSession;
+    private LocalDateTime urgentExpiresAt;
+    private String urgentMessage;
 }
