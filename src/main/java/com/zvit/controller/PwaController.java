@@ -400,10 +400,12 @@ public class PwaController {
         String token = request.getFcmToken() != null ? request.getFcmToken() : request.getToken();
         String deviceType = request.getDeviceType() != null ? request.getDeviceType() : "WEB";
 
-        log.info("PWA: Saving FCM token for user: {}, deviceType: {}", userId, deviceType);
+        String tokenPreview = token != null && token.length() > 20 ? token.substring(0, 20) + "..." : token;
+        log.info("[FCM] Saving token for user: {}, deviceType: {}, token: {}", userId, deviceType, tokenPreview);
 
         userService.updateFcmToken(userId, token, deviceType);
 
+        log.info("[FCM] Token saved successfully for user: {}", userId);
         return ResponseEntity.ok(ApiResponse.success("FCM токен збережено", null));
     }
 }

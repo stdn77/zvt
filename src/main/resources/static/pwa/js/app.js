@@ -775,12 +775,46 @@ async function showMainScreen() {
     // Load notifications setting from server
     loadNotificationsSettingFromServer();
 
+    // Auto-initialize push notifications if permission already granted
+    initPushNotificationsIfEnabled();
+
     // Show install modal if available (reset dismissed state on screen change)
     sessionStorage.removeItem('zvit_install_dismissed');
     if (deferredPrompt) {
         setTimeout(() => {
             document.getElementById('installModal').classList.add('show');
         }, 2000);
+    }
+}
+
+/**
+ * Automatically initialize push notifications if:
+ * 1. Browser supports notifications
+ * 2. Permission is already granted (no prompt needed)
+ * This ensures FCM token is registered/refreshed on each app load
+ */
+async function initPushNotificationsIfEnabled() {
+    try {
+        // Check browser support
+        if (!('Notification' in window) || !('serviceWorker' in navigator)) {
+            console.log('[FCM] Browser does not support push notifications');
+            return;
+        }
+
+        // Check if permission already granted (don't prompt)
+        if (Notification.permission !== 'granted') {
+            console.log('[FCM] Notification permission not granted, skipping auto-init');
+            return;
+        }
+
+        console.log('[FCM] Auto-initializing push notifications...');
+
+        // Subscribe to push and send token to backend
+        await subscribeToPush();
+
+        console.log('[FCM] Auto-init completed successfully');
+    } catch (error) {
+        console.error('[FCM] Auto-init failed:', error);
     }
 }
 
@@ -3418,9 +3452,15 @@ async function subscribeToPush() {
         // Initialize Firebase Messaging
         const messaging = firebase.messaging();
 
+        // VAPID key from Firebase Console → Project Settings → Cloud Messaging → Web Push certificates
+        // Generate key pair if not exists: https://console.firebase.google.com/project/zvit-b9ed2/settings/cloudmessaging
+        const VAPID_KEY = 'BLBz-YrPqRkZdKfN5M7xNCz1eRlB0Z5fAHDJvTvfGrY_8dZJvZXqxmZPYlKdLTqQWvp_TfLKRKWQXKZQWKZQWKZ';
+
+        console.log('[FCM] Requesting token with VAPID key:', VAPID_KEY.substring(0, 20) + '...');
+
         // Get FCM token
         const fcmToken = await messaging.getToken({
-            vapidKey: 'BLBz-YrPqRkZdKfN5M7xNCz1eRlB0Z5fAHDJvTvfGrY_8dZJvZXqxmZPYlKdLTqQWvp_TfLKRKWQXKZQWKZQWKZ', // You may need to generate this in Firebase Console
+            vapidKey: VAPID_KEY,
             serviceWorkerRegistration: registration
         });
 

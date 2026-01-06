@@ -37,12 +37,17 @@ public class UserService {
     @Transactional
     public void updateFcmToken(String userId, String fcmToken, String deviceType) {
         User user = getUserById(userId);
+        String tokenPreview = fcmToken != null && fcmToken.length() > 20 ? fcmToken.substring(0, 20) + "..." : fcmToken;
         if ("WEB".equalsIgnoreCase(deviceType)) {
+            String oldToken = user.getFcmTokenWeb();
+            boolean isNew = oldToken == null || !oldToken.equals(fcmToken);
             user.setFcmTokenWeb(fcmToken);
-            log.info("Updated WEB FCM token for user: {}", userId);
+            log.info("[FCM] Updated WEB FCM token for user: {}, token: {}, isNew: {}", userId, tokenPreview, isNew);
         } else {
+            String oldToken = user.getFcmToken();
+            boolean isNew = oldToken == null || !oldToken.equals(fcmToken);
             user.setFcmToken(fcmToken);
-            log.info("Updated ANDROID FCM token for user: {}", userId);
+            log.info("[FCM] Updated ANDROID FCM token for user: {}, token: {}, isNew: {}", userId, tokenPreview, isNew);
         }
         userRepository.save(user);
     }
