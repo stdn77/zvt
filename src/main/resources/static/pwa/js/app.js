@@ -132,6 +132,30 @@ function handleUrgentReportFromPush(data) {
     }
 }
 
+// Обробка зміни налаштувань групи з push-повідомлення
+function handleSettingsUpdateFromPush(data) {
+    console.log('[PWA] Settings update from push:', data);
+
+    if (!data || !data.groupId) {
+        console.warn('[PWA] Invalid settings update data');
+        return;
+    }
+
+    // Показуємо toast з інформацією про зміни
+    const groupName = data.groupName || 'Група';
+    showToast(`⚙️ ${groupName}: налаштування оновлено`, 'info');
+
+    // Оновлюємо список груп для відображення нових налаштувань
+    if (document.getElementById('reportsScreen')?.classList.contains('active')) {
+        loadReportsScreen();
+    }
+
+    // Оновлюємо кеш груп
+    if (currentUser) {
+        loadUserGroups().catch(err => console.error('Failed to reload groups:', err));
+    }
+}
+
 // API Base URL
 const API_BASE = '/api/v1';
 
@@ -598,6 +622,11 @@ async function registerServiceWorker() {
                 // Терміновий звіт отримано
                 if (event.data.type === 'URGENT_REPORT_RECEIVED') {
                     handleUrgentReportFromPush(event.data.data);
+                }
+
+                // Налаштування групи змінено
+                if (event.data.type === 'SETTINGS_UPDATE_RECEIVED') {
+                    handleSettingsUpdateFromPush(event.data.data);
                 }
             });
         } catch (error) {

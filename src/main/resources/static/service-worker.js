@@ -1,7 +1,7 @@
 // ZVIT PWA Service Worker
-const CACHE_NAME = 'zvit-cache-v44';
-const STATIC_CACHE = 'zvit-static-v44';
-const DYNAMIC_CACHE = 'zvit-dynamic-v44';
+const CACHE_NAME = 'zvit-cache-v45';
+const STATIC_CACHE = 'zvit-static-v45';
+const DYNAMIC_CACHE = 'zvit-dynamic-v45';
 
 // Статичні ресурси для кешування
 const STATIC_ASSETS = [
@@ -127,6 +127,13 @@ self.addEventListener('push', (event) => {
     );
   }
 
+  // Для зміни налаштувань групи - повідомляємо клієнта
+  if (data.data && data.data.type === 'SETTINGS_UPDATE') {
+    event.waitUntil(
+      notifyClientsAboutSettingsUpdate(data.data)
+    );
+  }
+
   const options = {
     body: data.body || data.message,
     icon: '/icons/icon-192x192.png',
@@ -161,6 +168,18 @@ async function notifyClientsAboutUrgentReport(urgentData) {
     client.postMessage({
       type: 'URGENT_REPORT_RECEIVED',
       data: urgentData
+    });
+  }
+}
+
+// Повідомити клієнтів про зміну налаштувань групи
+async function notifyClientsAboutSettingsUpdate(settingsData) {
+  const windowClients = await clients.matchAll({ type: 'window', includeUncontrolled: true });
+
+  for (const client of windowClients) {
+    client.postMessage({
+      type: 'SETTINGS_UPDATE_RECEIVED',
+      data: settingsData
     });
   }
 }
