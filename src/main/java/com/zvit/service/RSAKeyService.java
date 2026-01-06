@@ -1,19 +1,25 @@
 package com.zvit.service;
 
 import com.zvit.config.CryptoConfig;
+import com.zvit.entity.RsaKeyPair;
+import com.zvit.repository.RsaKeyPairRepository;
 import jakarta.annotation.PostConstruct;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import javax.crypto.Cipher;
 import java.nio.charset.StandardCharsets;
 import java.security.*;
+import java.security.spec.PKCS8EncodedKeySpec;
+import java.security.spec.X509EncodedKeySpec;
 import java.util.Base64;
+import java.util.Optional;
 
 /**
  * Сервіс для RSA шифрування.
- * Генерує пару ключів при старті сервера.
+ * Ключі зберігаються в БД для збереження між перезапусками сервера.
  * Клієнт шифрує дані публічним ключем, сервер дешифрує приватним.
  * Налаштування зчитуються з application.yml (crypto.rsa.*)
  */
@@ -23,31 +29,99 @@ import java.util.Base64;
 public class RSAKeyService {
 
     private final CryptoConfig cryptoConfig;
+    private final RsaKeyPairRepository rsaKeyPairRepository;
 
     private KeyPair keyPair;
     private String publicKeyBase64;
 
     @PostConstruct
+    @Transactional
     public void init() {
-        generateKeyPair();
-        log.info("RSA key pair generated: algorithm={}, keySize={}",
-                cryptoConfig.getRsa().getAlgorithm(),
-                cryptoConfig.getRsa().getKeySize());
+        loadOrGenerateKeyPair();
     }
 
     /**
-     * Генерує нову пару ключів
+     * Завантажує існуючу пару ключів з БД або генерує нову
      */
-    private void generateKeyPair() {
+    private void loadOrGenerateKeyPair() {
+        Optional<RsaKeyPair> existingKeyPair = rsaKeyPairRepository.findByActiveTrue();
+
+        if (existingKeyPair.isPresent()) {
+            RsaKeyPair savedKeys = existingKeyPair.get();
+            try {
+                loadKeyPairFromDatabase(savedKeys);
+                log.info("RSA key pair loaded from database: algorithm={}, keySize={}",
+                        savedKeys.getAlgorithm(), savedKeys.getKeySize());
+                return;
+            } catch (Exception e) {
+                log.error("Failed to load RSA keys from database, generating new pair", e);
+                // Деактивуємо старі ключі
+                savedKeys.setActive(false);
+                rsaKeyPairRepository.save(savedKeys);
+            }
+        }
+
+        // Генеруємо нову пару ключів
+        generateAndSaveKeyPair();
+    }
+
+    /**
+     * Завантажує пару ключів з БД
+     */
+    private void loadKeyPairFromDatabase(RsaKeyPair savedKeys) throws Exception {
+        String algorithm = savedKeys.getAlgorithm();
+        KeyFactory keyFactory = KeyFactory.getInstance(algorithm);
+
+        // Відновлюємо публічний ключ
+        byte[] publicKeyBytes = Base64.getDecoder().decode(savedKeys.getPublicKey());
+        X509EncodedKeySpec publicKeySpec = new X509EncodedKeySpec(publicKeyBytes);
+        PublicKey publicKey = keyFactory.generatePublic(publicKeySpec);
+
+        // Відновлюємо приватний ключ
+        byte[] privateKeyBytes = Base64.getDecoder().decode(savedKeys.getPrivateKey());
+        PKCS8EncodedKeySpec privateKeySpec = new PKCS8EncodedKeySpec(privateKeyBytes);
+        PrivateKey privateKey = keyFactory.generatePrivate(privateKeySpec);
+
+        this.keyPair = new KeyPair(publicKey, privateKey);
+        this.publicKeyBase64 = savedKeys.getPublicKey();
+    }
+
+    /**
+     * Генерує нову пару ключів та зберігає в БД
+     */
+    private void generateAndSaveKeyPair() {
         try {
-            KeyPairGenerator keyGen = KeyPairGenerator.getInstance(cryptoConfig.getRsa().getAlgorithm());
-            keyGen.initialize(cryptoConfig.getRsa().getKeySize(), new SecureRandom());
+            String algorithm = cryptoConfig.getRsa().getAlgorithm();
+            int keySize = cryptoConfig.getRsa().getKeySize();
+
+            KeyPairGenerator keyGen = KeyPairGenerator.getInstance(algorithm);
+            keyGen.initialize(keySize, new SecureRandom());
             this.keyPair = keyGen.generateKeyPair();
 
-            // Зберігаємо публічний ключ у Base64 форматі
-            this.publicKeyBase64 = Base64.getEncoder().encodeToString(
-                keyPair.getPublic().getEncoded()
+            // Зберігаємо ключі в Base64
+            String publicKeyB64 = Base64.getEncoder().encodeToString(
+                    keyPair.getPublic().getEncoded()
             );
+            String privateKeyB64 = Base64.getEncoder().encodeToString(
+                    keyPair.getPrivate().getEncoded()
+            );
+
+            this.publicKeyBase64 = publicKeyB64;
+
+            // Зберігаємо в БД
+            RsaKeyPair rsaKeyPair = RsaKeyPair.builder()
+                    .publicKey(publicKeyB64)
+                    .privateKey(privateKeyB64)
+                    .algorithm(algorithm)
+                    .keySize(keySize)
+                    .active(true)
+                    .build();
+
+            rsaKeyPairRepository.save(rsaKeyPair);
+
+            log.info("New RSA key pair generated and saved to database: algorithm={}, keySize={}",
+                    algorithm, keySize);
+
         } catch (NoSuchAlgorithmException e) {
             throw new RuntimeException("Помилка генерації RSA ключів", e);
         }
