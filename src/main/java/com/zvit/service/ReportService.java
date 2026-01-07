@@ -266,7 +266,10 @@ public class ReportService {
 
         for (GroupMember member : members) {
             if (member.getStatus() != GroupMember.MemberStatus.ACCEPTED) continue;
-            if (member.getUser().getId().equals(userId)) continue; // Виключаємо адміна
+            if (member.getUser().getId().equals(userId)) {
+                log.debug("[URGENT] Skipping admin {} (creator of urgent request)", member.getUser().getName());
+                continue;
+            }
 
             // Перевіряємо чи сповіщення увімкнені
             if (!member.getUser().isNotificationsEnabled()) {
@@ -274,15 +277,21 @@ public class ReportService {
                 continue;
             }
 
-            // Додаємо Android токен
+            // Логуємо токени користувача
             String androidToken = member.getUser().getFcmToken();
+            String webToken = member.getUser().getFcmTokenWeb();
+            log.debug("[URGENT] User {} tokens: Android={}, Web={}",
+                    member.getUser().getName(),
+                    androidToken != null ? "yes" : "no",
+                    webToken != null ? "yes" : "no");
+
+            // Додаємо Android токен
             if (androidToken != null && !androidToken.isEmpty()) {
                 fcmTokens.add(androidToken);
                 androidTokens.add(androidToken);
             }
 
             // Додаємо Web токен (для PWA)
-            String webToken = member.getUser().getFcmTokenWeb();
             if (webToken != null && !webToken.isEmpty()) {
                 fcmTokens.add(webToken);
                 webTokens.add(webToken);
