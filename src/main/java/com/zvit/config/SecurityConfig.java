@@ -39,6 +39,7 @@ public class SecurityConfig {
                 .requestMatchers("/icons/**").permitAll() // PWA icons
                 .requestMatchers("/manifest.json").permitAll() // PWA manifest
                 .requestMatchers("/service-worker.js").permitAll() // Service Worker
+                .requestMatchers("/firebase-messaging-sw.js").permitAll() // Firebase Messaging Service Worker
                 .requestMatchers("/feature-graphic").permitAll() // Feature graphic for Play Store
                 .requestMatchers("/app-icon").permitAll() // App icon for Play Store
                 .requestMatchers("/admin/**").permitAll() // Admin QR access (з rate limiting в контролері)
