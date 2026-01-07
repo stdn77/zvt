@@ -1388,7 +1388,9 @@ function showScheduleDialog() {
     // Ініціалізуємо drum pickers з поточним значенням
     setIntervalFromMinutes(currentGroup.intervalMinutes || 60);
 
-    document.getElementById('scheduleModal').classList.add('active');
+    const modal = document.getElementById('scheduleModal');
+    modal.style.display = '';  // Очищаємо inline style, який міг залишитись від closeModal
+    modal.classList.add('active');
 }
 
 function toggleScheduleType() {
@@ -1439,7 +1441,8 @@ function setupDrumPickerScroll(pickerId, type) {
     if (!picker) return;
 
     let startY = 0;
-    let currentTranslate = 0;
+    let startX = 0;
+    let isSwiping = false;
 
     picker.addEventListener('wheel', (e) => {
         e.preventDefault();
@@ -1456,22 +1459,51 @@ function setupDrumPickerScroll(pickerId, type) {
     // Touch support
     picker.addEventListener('touchstart', (e) => {
         startY = e.touches[0].clientY;
+        startX = e.touches[0].clientX;
+        isSwiping = false;
     }, { passive: true });
 
     picker.addEventListener('touchmove', (e) => {
-        e.preventDefault();
+        const diffY = Math.abs(e.touches[0].clientY - startY);
+        if (diffY > 10) {
+            isSwiping = true;
+            e.preventDefault();
+        }
     }, { passive: false });
 
     picker.addEventListener('touchend', (e) => {
         const endY = e.changedTouches[0].clientY;
-        const diff = startY - endY;
-        if (Math.abs(diff) > 20) {
-            const delta = diff > 0 ? 1 : -1;
+        const endX = e.changedTouches[0].clientX;
+        const diffY = startY - endY;
+        const diffX = Math.abs(startX - endX);
+
+        // Якщо це свайп вгору/вниз
+        if (Math.abs(diffY) > 20 && diffX < 50) {
+            const delta = diffY > 0 ? 1 : -1;
             if (type === 'hours') {
                 selectHour(Math.max(0, Math.min(24, selectedHours + delta)));
             } else {
                 const currentIndex = selectedMinutes / 5;
                 const newIndex = Math.max(0, Math.min(11, currentIndex + delta));
+                selectMinute(newIndex * 5);
+            }
+        }
+        // Якщо це тап (не свайп) - знаходимо який елемент натиснули
+        else if (!isSwiping && Math.abs(diffY) < 15) {
+            const pickerRect = picker.getBoundingClientRect();
+            const tapY = endY - pickerRect.top;
+            const centerY = pickerRect.height / 2;
+            const itemHeight = 50;
+
+            // Визначаємо зміщення від центру в кількості елементів
+            const offsetFromCenter = Math.round((tapY - centerY) / itemHeight);
+
+            if (type === 'hours') {
+                const newHour = Math.max(0, Math.min(24, selectedHours + offsetFromCenter));
+                selectHour(newHour);
+            } else {
+                const currentIndex = selectedMinutes / 5;
+                const newIndex = Math.max(0, Math.min(11, currentIndex + offsetFromCenter));
                 selectMinute(newIndex * 5);
             }
         }
