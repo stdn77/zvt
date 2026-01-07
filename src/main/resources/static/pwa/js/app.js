@@ -3453,8 +3453,7 @@ async function subscribeToPush() {
         const messaging = firebase.messaging();
 
         // VAPID key from Firebase Console → Project Settings → Cloud Messaging → Web Push certificates
-        // Generate key pair if not exists: https://console.firebase.google.com/project/zvit-b9ed2/settings/cloudmessaging
-        const VAPID_KEY = 'BLBz-YrPqRkZdKfN5M7xNCz1eRlB0Z5fAHDJvTvfGrY_8dZJvZXqxmZPYlKdLTqQWvp_TfLKRKWQXKZQWKZQWKZ';
+        const VAPID_KEY = 'BHRuaJ0HVXT2dm5GiMxsprIzC7G03hewx4Z0qf4LIERah3lgwi7fhsCKdEJzhKSGHUGFlCSgiObTo2xIrRvY-Y8';
 
         console.log('[FCM] Requesting token with VAPID key:', VAPID_KEY.substring(0, 20) + '...');
 
