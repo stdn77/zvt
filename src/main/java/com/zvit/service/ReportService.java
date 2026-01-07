@@ -69,12 +69,17 @@ public class ReportService {
         // Дешифруємо коментар
         String comment = rsaKeyService.decryptIfEncrypted(request.getComment());
 
+        // Перевіряємо чи є активна термінова сесія
+        boolean isUrgentSession = isUrgentSessionActive(group);
+
         Report report = Report.builder()
                 .group(group)
                 .user(user)
                 .reportType(Report.ReportType.SIMPLE)
                 .simpleResponse(request.getSimpleResponse())
                 .comment(comment)
+                .isUrgent(isUrgentSession)
+                .deadlineAt(isUrgentSession ? group.getUrgentExpiresAt() : null)
                 .build();
 
         reportRepository.save(report);
@@ -104,6 +109,9 @@ public class ReportService {
         String field5 = rsaKeyService.decryptIfEncrypted(request.getField5());
         String comment = rsaKeyService.decryptIfEncrypted(request.getComment());
 
+        // Перевіряємо чи є активна термінова сесія
+        boolean isUrgentSession = isUrgentSessionActive(group);
+
         Report report = Report.builder()
                 .group(group)
                 .user(user)
@@ -114,6 +122,8 @@ public class ReportService {
                 .field4Value(field4)
                 .field5Value(field5)
                 .comment(comment)
+                .isUrgent(isUrgentSession)
+                .deadlineAt(isUrgentSession ? group.getUrgentExpiresAt() : null)
                 .build();
 
         reportRepository.save(report);
@@ -303,7 +313,9 @@ public class ReportService {
 
         // Формуємо повідомлення
         String title = "Терміновий звіт: " + group.getExternalName();
-        String body = message;
+        String body = (message != null && !message.trim().isEmpty())
+                ? message
+                : "Терміново надішліть звіт";
 
         // Додаткові дані для обробки в додатку
         java.util.Map<String, String> data = new java.util.HashMap<>();
@@ -312,6 +324,8 @@ public class ReportService {
         data.put("groupName", group.getExternalName());
         data.put("deadlineMinutes", String.valueOf(deadlineMinutes));
         data.put("urgentSessionId", sessionId);
+        data.put("title", title);  // Для PWA service worker
+        data.put("body", body);    // Для PWA service worker
 
         // Відправляємо Push-сповіщення
         log.info("[URGENT] Sending push notifications via Firebase...");

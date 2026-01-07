@@ -39,9 +39,9 @@ messaging.onBackgroundMessage((payload) => {
 
     const notificationTitle = payload.notification?.title || data.title || 'ZVIT';
     const notificationOptions = {
-        body: payload.notification?.body || data.body || 'Час звітувати!',
-        icon: '/icons/icon-192x192.png',
-        badge: '/icons/icon-72x72.png',
+        body: payload.notification?.body || data.body || 'Терміново надішліть звіт',
+        icon: '/icons/android-chrome-192.png',
+        badge: '/icons/favicon-32.png',
         tag: messageType === 'URGENT_REPORT' ? 'urgent-' + data.groupId : (data.tag || 'zvit-reminder'),
         data: {
             url: data.url || '/app',

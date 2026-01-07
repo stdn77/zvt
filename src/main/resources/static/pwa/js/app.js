@@ -2452,9 +2452,10 @@ function renderReportGroupCard(group, role) {
         ? `onclick="openGroupStatuses('${groupId}', '${safeGroupName}')"`
         : `onclick="openMyReportsInGroup('${groupId}', '${safeGroupName}')"`;
 
-    // Індикатор термінового звіту для тих хто має звітувати
-    const urgentIndicator = (mustReport && hasUrgentReport) ? `
-        <div style="position: absolute; top: 8px; right: 8px; background: var(--danger); color: white; font-size: 10px; padding: 2px 6px; border-radius: 4px; font-weight: bold;">
+    // Індикатор термінового звіту - тільки для адмінів (у них права частина без термінового статусу)
+    // Для учасників/модераторів терміновий статус вже показується в правій частині (rightSection)
+    const urgentIndicator = (isAdmin && hasUrgentReport) ? `
+        <div style="position: absolute; top: 8px; right: 40%; background: var(--danger); color: white; font-size: 10px; padding: 2px 6px; border-radius: 4px; font-weight: bold;">
             ТЕРМІНОВО
         </div>
     ` : '';
@@ -3268,7 +3269,9 @@ async function submitSimpleReport() {
         if (response.success) {
             showToast('Звіт відправлено!', 'success');
             closeModal('simpleReportModal');
-            // Оновлюємо список звітів якщо є
+            // Прибираємо терміновий статус після відправки
+            clearUrgentReportForGroup(currentGroup.id);
+            // Оновлюємо список звітів
             if (typeof loadReportsScreen === 'function') {
                 loadReportsScreen();
             }
@@ -3285,6 +3288,8 @@ async function submitSimpleReport() {
             });
             showToast('Звіт збережено, буде відправлено при підключенні', 'info');
             closeModal('simpleReportModal');
+            // Прибираємо терміновий статус (звіт буде синхронізовано)
+            clearUrgentReportForGroup(currentGroup.id);
         } else {
             showToast(error.message || 'Помилка відправки', 'error');
         }
@@ -3335,7 +3340,9 @@ async function submitExtendedReport() {
         if (response.success) {
             showToast('Розширений звіт відправлено!', 'success');
             closeModal('extendedReportModal');
-            // Оновлюємо список звітів якщо є
+            // Прибираємо терміновий статус після відправки
+            clearUrgentReportForGroup(currentGroup.id);
+            // Оновлюємо список звітів
             if (typeof loadReportsScreen === 'function') {
                 loadReportsScreen();
             }
