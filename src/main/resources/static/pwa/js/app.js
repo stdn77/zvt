@@ -2700,10 +2700,13 @@ function showUrgentBanner(session) {
     if (session.requestedByUserName) {
         infoText = `Запит від: ${session.requestedByUserName}`;
         if (session.requestedAt) {
-            const requestedTime = new Date(session.requestedAt).toLocaleTimeString('uk-UA', {
-                hour: '2-digit', minute: '2-digit'
-            });
-            infoText += ` о ${requestedTime}`;
+            const requestedDate = parseServerDate(session.requestedAt);
+            if (requestedDate) {
+                const requestedTime = requestedDate.toLocaleTimeString('uk-UA', {
+                    hour: '2-digit', minute: '2-digit'
+                });
+                infoText += ` о ${requestedTime}`;
+            }
         }
     }
     if (session.message) {
