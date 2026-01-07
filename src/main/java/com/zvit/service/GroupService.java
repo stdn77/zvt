@@ -536,7 +536,7 @@ public class GroupService {
         String urgentMessage = null;
 
         if (group.getUrgentSessionId() != null && group.getUrgentExpiresAt() != null) {
-            java.time.LocalDateTime now = java.time.LocalDateTime.now();
+            java.time.LocalDateTime now = java.time.LocalDateTime.now(java.time.ZoneId.of("Europe/Kiev"));
             if (group.getUrgentExpiresAt().isAfter(now)) {
                 hasActiveUrgentSession = true;
                 urgentExpiresAt = group.getUrgentExpiresAt();
@@ -562,7 +562,7 @@ public class GroupService {
                 .positiveWord(group.getPositiveWord())
                 .negativeWord(group.getNegativeWord())
                 .lastReportAt(lastReport.map(Report::getSubmittedAt).orElse(null))
-                .serverTime(java.time.LocalDateTime.now())  // Серверний час
+                .serverTime(java.time.LocalDateTime.now(java.time.ZoneId.of("Europe/Kiev")))  // Серверний час (Київ)
                 .timezone("Europe/Kiev")                    // Часова зона
                 .hasActiveUrgentSession(hasActiveUrgentSession)
                 .urgentExpiresAt(urgentExpiresAt)

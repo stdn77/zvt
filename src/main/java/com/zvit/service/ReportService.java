@@ -184,7 +184,7 @@ public class ReportService {
 
         List<GroupMember> members = groupMemberRepository.findByGroupId(groupId);
 
-        LocalDateTime serverTime = LocalDateTime.now();
+        LocalDateTime serverTime = LocalDateTime.now(java.time.ZoneId.of("Europe/Kiev"));
         String timezone = "Europe/Kiev";
 
         // Отримуємо статуси користувачів
@@ -251,7 +251,8 @@ public class ReportService {
         }
 
         // Створюємо нову термінову сесію
-        LocalDateTime now = LocalDateTime.now();
+        // Використовуємо Київський час явно, незалежно від timezone сервера
+        LocalDateTime now = LocalDateTime.now(java.time.ZoneId.of("Europe/Kiev"));
         String sessionId = UUID.randomUUID().toString();
         int deadlineMinutes = request.getDeadlineMinutes() > 0 ? request.getDeadlineMinutes() : 30;
 
@@ -527,7 +528,7 @@ public class ReportService {
             return null;
         }
 
-        LocalDateTime now = LocalDateTime.now();
+        LocalDateTime now = LocalDateTime.now(java.time.ZoneId.of("Europe/Kiev"));
 
         if (group.getScheduleType() == Group.ScheduleType.FIXED_TIMES) {
             return getNextFixedTime(group, now);
@@ -546,7 +547,7 @@ public class ReportService {
             return null;
         }
 
-        LocalDateTime now = LocalDateTime.now();
+        LocalDateTime now = LocalDateTime.now(java.time.ZoneId.of("Europe/Kiev"));
 
         if (group.getScheduleType() == Group.ScheduleType.FIXED_TIMES) {
             return getPreviousFixedTime(group, now);
@@ -730,7 +731,7 @@ public class ReportService {
         if (group.getUrgentSessionId() == null || group.getUrgentExpiresAt() == null) {
             return false;
         }
-        return LocalDateTime.now().isBefore(group.getUrgentExpiresAt());
+        return LocalDateTime.now(java.time.ZoneId.of("Europe/Kiev")).isBefore(group.getUrgentExpiresAt());
     }
 
     /**
@@ -802,7 +803,7 @@ public class ReportService {
                 .groupId(group.getId())
                 .userId(userId)
                 .reportId(reportId)
-                .respondedAt(LocalDateTime.now())
+                .respondedAt(LocalDateTime.now(java.time.ZoneId.of("Europe/Kiev")))
                 .build();
 
         urgentResponseRepository.save(response);

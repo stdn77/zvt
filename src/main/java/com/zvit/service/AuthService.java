@@ -157,7 +157,7 @@ public class AuthService {
                 .name(user.getName())
                 .phone(decryptedPhone)
                 .email(decryptedEmail)
-                .serverTime(LocalDateTime.now())  // Серверний час для синхронізації
+                .serverTime(LocalDateTime.now(java.time.ZoneId.of("Europe/Kiev")))  // Серверний час (Київ)
                 .timezone("Europe/Kiev")          // Часова зона сервера
                 .encryptionKey(responseEncryptionService.getEncryptionKeyBase64()) // AES ключ для дешифрування
                 .build();
