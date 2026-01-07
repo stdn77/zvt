@@ -3061,9 +3061,10 @@ function renderUserReportsList(reports) {
         else if (report.reportType === 'URGENT') typeText = 'Терміновий';
 
         // Відповідь для простого звіту (з власними словами)
+        // Терміновий звіт може містити simpleResponse якщо базується на простому звіті
         let responseText = '';
         let responseColor = 'var(--text-primary)';
-        if (report.reportType === 'SIMPLE' && report.simpleResponse) {
+        if (report.simpleResponse) {
             if (report.simpleResponse === 'OK') {
                 responseText = '✅ ' + positiveWord;
                 responseColor = 'var(--success)';
@@ -3088,7 +3089,9 @@ function renderUserReportsList(reports) {
         `;
 
         // Розширені поля (T1-T5)
-        if (report.reportType === 'EXTENDED') {
+        // Терміновий звіт може містити розширені поля якщо базується на розширеному звіті
+        const hasExtendedFields = report.field1Value || report.field2Value || report.field3Value || report.field4Value || report.field5Value;
+        if (hasExtendedFields) {
             const fields = [
                 { label: 'Т1', value: report.field1Value },
                 { label: 'Т2', value: report.field2Value },
