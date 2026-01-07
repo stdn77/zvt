@@ -1441,11 +1441,12 @@ function setupDrumPickerScroll(pickerId, type) {
     if (!picker) return;
 
     let startY = 0;
-    let startX = 0;
     let isSwiping = false;
 
+    // Wheel/scroll - природній напрямок (scroll down = більше значення)
     picker.addEventListener('wheel', (e) => {
         e.preventDefault();
+        // deltaY > 0 = scroll down = показати наступні (більші) значення
         const delta = e.deltaY > 0 ? 1 : -1;
         if (type === 'hours') {
             selectHour(Math.max(0, Math.min(24, selectedHours + delta)));
@@ -1459,7 +1460,6 @@ function setupDrumPickerScroll(pickerId, type) {
     // Touch support
     picker.addEventListener('touchstart', (e) => {
         startY = e.touches[0].clientY;
-        startX = e.touches[0].clientX;
         isSwiping = false;
     }, { passive: true });
 
@@ -1473,12 +1473,11 @@ function setupDrumPickerScroll(pickerId, type) {
 
     picker.addEventListener('touchend', (e) => {
         const endY = e.changedTouches[0].clientY;
-        const endX = e.changedTouches[0].clientX;
         const diffY = startY - endY;
-        const diffX = Math.abs(startX - endX);
 
-        // Якщо це свайп вгору/вниз
-        if (Math.abs(diffY) > 20 && diffX < 50) {
+        // Якщо це свайп
+        if (Math.abs(diffY) > 20) {
+            // diffY > 0 = свайп вгору = показати наступні (більші) значення
             const delta = diffY > 0 ? 1 : -1;
             if (type === 'hours') {
                 selectHour(Math.max(0, Math.min(24, selectedHours + delta)));
@@ -1488,14 +1487,14 @@ function setupDrumPickerScroll(pickerId, type) {
                 selectMinute(newIndex * 5);
             }
         }
-        // Якщо це тап (не свайп) - знаходимо який елемент натиснули
-        else if (!isSwiping && Math.abs(diffY) < 15) {
+        // Якщо це тап - вибираємо елемент по позиції
+        else if (!isSwiping && Math.abs(diffY) < 10) {
             const pickerRect = picker.getBoundingClientRect();
             const tapY = endY - pickerRect.top;
-            const centerY = pickerRect.height / 2;
+            const centerY = pickerRect.height / 2; // 75px для 150px picker
             const itemHeight = 50;
 
-            // Визначаємо зміщення від центру в кількості елементів
+            // Визначаємо зміщення від центру
             const offsetFromCenter = Math.round((tapY - centerY) / itemHeight);
 
             if (type === 'hours') {
@@ -1532,8 +1531,13 @@ function updateDrumPicker(containerId, selectedIndex, totalItems) {
     });
 
     // Позиціонування для центрування вибраного елемента
-    const offset = -selectedIndex * 50;
-    container.style.transform = `translateY(calc(-50% + ${-offset}px - 25px))`;
+    // Picker висота 150px, центр на 75px
+    // Кожен item 50px, центр item на (index * 50 + 25)px від верху контейнера
+    // Container починається з top: 0
+    // Щоб центр item був на 75px: translateY + index*50 + 25 = 75
+    // translateY = 75 - 25 - index*50 = 50 - index*50
+    const translateY = 50 - selectedIndex * 50;
+    container.style.transform = `translateY(${translateY}px)`;
 }
 
 function validateInterval() {
