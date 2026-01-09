@@ -1,5 +1,13 @@
 // ZVIT PWA Application
 
+// Debug mode - set to false in production
+const DEBUG = false;
+
+// Logger - only logs in debug mode
+const log = DEBUG ? console.log.bind(console) : () => {};
+const logError = console.error.bind(console); // Always log errors
+const logWarn = console.warn.bind(console);   // Always log warnings
+
 // Constants
 const STORAGE_KEYS = {
     TOKEN: 'zvit_token',
@@ -10,6 +18,193 @@ const STORAGE_KEYS = {
     PENDING_PHONE: 'zvit_pending_phone',
     PENDING_PASSWORD: 'zvit_pending_password',
     PENDING_NAME: 'zvit_pending_name'
+};
+
+// Cached DOM elements (initialized after DOMContentLoaded)
+let DOM = {};
+
+// Initialize DOM cache for frequently used elements
+function initDOMCache() {
+    DOM = {
+        // Modals
+        installModal: DOM.installModal,
+        installModalIOS: DOM.installModalIOS,
+        forgotPasswordModal: DOM.forgotPasswordModal,
+        authChoiceModal: DOM.authChoiceModal,
+        editNameModal: DOM.editNameModal,
+        editEmailModal: DOM.editEmailModal,
+        createGroupModal: DOM.createGroupModal,
+        joinGroupModal: DOM.joinGroupModal,
+        leaveGroupModal: DOM.leaveGroupModal,
+        addMemberModal: DOM.addMemberModal,
+        scheduleModal: DOM.scheduleModal,
+        changeReportTypeModal: DOM.changeReportTypeModal,
+        changeReportWordsModal: DOM.changeReportWordsModal,
+        editGroupNameModal: DOM.editGroupNameModal,
+        groupSettingsModal: DOM.groupSettingsModal,
+        deleteGroupModal: DOM.deleteGroupModal,
+        roleSelectModal: DOM.roleSelectModal,
+        actionMenu: DOM.actionMenu,
+        actionMenuOverlay: DOM.actionMenuOverlay,
+        urgentReportModal: DOM.urgentReportModal,
+        simpleReportModal: DOM.simpleReportModal,
+        extendedReportModal: DOM.extendedReportModal,
+        callOptionsModal: DOM.callOptionsModal,
+        qrScannerModal: DOM.qrScannerModal,
+
+        // Phone verification
+        phoneInputStep: DOM.phoneInputStep,
+        otpInputStep: DOM.otpInputStep,
+        phoneVerifyInput: DOM.phoneVerifyInput,
+        sendCodeBtn: DOM.sendCodeBtn,
+        otpCodeInput: DOM.otpCodeInput,
+        otpSentMessage: DOM.otpSentMessage,
+        otpTimer: DOM.otpTimer,
+        resendCodeLink: DOM.resendCodeLink,
+        verifyCodeBtn: DOM.verifyCodeBtn,
+
+        // Auth forms
+        loginForm: DOM.loginForm,
+        registerForm: DOM.registerForm,
+        verifyForm: DOM.verifyForm,
+        loginPhone: DOM.loginPhone,
+        loginPassword: DOM.loginPassword,
+        loginBtn: DOM.loginBtn,
+        registerName: DOM.registerName,
+        registerPhone: DOM.registerPhone,
+        registerPassword: DOM.registerPassword,
+        registerBtn: DOM.registerBtn,
+        verifyCode: DOM.verifyCode,
+
+        // Profile
+        profileName: DOM.profileName,
+        profilePhone: DOM.profilePhone,
+        profileEmail: DOM.profileEmail,
+        editNameInput: DOM.editNameInput,
+        editEmailInput: DOM.editEmailInput,
+        notificationsToggle: DOM.notificationsToggle,
+
+        // Groups
+        groupsList: DOM.groupsList,
+        newGroupName: DOM.newGroupName,
+        accessCode: DOM.accessCode,
+        groupTitle: DOM.groupTitle,
+        groupAdminInfo: DOM.groupAdminInfo,
+        groupMemberView: DOM.groupMemberView,
+        groupSettingsBtn: DOM.groupSettingsBtn,
+        groupMembersInfo: DOM.groupMembersInfo,
+        groupReportType: DOM.groupReportType,
+        groupAccessCode: DOM.groupAccessCode,
+        groupScheduleRow: DOM.groupScheduleRow,
+        groupSchedule: DOM.groupSchedule,
+        groupWordsRow: DOM.groupWordsRow,
+        groupWords: DOM.groupWords,
+        addMemberCode: DOM.addMemberCode,
+        settingsGroupName: DOM.settingsGroupName,
+        leaveGroupName: DOM.leaveGroupName,
+        adminMembersList: DOM.adminMembersList,
+
+        // Schedule
+        scheduleFixed: DOM.scheduleFixed,
+        scheduleInterval: DOM.scheduleInterval,
+        fixedTimesSection: DOM.fixedTimesSection,
+        intervalSection: DOM.intervalSection,
+        fixedTime1: DOM.fixedTime1,
+        fixedTime2: DOM.fixedTime2,
+        fixedTime3: DOM.fixedTime3,
+        intervalStart: DOM.intervalStart,
+        hoursPickerItems: DOM.hoursPickerItems,
+        minutesPickerItems: DOM.minutesPickerItems,
+
+        // Report type & words
+        reportTypeSimple: DOM.reportTypeSimple,
+        reportTypeExtended: DOM.reportTypeExtended,
+        customWordsSection: DOM.customWordsSection,
+        customPositiveWord: DOM.customPositiveWord,
+        customNegativeWord: DOM.customNegativeWord,
+
+        // Reports screen
+        reportsScreen: DOM.reportsScreen,
+        reportsList: DOM.reportsList,
+        reportGroupsList: DOM.reportGroupsList,
+        userTilesGrid: DOM.userTilesGrid,
+        userReportsList: DOM.userReportsList,
+        userReportsTitle: DOM.userReportsTitle,
+        userReportsSubtitle: DOM.userReportsSubtitle,
+        userReportsPhoneHeader: DOM.userReportsPhoneHeader,
+        btnDeleteUserReports: DOM.btnDeleteUserReports,
+
+        // Group status
+        groupStatusTitle: DOM.groupStatusTitle,
+        urgentReportBtn: DOM.urgentReportBtn,
+        qrScannerBtn: DOM.qrScannerBtn,
+        urgentSessionBanner: DOM.urgentSessionBanner,
+        urgentSessionInfo: DOM.urgentSessionInfo,
+        urgentTimer: DOM.urgentTimer,
+
+        // Urgent report form
+        urgentModalGroupName: DOM.urgentModalGroupName,
+        urgentDeadlineSelect: DOM.urgentDeadlineSelect,
+        urgentMessage: DOM.urgentMessage,
+
+        // Simple report form
+        simpleReportGroupName: DOM.simpleReportGroupName,
+        simpleReportOkLabel: DOM.simpleReportOkLabel,
+        simpleReportNotOkLabel: DOM.simpleReportNotOkLabel,
+        simpleReportComment: DOM.simpleReportComment,
+
+        // Extended report form
+        extendedReportGroupName: DOM.extendedReportGroupName,
+        extendedField1: DOM.extendedField1,
+        extendedField2: DOM.extendedField2,
+        extendedField3: DOM.extendedField3,
+        extendedField4: DOM.extendedField4,
+        extendedField5: DOM.extendedField5,
+        extendedField1Label: DOM.extendedField1Label,
+        extendedField2Label: DOM.extendedField2Label,
+        extendedField3Label: DOM.extendedField3Label,
+        extendedField4Label: DOM.extendedField4Label,
+        extendedField5Label: DOM.extendedField5Label,
+        extendedReportComment: DOM.extendedReportComment,
+
+        // Call options
+        callOptionsPhone: DOM.callOptionsPhone,
+
+        // Misc
+        bottomNav: DOM.bottomNav,
+        toast: DOM.toast,
+        roleSelectOptions: DOM.roleSelectOptions
+    };
+}
+
+// HTML Templates
+const TEMPLATES = {
+    loading: TEMPLATES.loading,
+
+    emptyState: (icon, message, subMessage = '') => `
+        <div class="empty-state">
+            <svg viewBox="0 0 24 24" fill="currentColor">
+                <path d="${icon}"/>
+            </svg>
+            <p>${message}</p>
+            ${subMessage ? `<p style="font-size: 14px; opacity: 0.7; margin-top: 8px;">${subMessage}</p>` : ''}
+        </div>
+    `,
+
+    errorCard: (message, details = '') => `
+        <div class="card" style="text-align: center; color: var(--danger);">
+            <p>${message}</p>
+            ${details ? `<p style="font-size: 12px; margin-top: 5px; opacity: 0.7;">${details}</p>` : ''}
+        </div>
+    `
+};
+
+// Common SVG icons for templates
+const ICONS = {
+    reports: 'M14 2H6c-1.1 0-2 .9-2 2v16c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V8l-6-6zm-1 9h-2v2H9v-2H7v-2h2V7h2v2h2v2zm-1-8.5L17.5 8H13V3.5z',
+    checkCircle: 'M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z',
+    group: 'M16 11c1.66 0 2.99-1.34 2.99-3S17.66 5 16 5c-1.66 0-3 1.34-3 3s1.34 3 3 3zm-8 0c1.66 0 2.99-1.34 2.99-3S9.66 5 8 5C6.34 5 5 6.34 5 8s1.34 3 3 3zm0 2c-2.33 0-7 1.17-7 3.5V19h14v-2.5c0-2.33-4.67-3.5-7-3.5z',
+    person: 'M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z'
 };
 
 // State
@@ -116,10 +311,10 @@ function formatUrgentDeadline(deadlineStr) {
 
 // Обробка термінового звіту з push-повідомлення
 function handleUrgentReportFromPush(data) {
-    console.log('[URGENT] handleUrgentReportFromPush called with:', JSON.stringify(data));
+    log('[URGENT] handleUrgentReportFromPush called with:', JSON.stringify(data));
 
     if (!data || !data.groupId) {
-        console.warn('[URGENT] Invalid urgent report data - missing groupId');
+        logWarn('[URGENT] Invalid urgent report data - missing groupId');
         return;
     }
 
@@ -128,7 +323,7 @@ function handleUrgentReportFromPush(data) {
     const deadline = new Date();
     deadline.setMinutes(deadline.getMinutes() + deadlineMinutes);
 
-    console.log('[URGENT] Saving to localStorage: groupId=' + data.groupId + ', deadline=' + deadline.toISOString());
+    log('[URGENT] Saving to localStorage: groupId=' + data.groupId + ', deadline=' + deadline.toISOString());
 
     // Зберігаємо терміновий звіт
     setUrgentReportForGroup(data.groupId, deadline.toISOString(), data.message || '');
@@ -137,19 +332,19 @@ function handleUrgentReportFromPush(data) {
     showToast(`🚨 Терміновий звіт: ${data.groupName || 'Група'}`, 'warning');
 
     // Оновлюємо UI якщо на екрані звітів
-    const reportsScreen = document.getElementById('reportsScreen');
+    const reportsScreen = DOM.reportsScreen;
     if (reportsScreen?.classList.contains('active')) {
-        console.log('[URGENT] Reloading reports screen...');
+        log('[URGENT] Reloading reports screen...');
         loadReportsScreen();
     }
 }
 
 // Обробка зміни налаштувань групи з push-повідомлення
 function handleSettingsUpdateFromPush(data) {
-    console.log('[PWA] Settings update from push:', data);
+    log('[PWA] Settings update from push:', data);
 
     if (!data || !data.groupId) {
-        console.warn('[PWA] Invalid settings update data');
+        logWarn('[PWA] Invalid settings update data');
         return;
     }
 
@@ -158,13 +353,13 @@ function handleSettingsUpdateFromPush(data) {
     showToast(`⚙️ ${groupName}: налаштування оновлено`, 'info');
 
     // Оновлюємо список груп для відображення нових налаштувань
-    if (document.getElementById('reportsScreen')?.classList.contains('active')) {
+    if (DOM.reportsScreen?.classList.contains('active')) {
         loadReportsScreen();
     }
 
     // Оновлюємо кеш груп
     if (currentUser) {
-        loadUserGroups().catch(err => console.error('Failed to reload groups:', err));
+        loadUserGroups().catch(err => logError('Failed to reload groups:', err));
     }
 }
 
@@ -219,7 +414,7 @@ function togglePassword(inputId, button) {
 
 // Forgot Password
 function showForgotPasswordInfo() {
-    document.getElementById('forgotPasswordModal').classList.add('active');
+    DOM.forgotPasswordModal.classList.add('active');
 }
 
 // ==========================================
@@ -231,7 +426,7 @@ let recaptchaWidgetId = null;
 function initPhoneVerification() {
     // Don't re-initialize if already done
     if (recaptchaVerifier && recaptchaWidgetId !== null) {
-        console.log('reCAPTCHA already initialized');
+        log('reCAPTCHA already initialized');
         return;
     }
 
@@ -246,10 +441,10 @@ function initPhoneVerification() {
         recaptchaVerifier = new firebase.auth.RecaptchaVerifier('recaptcha-container', {
             size: 'invisible',
             callback: (response) => {
-                console.log('reCAPTCHA solved');
+                log('reCAPTCHA solved');
             },
             'expired-callback': () => {
-                console.log('reCAPTCHA expired');
+                log('reCAPTCHA expired');
                 showToast('Час reCAPTCHA вийшов, спробуйте знову');
                 recaptchaWidgetId = null;
                 recaptchaVerifier = null;
@@ -257,12 +452,12 @@ function initPhoneVerification() {
         });
         recaptchaVerifier.render().then(widgetId => {
             recaptchaWidgetId = widgetId;
-            console.log('reCAPTCHA rendered, widgetId:', widgetId);
+            log('reCAPTCHA rendered, widgetId:', widgetId);
         }).catch(err => {
-            console.error('reCAPTCHA render error:', err);
+            logError('reCAPTCHA render error:', err);
         });
     } catch (error) {
-        console.error('reCAPTCHA init error:', error);
+        logError('reCAPTCHA init error:', error);
     }
 }
 
@@ -272,7 +467,7 @@ function resetRecaptcha() {
             recaptchaVerifier.clear();
         }
     } catch (e) {
-        console.log('Error clearing recaptcha:', e);
+        log('Error clearing recaptcha:', e);
     }
     recaptchaVerifier = null;
     recaptchaWidgetId = null;
@@ -290,9 +485,9 @@ function resetRecaptcha() {
 }
 
 async function sendVerificationCode() {
-    const phoneInput = document.getElementById('phoneVerifyInput');
+    const phoneInput = DOM.phoneVerifyInput;
     const phone = normalizePhone(phoneInput.value);
-    const btn = document.getElementById('sendCodeBtn');
+    const btn = DOM.sendCodeBtn;
 
     // Validate phone
     if (phone.length !== 13) {
@@ -327,7 +522,7 @@ async function sendVerificationCode() {
         startOtpTimer();
 
     } catch (error) {
-        console.error('SMS send error:', error);
+        logError('SMS send error:', error);
         let errorMessage = 'Помилка надсилання коду';
 
         if (error.code === 'auth/invalid-phone-number') {
@@ -349,16 +544,16 @@ async function sendVerificationCode() {
 }
 
 function showOtpInputStep(phone) {
-    document.getElementById('phoneInputStep').style.display = 'none';
-    document.getElementById('otpInputStep').style.display = 'block';
-    document.getElementById('otpSentMessage').textContent = `Код надіслано на ${formatPhoneDisplay(phone)}`;
-    document.getElementById('otpCodeInput').focus();
+    DOM.phoneInputStep.style.display = 'none';
+    DOM.otpInputStep.style.display = 'block';
+    DOM.otpSentMessage.textContent = `Код надіслано на ${formatPhoneDisplay(phone)}`;
+    DOM.otpCodeInput.focus();
 }
 
 function startOtpTimer() {
     let seconds = 60;
-    const timerEl = document.getElementById('otpTimer');
-    const resendLink = document.getElementById('resendCodeLink');
+    const timerEl = DOM.otpTimer;
+    const resendLink = DOM.resendCodeLink;
 
     resendLink.style.display = 'none';
 
@@ -381,10 +576,10 @@ function startOtpTimer() {
 async function resendVerificationCode() {
     // Reset and send again
     resetRecaptcha();
-    document.getElementById('otpInputStep').style.display = 'none';
-    document.getElementById('phoneInputStep').style.display = 'block';
-    document.getElementById('sendCodeBtn').disabled = false;
-    document.getElementById('sendCodeBtn').textContent = 'Надіслати код';
+    DOM.otpInputStep.style.display = 'none';
+    DOM.phoneInputStep.style.display = 'block';
+    DOM.sendCodeBtn.disabled = false;
+    DOM.sendCodeBtn.textContent = 'Надіслати код';
 
     // Auto-send after recaptcha is ready
     setTimeout(() => {
@@ -400,16 +595,16 @@ function resetPhoneVerification() {
     phoneVerificationId = null;
     phoneVerificationPhone = null;
 
-    document.getElementById('otpInputStep').style.display = 'none';
-    document.getElementById('phoneInputStep').style.display = 'block';
-    document.getElementById('sendCodeBtn').disabled = false;
-    document.getElementById('sendCodeBtn').textContent = 'Надіслати код';
-    document.getElementById('otpCodeInput').value = '';
+    DOM.otpInputStep.style.display = 'none';
+    DOM.phoneInputStep.style.display = 'block';
+    DOM.sendCodeBtn.disabled = false;
+    DOM.sendCodeBtn.textContent = 'Надіслати код';
+    DOM.otpCodeInput.value = '';
 }
 
 async function verifyOtpCode() {
-    const code = document.getElementById('otpCodeInput').value.trim();
-    const btn = document.getElementById('verifyCodeBtn');
+    const code = DOM.otpCodeInput.value.trim();
+    const btn = DOM.verifyCodeBtn;
 
     if (code.length !== 6) {
         showToast('Введіть 6-значний код');
@@ -437,13 +632,13 @@ async function verifyOtpCode() {
         }
 
         // Pre-fill phone in login form
-        document.getElementById('loginPhone').value = phoneVerificationPhone;
+        DOM.loginPhone.value = phoneVerificationPhone;
 
         // Show choice: login or register
         showLoginOrRegisterChoice();
 
     } catch (error) {
-        console.error('OTP verify error:', error);
+        logError('OTP verify error:', error);
         let errorMessage = 'Невірний код';
 
         if (error.code === 'auth/invalid-verification-code') {
@@ -481,23 +676,23 @@ function showLoginOrRegisterChoice() {
 }
 
 function goToLogin() {
-    const modal = document.getElementById('authChoiceModal');
+    const modal = DOM.authChoiceModal;
     if (modal) modal.remove();
 
     const verifiedPhone = localStorage.getItem('zvit_verified_phone');
     if (verifiedPhone) {
-        document.getElementById('loginPhone').value = verifiedPhone;
+        DOM.loginPhone.value = verifiedPhone;
     }
     showScreen('loginScreen');
 }
 
 function goToRegister() {
-    const modal = document.getElementById('authChoiceModal');
+    const modal = DOM.authChoiceModal;
     if (modal) modal.remove();
 
     const verifiedPhone = localStorage.getItem('zvit_verified_phone');
     if (verifiedPhone) {
-        document.getElementById('registerPhone').value = verifiedPhone;
+        DOM.registerPhone.value = verifiedPhone;
     }
     showScreen('registerScreen');
 }
@@ -550,6 +745,9 @@ function setupPhoneInput(input) {
 
 // Initialize app
 document.addEventListener('DOMContentLoaded', () => {
+    // Cache DOM elements first
+    initDOMCache();
+
     // Initialize history state for back button
     history.replaceState({ screen: 'reportsScreen' }, '', '');
 
@@ -586,7 +784,7 @@ async function initApp() {
         // Phone verified but not logged in - show login screen
         showScreen('loginScreen');
         // Pre-fill phone number
-        const loginPhoneInput = document.getElementById('loginPhone');
+        const loginPhoneInput = DOM.loginPhone;
         if (loginPhoneInput) {
             loginPhoneInput.value = verifiedPhone;
         }
@@ -602,14 +800,14 @@ async function initApp() {
     }
 
     // Setup form handlers
-    document.getElementById('loginForm').addEventListener('submit', handleLogin);
-    document.getElementById('registerForm').addEventListener('submit', handleRegister);
-    document.getElementById('verifyForm').addEventListener('submit', handleVerify);
+    DOM.loginForm.addEventListener('submit', handleLogin);
+    DOM.registerForm.addEventListener('submit', handleRegister);
+    DOM.verifyForm.addEventListener('submit', handleVerify);
 
     // Setup phone inputs with mask
-    setupPhoneInput(document.getElementById('loginPhone'));
-    setupPhoneInput(document.getElementById('registerPhone'));
-    setupPhoneInput(document.getElementById('phoneVerifyInput'));
+    setupPhoneInput(DOM.loginPhone);
+    setupPhoneInput(DOM.registerPhone);
+    setupPhoneInput(DOM.phoneVerifyInput);
 }
 
 // Service Worker
@@ -617,11 +815,11 @@ async function registerServiceWorker() {
     if ('serviceWorker' in navigator) {
         try {
             const registration = await navigator.serviceWorker.register('/service-worker.js');
-            console.log('SW registered:', registration);
+            log('SW registered:', registration);
 
             // Listen for messages from SW
             navigator.serviceWorker.addEventListener('message', (event) => {
-                console.log('[PWA] Message from SW:', event.data);
+                log('[PWA] Message from SW:', event.data);
 
                 if (event.data.type === 'NOTIFICATION_CLICK') {
                     handleNotificationClick(event.data.data);
@@ -638,7 +836,7 @@ async function registerServiceWorker() {
                 }
             });
         } catch (error) {
-            console.error('SW registration failed:', error);
+            logError('SW registration failed:', error);
         }
     }
 }
@@ -652,13 +850,13 @@ function setupInstallPrompt() {
 
         // Show install modal after login
         if (currentUser && !sessionStorage.getItem('zvit_install_dismissed')) {
-            document.getElementById('installModal').classList.add('show');
+            DOM.installModal.classList.add('show');
         }
     });
 
     window.addEventListener('appinstalled', () => {
-        console.log('PWA installed');
-        document.getElementById('installModal').classList.remove('show');
+        log('PWA installed');
+        DOM.installModal.classList.remove('show');
         deferredPrompt = null;
     });
 
@@ -666,7 +864,7 @@ function setupInstallPrompt() {
     if (isIOS() && !isStandalonePWA()) {
         setTimeout(() => {
             if (currentUser && !sessionStorage.getItem('zvit_install_dismissed_ios')) {
-                document.getElementById('installModalIOS').classList.add('show');
+                DOM.installModalIOS.classList.add('show');
             }
         }, 3000);
     }
@@ -676,33 +874,33 @@ async function installPWA() {
     if (!deferredPrompt) {
         // iOS Safari - show iOS modal
         if (isIOS()) {
-            document.getElementById('installModal').classList.remove('show');
-            document.getElementById('installModalIOS').classList.add('show');
+            DOM.installModal.classList.remove('show');
+            DOM.installModalIOS.classList.add('show');
         } else {
             showToast('Натисніть меню браузера → "Встановити додаток"', 'info');
-            document.getElementById('installModal').classList.remove('show');
+            DOM.installModal.classList.remove('show');
         }
         return;
     }
 
     deferredPrompt.prompt();
     const { outcome } = await deferredPrompt.userChoice;
-    console.log('Install outcome:', outcome);
+    log('Install outcome:', outcome);
     deferredPrompt = null;
-    document.getElementById('installModal').classList.remove('show');
+    DOM.installModal.classList.remove('show');
 }
 
 function dismissInstallModal(event) {
     // Закрити тільки при кліку на overlay (не на modal)
     if (event.target.id === 'installModal') {
-        document.getElementById('installModal').classList.remove('show');
+        DOM.installModal.classList.remove('show');
         // Зберігаємо в sessionStorage - закрито до наступного відкриття екрану
         sessionStorage.setItem('zvit_install_dismissed', 'true');
     }
 }
 
 function dismissInstallModalIOS(event) {
-    document.getElementById('installModalIOS').classList.remove('show');
+    DOM.installModalIOS.classList.remove('show');
     sessionStorage.setItem('zvit_install_dismissed_ios', 'true');
 }
 
@@ -712,7 +910,7 @@ function showScreen(screenId, addToHistory = true) {
     document.getElementById(screenId).classList.add('active');
 
     // Show/hide bottom nav
-    const bottomNav = document.getElementById('bottomNav');
+    const bottomNav = DOM.bottomNav;
     const authScreens = ['loginScreen', 'registerScreen', 'verifyScreen'];
     const mainScreens = ['mainScreen', 'reportsScreen', 'settingsScreen'];
     bottomNav.style.display = authScreens.includes(screenId) ? 'none' : 'flex';
@@ -756,9 +954,9 @@ function navigateTo(screenId) {
 
 async function updateSettingsScreen() {
     if (currentUser) {
-        document.getElementById('profileName').textContent = currentUser.name || '-';
-        document.getElementById('profilePhone').textContent = currentUser.phone || '-';
-        document.getElementById('profileEmail').textContent = currentUser.email || 'Не вказано';
+        DOM.profileName.textContent = currentUser.name || '-';
+        DOM.profilePhone.textContent = currentUser.phone || '-';
+        DOM.profileEmail.textContent = currentUser.email || 'Не вказано';
     }
     // Load notification setting from server (synced with server)
     await loadNotificationsSettingFromServer();
@@ -771,9 +969,9 @@ async function showMainScreen() {
 
     // Update settings
     if (currentUser) {
-        document.getElementById('profileName').textContent = currentUser.name || '-';
-        document.getElementById('profilePhone').textContent = currentUser.phone || '-';
-        document.getElementById('profileEmail').textContent = currentUser.email || 'Не вказано';
+        DOM.profileName.textContent = currentUser.name || '-';
+        DOM.profilePhone.textContent = currentUser.phone || '-';
+        DOM.profileEmail.textContent = currentUser.email || 'Не вказано';
     }
 
     // Load notifications setting from server
@@ -786,7 +984,7 @@ async function showMainScreen() {
     sessionStorage.removeItem('zvit_install_dismissed');
     if (deferredPrompt) {
         setTimeout(() => {
-            document.getElementById('installModal').classList.add('show');
+            DOM.installModal.classList.add('show');
         }, 2000);
     }
 }
@@ -801,24 +999,24 @@ async function initPushNotificationsIfEnabled() {
     try {
         // Check browser support
         if (!('Notification' in window) || !('serviceWorker' in navigator)) {
-            console.log('[FCM] Browser does not support push notifications');
+            log('[FCM] Browser does not support push notifications');
             return;
         }
 
         // Check if permission already granted (don't prompt)
         if (Notification.permission !== 'granted') {
-            console.log('[FCM] Notification permission not granted, skipping auto-init');
+            log('[FCM] Notification permission not granted, skipping auto-init');
             return;
         }
 
-        console.log('[FCM] Auto-initializing push notifications...');
+        log('[FCM] Auto-initializing push notifications...');
 
         // Subscribe to push and send token to backend
         await subscribeToPush();
 
-        console.log('[FCM] Auto-init completed successfully');
+        log('[FCM] Auto-init completed successfully');
     } catch (error) {
-        console.error('[FCM] Auto-init failed:', error);
+        logError('[FCM] Auto-init failed:', error);
     }
 }
 
@@ -826,10 +1024,10 @@ async function initPushNotificationsIfEnabled() {
 async function handleLogin(e) {
     e.preventDefault();
 
-    const phoneRaw = document.getElementById('loginPhone').value;
+    const phoneRaw = DOM.loginPhone.value;
     const phone = normalizePhone(phoneRaw);
-    const password = document.getElementById('loginPassword').value;
-    const btn = document.getElementById('loginBtn');
+    const password = DOM.loginPassword.value;
+    const btn = DOM.loginBtn;
 
     // phone = +380XXXXXXXXX (13 символів)
     if (phone.length !== 13) {
@@ -890,11 +1088,11 @@ async function handleLogin(e) {
 async function handleRegister(e) {
     e.preventDefault();
 
-    const name = document.getElementById('registerName').value;
-    const phoneRaw = document.getElementById('registerPhone').value;
+    const name = DOM.registerName.value;
+    const phoneRaw = DOM.registerPhone.value;
     const phone = normalizePhone(phoneRaw);
-    const password = document.getElementById('registerPassword').value;
-    const btn = document.getElementById('registerBtn');
+    const password = DOM.registerPassword.value;
+    const btn = DOM.registerBtn;
 
     // phone = +380XXXXXXXXX (13 символів)
     if (phone.length !== 13) {
@@ -973,7 +1171,7 @@ async function handleRegister(e) {
 async function handleVerify(e) {
     e.preventDefault();
 
-    const code = document.getElementById('verifyCode').value;
+    const code = DOM.verifyCode.value;
     const phone = localStorage.getItem('zvit_pending_phone');
     const password = localStorage.getItem('zvit_pending_password');
     const name = localStorage.getItem('zvit_pending_name');
@@ -1040,7 +1238,7 @@ async function clearAppCache() {
         if ('caches' in window) {
             const cacheNames = await caches.keys();
             await Promise.all(cacheNames.map(cacheName => caches.delete(cacheName)));
-            console.log('Service Worker caches cleared');
+            log('Service Worker caches cleared');
         }
 
         // Unregister Service Worker
@@ -1049,7 +1247,7 @@ async function clearAppCache() {
             for (const registration of registrations) {
                 await registration.unregister();
             }
-            console.log('Service Worker unregistered');
+            log('Service Worker unregistered');
         }
 
         // Clear localStorage (except auth token)
@@ -1067,7 +1265,7 @@ async function clearAppCache() {
         }, 1000);
 
     } catch (error) {
-        console.error('Error clearing cache:', error);
+        logError('Error clearing cache:', error);
         showToast('Помилка скидання кешу', 'error');
     }
 }
@@ -1075,18 +1273,18 @@ async function clearAppCache() {
 // Profile Editing
 function showEditNameDialog() {
     const currentName = currentUser?.name || '';
-    document.getElementById('editNameInput').value = currentName;
-    document.getElementById('editNameModal').classList.add('active');
+    DOM.editNameInput.value = currentName;
+    DOM.editNameModal.classList.add('active');
 }
 
 function showEditEmailDialog() {
     const currentEmail = currentUser?.email || '';
-    document.getElementById('editEmailInput').value = currentEmail;
-    document.getElementById('editEmailModal').classList.add('active');
+    DOM.editEmailInput.value = currentEmail;
+    DOM.editEmailModal.classList.add('active');
 }
 
 async function saveProfileName() {
-    const name = document.getElementById('editNameInput').value.trim();
+    const name = DOM.editNameInput.value.trim();
 
     if (!name) {
         showToast('Введіть ім\'я', 'error');
@@ -1104,7 +1302,7 @@ async function saveProfileName() {
         if (response.success) {
             currentUser.name = name;
             localStorage.setItem('zvit_user', JSON.stringify(currentUser));
-            document.getElementById('profileName').textContent = name;
+            DOM.profileName.textContent = name;
             closeModal('editNameModal');
             showToast('Ім\'я оновлено', 'success');
         } else {
@@ -1116,7 +1314,7 @@ async function saveProfileName() {
 }
 
 async function saveProfileEmail() {
-    const email = document.getElementById('editEmailInput').value.trim();
+    const email = DOM.editEmailInput.value.trim();
 
     if (email && !isValidEmail(email)) {
         showToast('Невірний формат email', 'error');
@@ -1129,7 +1327,7 @@ async function saveProfileEmail() {
         if (response.success) {
             currentUser.email = email || null;
             localStorage.setItem('zvit_user', JSON.stringify(currentUser));
-            document.getElementById('profileEmail').textContent = email || 'Не вказано';
+            DOM.profileEmail.textContent = email || 'Не вказано';
             closeModal('editEmailModal');
             showToast('Email оновлено', 'success');
         } else {
@@ -1146,16 +1344,16 @@ function isValidEmail(email) {
 
 // Groups
 async function loadGroups() {
-    const container = document.getElementById('groupsList');
-    container.innerHTML = '<div class="loading"><div class="spinner"></div></div>';
+    const container = DOM.groupsList;
+    container.innerHTML = TEMPLATES.loading;
 
     try {
-        console.log('[PWA] Loading groups...');
-        console.log('[PWA] Token:', localStorage.getItem('zvit_token') ? 'present' : 'missing');
+        log('[PWA] Loading groups...');
+        log('[PWA] Token:', localStorage.getItem('zvit_token') ? 'present' : 'missing');
 
         const response = await apiRequest('/pwa/groups', 'GET');
 
-        console.log('[PWA] Groups response:', response);
+        log('[PWA] Groups response:', response);
 
         if (response.success && response.data) {
             renderGroups(response.data);
@@ -1171,11 +1369,11 @@ async function loadGroups() {
             `;
         }
     } catch (error) {
-        console.error('[PWA] Groups loading error:', error);
+        logError('[PWA] Groups loading error:', error);
         // Якщо токен є але сервер не відповідає - перенаправляємо на логін
         // (скоріш за все токен протух або сервер перезавантажився)
         if (localStorage.getItem(STORAGE_KEYS.TOKEN)) {
-            console.log('[PWA] Server error with existing token - redirecting to login');
+            log('[PWA] Server error with existing token - redirecting to login');
             showToast('Сесія закінчилась. Увійдіть знову.', 'warning');
             logout();
         }
@@ -1183,7 +1381,7 @@ async function loadGroups() {
 }
 
 function renderGroups(groups) {
-    const container = document.getElementById('groupsList');
+    const container = DOM.groupsList;
 
     if (!groups || groups.length === 0) {
         container.innerHTML = `
@@ -1223,7 +1421,7 @@ function renderGroups(groups) {
 
 async function openGroup(groupId, groupName) {
     currentGroup = { id: groupId, name: groupName };
-    document.getElementById('groupTitle').textContent = groupName;
+    DOM.groupTitle.textContent = groupName;
     showScreen('groupScreen');
 
     // Завантажуємо деталі групи (функція сама вирішить що показати - учасників чи звіти)
@@ -1232,9 +1430,9 @@ async function openGroup(groupId, groupName) {
 
 async function loadGroupDetails(groupId) {
     try {
-        console.log('[PWA] Loading group details:', groupId);
+        log('[PWA] Loading group details:', groupId);
         const response = await apiRequest(`/pwa/groups/${groupId}`, 'GET');
-        console.log('[PWA] Group details:', response);
+        log('[PWA] Group details:', response);
 
         if (response.success && response.data) {
             const group = response.data;
@@ -1256,9 +1454,9 @@ async function loadGroupDetails(groupId) {
             };
 
             // Показуємо/ховаємо адмін-панель та вид для членів
-            const adminInfo = document.getElementById('groupAdminInfo');
-            const memberView = document.getElementById('groupMemberView');
-            const settingsBtn = document.getElementById('groupSettingsBtn');
+            const adminInfo = DOM.groupAdminInfo;
+            const memberView = DOM.groupMemberView;
+            const settingsBtn = DOM.groupSettingsBtn;
 
             if (currentGroup.isAdmin) {
                 // Адмін бачить учасників
@@ -1267,32 +1465,32 @@ async function loadGroupDetails(groupId) {
                 settingsBtn.style.display = 'flex';
 
                 // Оновлюємо інформацію
-                document.getElementById('groupMembersInfo').textContent = group.currentMembers || 0;
-                document.getElementById('groupReportType').textContent =
+                DOM.groupMembersInfo.textContent = group.currentMembers || 0;
+                DOM.groupReportType.textContent =
                     group.reportType === 'SIMPLE' ? 'Простий' : 'Розширений';
-                document.getElementById('groupAccessCode').textContent = group.accessCode || '-';
+                DOM.groupAccessCode.textContent = group.accessCode || '-';
 
                 // Розклад
-                const scheduleRow = document.getElementById('groupScheduleRow');
+                const scheduleRow = DOM.groupScheduleRow;
                 if (group.scheduleType && (group.fixedTimes || group.intervalMinutes)) {
                     scheduleRow.style.display = 'flex';
                     if (group.scheduleType === 'FIXED_TIMES' && group.fixedTimes) {
-                        document.getElementById('groupSchedule').textContent = 'о ' + group.fixedTimes.join('; ');
+                        DOM.groupSchedule.textContent = 'о ' + group.fixedTimes.join('; ');
                     } else if (group.scheduleType === 'INTERVAL') {
                         const hours = Math.floor(group.intervalMinutes / 60);
                         const mins = group.intervalMinutes % 60;
                         const interval = hours > 0 ? `${hours} год${mins > 0 ? ` ${mins} хв` : ''}` : `${mins} хв`;
-                        document.getElementById('groupSchedule').textContent = `з ${group.intervalStartTime}, кожні ${interval}`;
+                        DOM.groupSchedule.textContent = `з ${group.intervalStartTime}, кожні ${interval}`;
                     }
                 } else {
                     scheduleRow.style.display = 'none';
                 }
 
                 // Слова звіту (для простих)
-                const wordsRow = document.getElementById('groupWordsRow');
+                const wordsRow = DOM.groupWordsRow;
                 if (group.reportType === 'SIMPLE') {
                     wordsRow.style.display = 'flex';
-                    document.getElementById('groupWords').textContent =
+                    DOM.groupWords.textContent =
                         `${group.positiveWord || 'ОК'} / ${group.negativeWord || 'НЕ ОК'}`;
                 } else {
                     wordsRow.style.display = 'none';
@@ -1311,7 +1509,7 @@ async function loadGroupDetails(groupId) {
             }
         }
     } catch (error) {
-        console.error('[PWA] Error loading group details:', error);
+        logError('[PWA] Error loading group details:', error);
     }
 }
 
@@ -1334,8 +1532,8 @@ function copyAccessCode() {
 // Додати учасника
 function showAddMemberDialog() {
     if (!currentGroup) return;
-    document.getElementById('addMemberCode').textContent = currentGroup.accessCode || '-';
-    document.getElementById('addMemberModal').classList.add('active');
+    DOM.addMemberCode.textContent = currentGroup.accessCode || '-';
+    DOM.addMemberModal.classList.add('active');
 }
 
 function copyAccessCodeFromModal() {
@@ -1368,35 +1566,35 @@ function showScheduleDialog() {
 
     // Встановлюємо поточні значення
     const isInterval = currentGroup.scheduleType === 'INTERVAL';
-    document.getElementById('scheduleFixed').checked = !isInterval;
-    document.getElementById('scheduleInterval').checked = isInterval;
+    DOM.scheduleFixed.checked = !isInterval;
+    DOM.scheduleInterval.checked = isInterval;
 
     toggleScheduleType();
 
     // Заповнюємо значення
     if (currentGroup.fixedTimes) {
         const times = currentGroup.fixedTimes;
-        if (times[0]) document.getElementById('fixedTime1').value = times[0];
-        if (times[1]) document.getElementById('fixedTime2').value = times[1];
-        if (times[2]) document.getElementById('fixedTime3').value = times[2];
+        if (times[0]) DOM.fixedTime1.value = times[0];
+        if (times[1]) DOM.fixedTime2.value = times[1];
+        if (times[2]) DOM.fixedTime3.value = times[2];
     }
 
     if (currentGroup.intervalStartTime) {
-        document.getElementById('intervalStart').value = currentGroup.intervalStartTime;
+        DOM.intervalStart.value = currentGroup.intervalStartTime;
     }
 
     // Ініціалізуємо drum pickers з поточним значенням
     setIntervalFromMinutes(currentGroup.intervalMinutes || 60);
 
-    const modal = document.getElementById('scheduleModal');
+    const modal = DOM.scheduleModal;
     modal.style.display = '';  // Очищаємо inline style, який міг залишитись від closeModal
     modal.classList.add('active');
 }
 
 function toggleScheduleType() {
-    const isInterval = document.getElementById('scheduleInterval').checked;
-    document.getElementById('fixedTimesSection').style.display = isInterval ? 'none' : 'block';
-    document.getElementById('intervalSection').style.display = isInterval ? 'block' : 'none';
+    const isInterval = DOM.scheduleInterval.checked;
+    DOM.fixedTimesSection.style.display = isInterval ? 'none' : 'block';
+    DOM.intervalSection.style.display = isInterval ? 'block' : 'none';
 }
 
 // Drum Picker для інтервалу
@@ -1404,8 +1602,8 @@ let selectedHours = 0;
 let selectedMinutes = 5;
 
 function initDrumPickers() {
-    const hoursContainer = document.getElementById('hoursPickerItems');
-    const minutesContainer = document.getElementById('minutesPickerItems');
+    const hoursContainer = DOM.hoursPickerItems;
+    const minutesContainer = DOM.minutesPickerItems;
 
     if (!hoursContainer || !minutesContainer) return;
 
@@ -1574,8 +1772,8 @@ function getIntervalMinutes() {
 
 // Слухачі для перемикання типу розкладу
 document.addEventListener('DOMContentLoaded', () => {
-    const scheduleFixed = document.getElementById('scheduleFixed');
-    const scheduleInterval = document.getElementById('scheduleInterval');
+    const scheduleFixed = DOM.scheduleFixed;
+    const scheduleInterval = DOM.scheduleInterval;
     if (scheduleFixed) scheduleFixed.addEventListener('change', toggleScheduleType);
     if (scheduleInterval) scheduleInterval.addEventListener('change', toggleScheduleType);
 
@@ -1586,20 +1784,20 @@ document.addEventListener('DOMContentLoaded', () => {
 async function saveSchedule() {
     if (!currentGroup) return;
 
-    const isInterval = document.getElementById('scheduleInterval').checked;
+    const isInterval = DOM.scheduleInterval.checked;
 
     const request = {
         scheduleType: isInterval ? 'INTERVAL' : 'FIXED_TIMES'
     };
 
     if (isInterval) {
-        request.intervalStartTime = document.getElementById('intervalStart').value;
+        request.intervalStartTime = DOM.intervalStart.value;
         request.intervalMinutes = getIntervalMinutes();
     } else {
         const times = [];
-        const t1 = document.getElementById('fixedTime1').value;
-        const t2 = document.getElementById('fixedTime2').value;
-        const t3 = document.getElementById('fixedTime3').value;
+        const t1 = DOM.fixedTime1.value;
+        const t2 = DOM.fixedTime2.value;
+        const t3 = DOM.fixedTime3.value;
         if (t1) times.push(t1);
         if (t2) times.push(t2);
         if (t3) times.push(t3);
@@ -1631,11 +1829,11 @@ function showChangeReportTypeModal() {
 
     // Set current type
     const isSimple = currentGroup.reportType === 'SIMPLE';
-    document.getElementById('reportTypeSimple').checked = isSimple;
-    document.getElementById('reportTypeExtended').checked = !isSimple;
+    DOM.reportTypeSimple.checked = isSimple;
+    DOM.reportTypeExtended.checked = !isSimple;
 
     closeModal('groupSettingsModal');
-    document.getElementById('changeReportTypeModal').classList.add('active');
+    DOM.changeReportTypeModal.classList.add('active');
 }
 
 async function saveReportType() {
@@ -1652,7 +1850,7 @@ async function saveReportType() {
             currentGroup.reportType = newType;
             const typeText = newType === 'SIMPLE' ? 'Простий' : 'Розширений';
 
-            document.getElementById('groupReportType').textContent = typeText;
+            DOM.groupReportType.textContent = typeText;
 
             closeModal('changeReportTypeModal');
             showToast('Тип звіту змінено', 'success');
@@ -1688,30 +1886,30 @@ function showChangeReportWordsDialog() {
     // Якщо не знайдено стандартний варіант - вибираємо "Власні слова"
     if (!found) {
         document.querySelector('input[name="reportWords"][value="CUSTOM"]').checked = true;
-        document.getElementById('customPositiveWord').value = currentPositive;
-        document.getElementById('customNegativeWord').value = currentNegative;
-        document.getElementById('customWordsSection').style.display = 'block';
+        DOM.customPositiveWord.value = currentPositive;
+        DOM.customNegativeWord.value = currentNegative;
+        DOM.customWordsSection.style.display = 'block';
     } else {
-        document.getElementById('customWordsSection').style.display = 'none';
-        document.getElementById('customPositiveWord').value = '';
-        document.getElementById('customNegativeWord').value = '';
+        DOM.customWordsSection.style.display = 'none';
+        DOM.customPositiveWord.value = '';
+        DOM.customNegativeWord.value = '';
     }
 
     // Обробник зміни вибору
     radios.forEach(radio => {
         radio.onchange = function() {
-            const customSection = document.getElementById('customWordsSection');
+            const customSection = DOM.customWordsSection;
             if (this.value === 'CUSTOM') {
                 customSection.style.display = 'block';
-                document.getElementById('customPositiveWord').value = currentGroup.positiveWord || '';
-                document.getElementById('customNegativeWord').value = currentGroup.negativeWord || '';
+                DOM.customPositiveWord.value = currentGroup.positiveWord || '';
+                DOM.customNegativeWord.value = currentGroup.negativeWord || '';
             } else {
                 customSection.style.display = 'none';
             }
         };
     });
 
-    document.getElementById('changeReportWordsModal').classList.add('active');
+    DOM.changeReportWordsModal.classList.add('active');
 }
 
 // Зберегти слова звіту
@@ -1724,8 +1922,8 @@ async function saveReportWords() {
     let positiveWord, negativeWord;
 
     if (selectedRadio.value === 'CUSTOM') {
-        positiveWord = document.getElementById('customPositiveWord').value.trim();
-        negativeWord = document.getElementById('customNegativeWord').value.trim();
+        positiveWord = DOM.customPositiveWord.value.trim();
+        negativeWord = DOM.customNegativeWord.value.trim();
 
         if (!positiveWord || !negativeWord) {
             showToast('Введіть обидва слова', 'error');
@@ -1752,7 +1950,7 @@ async function saveReportWords() {
             currentGroup.positiveWord = positiveWord;
             currentGroup.negativeWord = negativeWord;
 
-            document.getElementById('groupWords').textContent = `${positiveWord} / ${negativeWord}`;
+            DOM.groupWords.textContent = `${positiveWord} / ${negativeWord}`;
 
             closeModal('changeReportWordsModal');
             showToast('Слова звіту змінено', 'success');
@@ -1766,15 +1964,15 @@ async function saveReportWords() {
 
 function showEditGroupNameDialog() {
     if (!currentGroup) return;
-    document.getElementById('editGroupNameInput').value = currentGroup.name || '';
+    DOM.editGroupNameInput.value = currentGroup.name || '';
     closeModal('groupSettingsModal');
-    document.getElementById('editGroupNameModal').classList.add('active');
+    DOM.editGroupNameModal.classList.add('active');
 }
 
 async function saveGroupName() {
     if (!currentGroup) return;
 
-    const newName = document.getElementById('editGroupNameInput').value.trim();
+    const newName = DOM.editGroupNameInput.value.trim();
 
     if (!newName || newName.length < 3) {
         showToast('Назва має бути мінімум 3 символи', 'error');
@@ -1788,8 +1986,8 @@ async function saveGroupName() {
 
         if (response.success) {
             currentGroup.name = newName;
-            document.getElementById('groupTitle').textContent = newName;
-            document.getElementById('settingsGroupName').textContent = newName;
+            DOM.groupTitle.textContent = newName;
+            DOM.settingsGroupName.textContent = newName;
 
             closeModal('editGroupNameModal');
             showToast('Назву групи змінено', 'success');
@@ -1814,7 +2012,7 @@ async function regenerateAccessCode() {
             const newCode = response.data.accessCode || response.data;
             currentGroup.accessCode = newCode;
 
-            document.getElementById('groupAccessCode').textContent = newCode;
+            DOM.groupAccessCode.textContent = newCode;
 
             closeModal('groupSettingsModal');
             showToast('Код доступу змінено', 'success');
@@ -1828,15 +2026,15 @@ async function regenerateAccessCode() {
 
 function showGroupSettings() {
     if (!currentGroup) return;
-    document.getElementById('settingsGroupName').textContent = currentGroup.name;
-    const modal = document.getElementById('groupSettingsModal');
+    DOM.settingsGroupName.textContent = currentGroup.name;
+    const modal = DOM.groupSettingsModal;
     modal.classList.add('active');
     modal.style.display = 'flex';
 }
 
 function showDeleteGroupConfirm() {
     closeModal('groupSettingsModal');
-    document.getElementById('deleteGroupModal').classList.add('active');
+    DOM.deleteGroupModal.classList.add('active');
 }
 
 async function confirmDeleteGroup() {
@@ -1860,7 +2058,7 @@ async function confirmDeleteGroup() {
 }
 
 async function loadGroupMembersForAdmin() {
-    const container = document.getElementById('adminMembersList');
+    const container = DOM.adminMembersList;
     container.innerHTML = '<div class="loading" style="padding: 20px;"><div class="spinner" style="width: 24px; height: 24px;"></div></div>';
 
     try {
@@ -1871,7 +2069,7 @@ async function loadGroupMembersForAdmin() {
             currentGroup.adminCount = response.data.filter(m => m.role === 'ADMIN' && m.status === 'ACCEPTED').length;
             renderMembersForAdmin(response.data);
             // Оновлюємо лічильник у інфо-блоці
-            const membersInfo = document.getElementById('groupMembersInfo');
+            const membersInfo = DOM.groupMembersInfo;
             if (membersInfo) {
                 membersInfo.textContent = response.data.length;
             }
@@ -1888,7 +2086,7 @@ function loadGroupMembers() {
 }
 
 function renderMembersForAdmin(members) {
-    const container = document.getElementById('adminMembersList');
+    const container = DOM.adminMembersList;
 
     if (!members || members.length === 0) {
         container.innerHTML = '<p style="color: var(--text-secondary); text-align: center; padding: 20px;">Немає учасників</p>';
@@ -2026,8 +2224,8 @@ function showRoleChangeDialog(memberId, currentRole) {
         </div>
     `).join('');
 
-    document.getElementById('roleSelectOptions').innerHTML = optionsHtml;
-    document.getElementById('roleSelectModal').style.display = 'flex';
+    DOM.roleSelectOptions.innerHTML = optionsHtml;
+    DOM.roleSelectModal.style.display = 'flex';
 }
 
 function selectNewRole(memberId, newRole, currentRole) {
@@ -2118,25 +2316,25 @@ async function rejectMember(memberId) {
 
 // Group Actions Menu
 function showGroupActionsMenu() {
-    document.getElementById('actionMenu').classList.add('active');
-    document.getElementById('actionMenuOverlay').classList.add('active');
+    DOM.actionMenu.classList.add('active');
+    DOM.actionMenuOverlay.classList.add('active');
 }
 
 function hideGroupActionsMenu() {
-    document.getElementById('actionMenu').classList.remove('active');
-    document.getElementById('actionMenuOverlay').classList.remove('active');
+    DOM.actionMenu.classList.remove('active');
+    DOM.actionMenuOverlay.classList.remove('active');
 }
 
 // Create Group
 function showCreateGroupDialog() {
     hideGroupActionsMenu();
-    document.getElementById('newGroupName').value = '';
+    DOM.newGroupName.value = '';
     document.querySelector('input[name="reportType"][value="SIMPLE"]').checked = true;
-    document.getElementById('createGroupModal').classList.add('active');
+    DOM.createGroupModal.classList.add('active');
 }
 
 async function createGroup() {
-    const name = document.getElementById('newGroupName').value.trim();
+    const name = DOM.newGroupName.value.trim();
     const reportType = document.querySelector('input[name="reportType"]:checked').value;
 
     if (!name) {
@@ -2171,12 +2369,12 @@ async function createGroup() {
 // Join Group
 function showJoinGroupDialog() {
     hideGroupActionsMenu();
-    document.getElementById('accessCode').value = '';
-    document.getElementById('joinGroupModal').classList.add('active');
+    DOM.accessCode.value = '';
+    DOM.joinGroupModal.classList.add('active');
 }
 
 async function joinGroup() {
-    const accessCode = document.getElementById('accessCode').value.trim().toUpperCase();
+    const accessCode = DOM.accessCode.value.trim().toUpperCase();
 
     if (!accessCode) {
         showToast('Введіть код доступу', 'error');
@@ -2216,8 +2414,8 @@ function closeModal(modalId) {
 // Leave Group
 function showLeaveGroupConfirm() {
     if (!currentGroup) return;
-    document.getElementById('leaveGroupName').textContent = currentGroup.name;
-    document.getElementById('leaveGroupModal').classList.add('active');
+    DOM.leaveGroupName.textContent = currentGroup.name;
+    DOM.leaveGroupModal.classList.add('active');
 }
 
 async function confirmLeaveGroup() {
@@ -2242,13 +2440,13 @@ async function confirmLeaveGroup() {
 
 // Reports
 async function loadReports(groupId) {
-    const container = document.getElementById('reportsList');
-    container.innerHTML = '<div class="loading"><div class="spinner"></div></div>';
+    const container = DOM.reportsList;
+    container.innerHTML = TEMPLATES.loading;
 
     try {
-        console.log('[PWA] Loading reports for group:', groupId);
+        log('[PWA] Loading reports for group:', groupId);
         const response = await apiRequest(`/pwa/groups/${groupId}/reports`, 'GET');
-        console.log('[PWA] Reports response:', response);
+        log('[PWA] Reports response:', response);
 
         if (response.success && response.data) {
             renderReports(response.data);
@@ -2263,7 +2461,7 @@ async function loadReports(groupId) {
             `;
         }
     } catch (error) {
-        console.error('[PWA] Reports loading error:', error);
+        logError('[PWA] Reports loading error:', error);
         container.innerHTML = `
             <div class="card" style="text-align: center; color: var(--danger);">
                 <p>Помилка завантаження звітів</p>
@@ -2274,7 +2472,7 @@ async function loadReports(groupId) {
 }
 
 function renderReports(reports) {
-    const container = document.getElementById('reportsList');
+    const container = DOM.reportsList;
 
     if (!reports || reports.length === 0) {
         container.innerHTML = `
@@ -2311,13 +2509,13 @@ function renderReports(reports) {
 
 // Reports Screen - показує список груп для звітування (як в Android)
 async function loadReportsScreen() {
-    const container = document.getElementById('reportGroupsList');
-    container.innerHTML = '<div class="loading"><div class="spinner"></div></div>';
+    const container = DOM.reportGroupsList;
+    container.innerHTML = TEMPLATES.loading;
 
     try {
-        console.log('[PWA] Loading groups for reporting...');
+        log('[PWA] Loading groups for reporting...');
         const response = await apiRequest('/pwa/groups', 'GET');
-        console.log('[PWA] Groups for reporting:', response);
+        log('[PWA] Groups for reporting:', response);
 
         if (response.success && response.data && response.data.length > 0) {
             renderReportGroups(response.data);
@@ -2333,10 +2531,10 @@ async function loadReportsScreen() {
             `;
         }
     } catch (error) {
-        console.error('[PWA] Groups loading error:', error);
+        logError('[PWA] Groups loading error:', error);
         // Якщо токен є але сервер не відповідає - перенаправляємо на логін
         if (localStorage.getItem(STORAGE_KEYS.TOKEN)) {
-            console.log('[PWA] Server error with existing token - redirecting to login');
+            log('[PWA] Server error with existing token - redirecting to login');
             showToast('Сесія закінчилась. Увійдіть знову.', 'warning');
             logout();
         }
@@ -2344,20 +2542,20 @@ async function loadReportsScreen() {
 }
 
 function renderReportGroups(groups) {
-    const container = document.getElementById('reportGroupsList');
+    const container = DOM.reportGroupsList;
 
-    console.log('[PWA] renderReportGroups - all groups:', groups);
+    log('[PWA] renderReportGroups - all groups:', groups);
 
     // Фільтруємо тільки прийняті групи (userRole не null/undefined)
     const acceptedGroups = groups.filter(g => g.userRole);
-    console.log('[PWA] Accepted groups:', acceptedGroups);
+    log('[PWA] Accepted groups:', acceptedGroups);
 
     // Розділяємо на групи за роллю
     const adminGroups = acceptedGroups.filter(g => g.userRole === 'ADMIN');
     const moderatorGroups = acceptedGroups.filter(g => g.userRole === 'MODER');
     const memberGroups = acceptedGroups.filter(g => g.userRole === 'MEMBER');
 
-    console.log('[PWA] Admin groups:', adminGroups.length, 'Moderator groups:', moderatorGroups.length, 'Member groups:', memberGroups.length);
+    log('[PWA] Admin groups:', adminGroups.length, 'Moderator groups:', moderatorGroups.length, 'Member groups:', memberGroups.length);
 
     let html = '';
 
@@ -2422,11 +2620,11 @@ function renderReportGroupCard(group, role) {
 
     // Якщо сервер повідомив про активну сесію - синхронізуємо localStorage
     if (group.hasActiveUrgentSession && group.urgentExpiresAt) {
-        console.log('[URGENT] Server reports active session for group', groupId, ':', group.urgentExpiresAt);
+        log('[URGENT] Server reports active session for group', groupId, ':', group.urgentExpiresAt);
         const serverDeadline = parseServerDate(group.urgentExpiresAt);
         if (serverDeadline && serverDeadline > new Date()) {
             // Оновлюємо/зберігаємо інформацію з сервера
-            console.log('[URGENT] Syncing to localStorage from server data');
+            log('[URGENT] Syncing to localStorage from server data');
             setUrgentReportForGroup(groupId, group.urgentExpiresAt, group.urgentMessage || '');
             urgentReport = { deadline: group.urgentExpiresAt, message: group.urgentMessage || '' };
         }
@@ -2434,7 +2632,7 @@ function renderReportGroupCard(group, role) {
 
     const hasUrgentReport = urgentReport !== null;
     if (hasUrgentReport) {
-        console.log('[URGENT] Group', groupId, 'has urgent report:', urgentReport);
+        log('[URGENT] Group', groupId, 'has urgent report:', urgentReport);
     }
 
     // Права частина залежить від ролі:
@@ -2520,7 +2718,7 @@ function renderReportGroupCard(group, role) {
 }
 
 function openGroupDetails(groupId) {
-    console.log('[PWA] openGroupDetails called:', groupId);
+    log('[PWA] openGroupDetails called:', groupId);
     currentGroup = { id: groupId };
     showScreen('groupScreen');
     loadGroupDetails(groupId);
@@ -2528,16 +2726,16 @@ function openGroupDetails(groupId) {
 
 // Відкрити екран статусів учасників (для адміна)
 async function openGroupStatuses(groupId, groupName) {
-    console.log('[PWA] openGroupStatuses called:', groupId, groupName);
+    log('[PWA] openGroupStatuses called:', groupId, groupName);
     currentGroup = { id: groupId, name: groupName };
-    document.getElementById('groupStatusTitle').textContent = groupName || 'Статус групи';
+    DOM.groupStatusTitle.textContent = groupName || 'Статус групи';
 
     // Показуємо кнопки для адміна
-    const urgentBtn = document.getElementById('urgentReportBtn');
+    const urgentBtn = DOM.urgentReportBtn;
     if (urgentBtn) {
         urgentBtn.style.display = 'flex';
     }
-    const qrBtn = document.getElementById('qrScannerBtn');
+    const qrBtn = DOM.qrScannerBtn;
     if (qrBtn) {
         qrBtn.style.display = 'flex';
     }
@@ -2552,7 +2750,7 @@ async function openGroupStatuses(groupId, groupName) {
             currentGroup.negativeWord = groupResponse.data.negativeWord || 'НЕ ОК';
         }
     } catch (e) {
-        console.log('[PWA] Could not load group details for words:', e);
+        log('[PWA] Could not load group details for words:', e);
     }
 
     loadGroupStatuses(groupId);
@@ -2560,22 +2758,22 @@ async function openGroupStatuses(groupId, groupName) {
 
 // Відкрити мої звіти в групі (для учасника)
 async function openMyReportsInGroup(groupId, groupName) {
-    console.log('[PWA] openMyReportsInGroup called:', groupId, groupName);
+    log('[PWA] openMyReportsInGroup called:', groupId, groupName);
 
     currentGroup = { id: groupId, name: groupName };
     currentReportUser = null; // Це мої звіти, не потрібен телефон
 
     // Оновлюємо заголовок - назва групи
-    document.getElementById('userReportsTitle').textContent = groupName || 'Група';
+    DOM.userReportsTitle.textContent = groupName || 'Група';
 
     // Показуємо субтитр "Мої звіти"
-    document.getElementById('userReportsSubtitle').style.display = 'block';
+    DOM.userReportsSubtitle.style.display = 'block';
 
     // Ховаємо телефон (це мої звіти)
-    document.getElementById('userReportsPhoneHeader').style.display = 'none';
+    DOM.userReportsPhoneHeader.style.display = 'none';
 
     // Ховаємо кнопку видалення (це мої звіти)
-    const deleteBtn = document.getElementById('btnDeleteUserReports');
+    const deleteBtn = DOM.btnDeleteUserReports;
     if (deleteBtn) {
         deleteBtn.style.display = 'none';
     }
@@ -2591,16 +2789,16 @@ async function openMyReportsInGroup(groupId, groupName) {
             currentGroup.negativeWord = groupResponse.data.negativeWord || 'НЕ ОК';
         }
     } catch (e) {
-        console.log('[PWA] Could not load group details for words:', e);
+        log('[PWA] Could not load group details for words:', e);
     }
 
-    const container = document.getElementById('userReportsList');
-    container.innerHTML = '<div class="loading"><div class="spinner"></div></div>';
+    const container = DOM.userReportsList;
+    container.innerHTML = TEMPLATES.loading;
 
     try {
         // Завантажуємо мої звіти в групі (той самий ендпойнт що для member view)
         const response = await apiRequest(`/pwa/groups/${groupId}/reports`, 'GET');
-        console.log('[PWA] My reports response:', response);
+        log('[PWA] My reports response:', response);
 
         if (response.success && response.data && response.data.length > 0) {
             renderUserReportsList(response.data);
@@ -2612,7 +2810,7 @@ async function openMyReportsInGroup(groupId, groupName) {
             `;
         }
     } catch (error) {
-        console.error('[PWA] My reports error:', error);
+        logError('[PWA] My reports error:', error);
         container.innerHTML = `
             <div style="text-align: center; padding: 32px; color: var(--danger);">
                 <p>Помилка завантаження звітів</p>
@@ -2626,13 +2824,13 @@ let urgentTimerInterval = null;
 
 // Завантажити статуси учасників групи
 async function loadGroupStatuses(groupId) {
-    const container = document.getElementById('userTilesGrid');
+    const container = DOM.userTilesGrid;
     container.innerHTML = '<div class="loading" style="grid-column: 1 / -1;"><div class="spinner"></div></div>';
 
     try {
-        console.log('[PWA] Loading group statuses for:', groupId);
+        log('[PWA] Loading group statuses for:', groupId);
         const response = await apiRequest(`/pwa/groups/${groupId}/statuses`, 'GET');
-        console.log('[PWA] Group statuses:', response);
+        log('[PWA] Group statuses:', response);
 
         if (response.success && response.data) {
             // Обробка термінового збору
@@ -2657,7 +2855,7 @@ async function loadGroupStatuses(groupId) {
             `;
         }
     } catch (error) {
-        console.error('[PWA] Group statuses error:', error);
+        logError('[PWA] Group statuses error:', error);
         hideUrgentBanner();
         container.innerHTML = `
             <div style="grid-column: 1 / -1; text-align: center; padding: 32px; color: var(--danger);">
@@ -2671,8 +2869,8 @@ async function loadGroupStatuses(groupId) {
 
 // Обробка термінового збору
 function handleUrgentSession(urgentSession) {
-    const banner = document.getElementById('urgentSessionBanner');
-    const urgentBtn = document.getElementById('urgentReportBtn');
+    const banner = DOM.urgentSessionBanner;
+    const urgentBtn = DOM.urgentReportBtn;
 
     if (urgentSession && urgentSession.active) {
         // Показати банер термінового збору
@@ -2689,8 +2887,8 @@ function handleUrgentSession(urgentSession) {
 
 // Показати банер термінового збору
 function showUrgentBanner(session) {
-    const banner = document.getElementById('urgentSessionBanner');
-    const infoEl = document.getElementById('urgentSessionInfo');
+    const banner = DOM.urgentSessionBanner;
+    const infoEl = DOM.urgentSessionInfo;
 
     if (!banner) return;
 
@@ -2726,7 +2924,7 @@ function showUrgentBanner(session) {
 
 // Сховати банер термінового збору
 function hideUrgentBanner() {
-    const banner = document.getElementById('urgentSessionBanner');
+    const banner = DOM.urgentSessionBanner;
     if (banner) banner.style.display = 'none';
 
     // Зупинити таймер
@@ -2738,7 +2936,7 @@ function hideUrgentBanner() {
 
 // Запустити таймер зворотного відліку
 function startUrgentTimer(remainingSeconds) {
-    const timerEl = document.getElementById('urgentTimer');
+    const timerEl = DOM.urgentTimer;
     if (!timerEl) return;
 
     // Зупинити попередній таймер
@@ -2797,14 +2995,14 @@ async function endUrgentSession() {
             showToast(response.message || 'Помилка завершення збору', 'error');
         }
     } catch (error) {
-        console.error('[PWA] End urgent session error:', error);
+        logError('[PWA] End urgent session error:', error);
         showToast('Помилка завершення збору', 'error');
     }
 }
 
 // Відобразити плитки користувачів
 function renderUserTiles(users) {
-    const container = document.getElementById('userTilesGrid');
+    const container = DOM.userTilesGrid;
 
     if (!users || users.length === 0) {
         container.innerHTML = `
@@ -2886,7 +3084,7 @@ let currentReportUser = null;
 
 // Відкрити звіти користувача (як окрему сторінку)
 async function openUserReports(userId, userName, userPhone) {
-    console.log('[PWA] Opening user reports:', userId, userName, userPhone);
+    log('[PWA] Opening user reports:', userId, userName, userPhone);
 
     // Зберігаємо дані користувача
     currentReportUser = {
@@ -2896,13 +3094,13 @@ async function openUserReports(userId, userName, userPhone) {
     };
 
     // Оновлюємо заголовок
-    document.getElementById('userReportsTitle').textContent = userName;
+    DOM.userReportsTitle.textContent = userName;
 
     // Ховаємо субтитр "Мої звіти" (це звіти іншого користувача)
-    document.getElementById('userReportsSubtitle').style.display = 'none';
+    DOM.userReportsSubtitle.style.display = 'none';
 
     // Показуємо телефон якщо є
-    const phoneHeader = document.getElementById('userReportsPhoneHeader');
+    const phoneHeader = DOM.userReportsPhoneHeader;
     if (userPhone && userPhone.trim()) {
         phoneHeader.textContent = userPhone;
         phoneHeader.style.display = 'block';
@@ -2911,7 +3109,7 @@ async function openUserReports(userId, userName, userPhone) {
     }
 
     // Показуємо кнопку видалення звітів (це звіти іншого користувача, ми адмін/модератор)
-    const deleteBtn = document.getElementById('btnDeleteUserReports');
+    const deleteBtn = DOM.btnDeleteUserReports;
     if (deleteBtn) {
         deleteBtn.style.display = 'block';
     }
@@ -2919,13 +3117,13 @@ async function openUserReports(userId, userName, userPhone) {
     // Переходимо на екран
     showScreen('userReportsScreen');
 
-    const container = document.getElementById('userReportsList');
-    container.innerHTML = '<div class="loading"><div class="spinner"></div></div>';
+    const container = DOM.userReportsList;
+    container.innerHTML = TEMPLATES.loading;
 
     try {
         const groupId = currentGroup.id;
         const response = await apiRequest(`/pwa/groups/${groupId}/users/${userId}/reports`, 'GET');
-        console.log('[PWA] User reports response:', response);
+        log('[PWA] User reports response:', response);
 
         if (response.success && response.data && response.data.length > 0) {
             renderUserReportsList(response.data);
@@ -2937,7 +3135,7 @@ async function openUserReports(userId, userName, userPhone) {
             `;
         }
     } catch (error) {
-        console.error('[PWA] User reports error:', error);
+        logError('[PWA] User reports error:', error);
         container.innerHTML = `
             <div style="text-align: center; padding: 32px; color: var(--danger);">
                 <p>Помилка завантаження звітів</p>
@@ -2961,8 +3159,8 @@ function navigateBackFromUserReports() {
 function showUserCallOptions() {
     if (!currentReportUser || !currentReportUser.phone) return;
 
-    document.getElementById('callOptionsPhone').textContent = currentReportUser.phone;
-    document.getElementById('callOptionsModal').classList.add('active');
+    DOM.callOptionsPhone.textContent = currentReportUser.phone;
+    DOM.callOptionsModal.classList.add('active');
 }
 
 // Підтвердити видалення звітів користувача
@@ -2994,7 +3192,7 @@ async function deleteUserReports() {
             showToast(`Видалено ${deletedCount} звітів`, 'success');
 
             // Оновити список (буде порожній)
-            const container = document.getElementById('userReportsList');
+            const container = DOM.userReportsList;
             container.innerHTML = `
                 <div style="text-align: center; padding: 32px; color: var(--text-secondary);">
                     <p>Немає звітів</p>
@@ -3004,7 +3202,7 @@ async function deleteUserReports() {
             showToast(response.message || 'Помилка видалення', 'error');
         }
     } catch (error) {
-        console.error('[PWA] Delete reports error:', error);
+        logError('[PWA] Delete reports error:', error);
         showToast('Помилка видалення звітів', 'error');
     }
 }
@@ -3038,7 +3236,7 @@ function openUserWhatsApp() {
 
 // Відобразити список звітів користувача
 function renderUserReportsList(reports) {
-    const container = document.getElementById('userReportsList');
+    const container = DOM.userReportsList;
 
     // Отримуємо власні слова з групи (якщо є)
     const positiveWord = currentGroup?.positiveWord || 'ОК';
@@ -3132,10 +3330,10 @@ function isLightColor(hexColor) {
 // Відкрити діалог термінового звіту (для адміна)
 function openUrgentReportDialog(groupId, groupName) {
     currentGroup = { id: groupId, name: groupName };
-    document.getElementById('urgentModalGroupName').textContent = groupName;
-    document.getElementById('urgentDeadlineSelect').value = '30';
-    document.getElementById('urgentMessage').value = '';
-    document.getElementById('urgentReportModal').classList.add('active');
+    DOM.urgentModalGroupName.textContent = groupName;
+    DOM.urgentDeadlineSelect.value = '30';
+    DOM.urgentMessage.value = '';
+    DOM.urgentReportModal.classList.add('active');
 }
 
 // Відкрити діалог термінового звіту з екрану групи
@@ -3150,8 +3348,8 @@ function openUrgentReportDialogFromGroup() {
 // Надіслати терміновий запит
 async function submitUrgentReport() {
     const groupId = currentGroup.id;
-    const deadlineMinutes = parseInt(document.getElementById('urgentDeadlineSelect').value);
-    const additionalMessage = document.getElementById('urgentMessage').value.trim();
+    const deadlineMinutes = parseInt(DOM.urgentDeadlineSelect.value);
+    const additionalMessage = DOM.urgentMessage.value.trim();
 
     // Базове повідомлення
     let message = 'Терміново надішліть звіт';
@@ -3171,7 +3369,7 @@ async function submitUrgentReport() {
         });
 
         if (response.success) {
-            document.getElementById('urgentReportModal').classList.remove('active');
+            DOM.urgentReportModal.classList.remove('active');
             showToast(`Терміновий запит надіслано! Сповіщень: ${response.data}`, 'success');
             // Пропонуємо переглянути статуси
             if (confirm('Переглянути хто вже відзвітував?')) {
@@ -3181,7 +3379,7 @@ async function submitUrgentReport() {
             showToast(response.message || 'Помилка надсилання', 'error');
         }
     } catch (error) {
-        console.error('[PWA] Urgent report error:', error);
+        logError('[PWA] Urgent report error:', error);
         showToast(error.message || 'Помилка надсилання термінового запиту', 'error');
     } finally {
         submitBtn.disabled = false;
@@ -3216,16 +3414,16 @@ function openSimpleReportModal() {
     }
 
     // Встановлюємо назву групи
-    document.getElementById('simpleReportGroupName').textContent = currentGroup.name;
+    DOM.simpleReportGroupName.textContent = currentGroup.name;
 
     // Встановлюємо власні слова групи
     const positiveWord = currentGroup.positiveWord || 'ОК';
     const negativeWord = currentGroup.negativeWord || 'НЕ ОК';
-    document.getElementById('simpleReportOkLabel').textContent = `✅ ${positiveWord} - Все добре`;
-    document.getElementById('simpleReportNotOkLabel').textContent = `❌ ${negativeWord} - Потрібна допомога`;
+    DOM.simpleReportOkLabel.textContent = `✅ ${positiveWord} - Все добре`;
+    DOM.simpleReportNotOkLabel.textContent = `❌ ${negativeWord} - Потрібна допомога`;
 
     // Скидаємо форму
-    document.getElementById('simpleReportComment').value = '';
+    DOM.simpleReportComment.value = '';
     selectedReportResponse = 'OK';
 
     // Скидаємо вибір на OK
@@ -3234,7 +3432,7 @@ function openSimpleReportModal() {
     });
     document.querySelector('.simple-report-options .radio-option').classList.add('selected');
 
-    document.getElementById('simpleReportModal').classList.add('active');
+    DOM.simpleReportModal.classList.add('active');
 }
 
 // Extended Report Modal
@@ -3245,15 +3443,15 @@ function openExtendedReportModal() {
     }
 
     // Встановлюємо назву групи
-    document.getElementById('extendedReportGroupName').textContent = currentGroup.name;
+    DOM.extendedReportGroupName.textContent = currentGroup.name;
 
     // Скидаємо форму
-    document.getElementById('extendedField1').value = '';
-    document.getElementById('extendedField2').value = '';
-    document.getElementById('extendedField3').value = '';
-    document.getElementById('extendedField4').value = '';
-    document.getElementById('extendedField5').value = '';
-    document.getElementById('extendedReportComment').value = '';
+    DOM.extendedField1.value = '';
+    DOM.extendedField2.value = '';
+    DOM.extendedField3.value = '';
+    DOM.extendedField4.value = '';
+    DOM.extendedField5.value = '';
+    DOM.extendedReportComment.value = '';
 
     // Встановлюємо назви полів (якщо є в групі)
     const labels = ['Поле 1', 'Поле 2', 'Поле 3', 'Поле 4', 'Поле 5'];
@@ -3263,13 +3461,13 @@ function openExtendedReportModal() {
     if (currentGroup.field4Name) labels[3] = currentGroup.field4Name;
     if (currentGroup.field5Name) labels[4] = currentGroup.field5Name;
 
-    document.getElementById('extendedField1Label').textContent = labels[0];
-    document.getElementById('extendedField2Label').textContent = labels[1];
-    document.getElementById('extendedField3Label').textContent = labels[2];
-    document.getElementById('extendedField4Label').textContent = labels[3];
-    document.getElementById('extendedField5Label').textContent = labels[4];
+    DOM.extendedField1Label.textContent = labels[0];
+    DOM.extendedField2Label.textContent = labels[1];
+    DOM.extendedField3Label.textContent = labels[2];
+    DOM.extendedField4Label.textContent = labels[3];
+    DOM.extendedField5Label.textContent = labels[4];
 
-    document.getElementById('extendedReportModal').classList.add('active');
+    DOM.extendedReportModal.classList.add('active');
 }
 
 function selectSimpleReportOption(element, value) {
@@ -3286,7 +3484,7 @@ async function submitSimpleReport() {
         return;
     }
 
-    const comment = document.getElementById('simpleReportComment').value;
+    const comment = DOM.simpleReportComment.value;
 
     try {
         const response = await apiRequest(`/pwa/groups/${currentGroup.id}/reports/simple`, 'POST', {
@@ -3331,12 +3529,12 @@ async function submitExtendedReport() {
         return;
     }
 
-    const field1 = document.getElementById('extendedField1').value.trim();
-    const field2 = document.getElementById('extendedField2').value.trim();
-    const field3 = document.getElementById('extendedField3').value.trim();
-    const field4 = document.getElementById('extendedField4').value.trim();
-    const field5 = document.getElementById('extendedField5').value.trim();
-    const comment = document.getElementById('extendedReportComment').value.trim();
+    const field1 = DOM.extendedField1.value.trim();
+    const field2 = DOM.extendedField2.value.trim();
+    const field3 = DOM.extendedField3.value.trim();
+    const field4 = DOM.extendedField4.value.trim();
+    const field5 = DOM.extendedField5.value.trim();
+    const comment = DOM.extendedReportComment.value.trim();
 
     try {
         // Шифруємо поля якщо є публічний ключ
@@ -3400,7 +3598,7 @@ async function saveReportForSync(reportData) {
 
 // Notifications
 async function toggleNotifications() {
-    const toggle = document.getElementById('notificationsToggle');
+    const toggle = DOM.notificationsToggle;
     const isCurrentlyEnabled = toggle.classList.contains('active');
 
     if (isCurrentlyEnabled) {
@@ -3423,10 +3621,10 @@ async function updateNotificationsOnServer(enabled) {
     try {
         const response = await apiRequest('/user/notifications', 'PUT', { enabled });
         if (!response.success) {
-            console.error('[Notifications] Failed to update on server:', response.message);
+            logError('[Notifications] Failed to update on server:', response.message);
         }
     } catch (error) {
-        console.error('[Notifications] Error updating on server:', error);
+        logError('[Notifications] Error updating on server:', error);
     }
 }
 
@@ -3434,7 +3632,7 @@ async function loadNotificationsSettingFromServer() {
     try {
         const response = await apiRequest('/user/notifications', 'GET');
         if (response.success && response.data) {
-            const toggle = document.getElementById('notificationsToggle');
+            const toggle = DOM.notificationsToggle;
             if (response.data.enabled) {
                 toggle.classList.add('active');
             } else {
@@ -3442,7 +3640,7 @@ async function loadNotificationsSettingFromServer() {
             }
         }
     } catch (error) {
-        console.error('[Notifications] Error loading setting:', error);
+        logError('[Notifications] Error loading setting:', error);
     }
 }
 
@@ -3479,11 +3677,11 @@ async function requestNotificationPermission() {
 
 async function subscribeToPush() {
     try {
-        console.log('[FCM] Starting push subscription...');
+        log('[FCM] Starting push subscription...');
 
         // Register Firebase messaging service worker
         const registration = await navigator.serviceWorker.register('/firebase-messaging-sw.js');
-        console.log('[FCM] Service worker registered:', registration);
+        log('[FCM] Service worker registered:', registration);
 
         // Initialize Firebase Messaging
         const messaging = firebase.messaging();
@@ -3491,7 +3689,7 @@ async function subscribeToPush() {
         // VAPID key from Firebase Console → Project Settings → Cloud Messaging → Web Push certificates
         const VAPID_KEY = 'BHRuaJ0HVXT2dm5GiMxsprIzC7G03hewx4Z0qf4LIERah3lgwi7fhsCKdEJzhKSGHUGFlCSgiObTo2xIrRvY-Y8';
 
-        console.log('[FCM] Requesting token with VAPID key:', VAPID_KEY.substring(0, 20) + '...');
+        log('[FCM] Requesting token with VAPID key:', VAPID_KEY.substring(0, 20) + '...');
 
         // Get FCM token
         const fcmToken = await messaging.getToken({
@@ -3500,24 +3698,24 @@ async function subscribeToPush() {
         });
 
         if (fcmToken) {
-            console.log('[FCM] Token received:', fcmToken.substring(0, 20) + '...');
+            log('[FCM] Token received:', fcmToken.substring(0, 20) + '...');
 
             // Send token to backend
             await sendFcmTokenToBackend(fcmToken);
 
             // Listen for token refresh
             messaging.onMessage((payload) => {
-                console.log('[FCM] Foreground message received:', payload);
+                log('[FCM] Foreground message received:', payload);
                 showForegroundNotification(payload);
             });
 
             return fcmToken;
         } else {
-            console.log('[FCM] No token available');
+            log('[FCM] No token available');
             return null;
         }
     } catch (error) {
-        console.error('[FCM] Push subscription failed:', error);
+        logError('[FCM] Push subscription failed:', error);
 
         // Handle specific errors
         if (error.code === 'messaging/permission-blocked') {
@@ -3538,18 +3736,18 @@ async function sendFcmTokenToBackend(fcmToken) {
         });
 
         if (response.success) {
-            console.log('[FCM] Token saved to backend');
+            log('[FCM] Token saved to backend');
             localStorage.setItem('zvit_fcm_token', fcmToken);
         } else {
-            console.error('[FCM] Failed to save token:', response.message);
+            logError('[FCM] Failed to save token:', response.message);
         }
     } catch (error) {
-        console.error('[FCM] Error sending token to backend:', error);
+        logError('[FCM] Error sending token to backend:', error);
     }
 }
 
 function showForegroundNotification(payload) {
-    console.log('[FCM] showForegroundNotification:', payload);
+    log('[FCM] showForegroundNotification:', payload);
     const data = payload.data || {};
     const messageType = data.type;
 
@@ -3584,7 +3782,7 @@ function showForegroundNotification(payload) {
 }
 
 function updateNotificationsToggle() {
-    const toggle = document.getElementById('notificationsToggle');
+    const toggle = DOM.notificationsToggle;
     if ('Notification' in window && Notification.permission === 'granted') {
         toggle.classList.add('active');
     } else {
@@ -3618,21 +3816,21 @@ async function apiRequest(endpoint, method = 'GET', body = null) {
         options.body = JSON.stringify(body);
     }
 
-    console.log(`[API] ${method} ${API_BASE}${endpoint}`);
+    log(`[API] ${method} ${API_BASE}${endpoint}`);
 
     const response = await fetch(`${API_BASE}${endpoint}`, options);
 
-    console.log(`[API] Response status: ${response.status}`);
+    log(`[API] Response status: ${response.status}`);
 
     // Handle 401 - redirect to login
     if (response.status === 401) {
-        console.log('[API] Unauthorized - logging out');
+        log('[API] Unauthorized - logging out');
         logout();
         throw new Error('Сесія закінчилась');
     }
 
     const data = await response.json();
-    console.log('[API] Response data:', data);
+    log('[API] Response data:', data);
 
     if (!response.ok && !data.success) {
         throw new Error(data.message || 'Помилка сервера');
@@ -3643,7 +3841,7 @@ async function apiRequest(endpoint, method = 'GET', body = null) {
 
 // Helpers
 function showToast(message, type = 'info') {
-    const toast = document.getElementById('toast');
+    const toast = DOM.toast;
     toast.textContent = message;
     toast.className = `toast show ${type}`;
 
@@ -3929,7 +4127,7 @@ function openQrScanner() {
         return;
     }
 
-    const modal = document.getElementById('qrScannerModal');
+    const modal = DOM.qrScannerModal;
     modal.classList.add('active');
     modal.style.display = 'flex';
 
@@ -3950,7 +4148,7 @@ async function startQrScanner() {
             await html5QrCode.stop();
         }
     } catch (e) {
-        console.log('QR scanner was not running');
+        log('QR scanner was not running');
     }
 
     html5QrCode = new Html5Qrcode("qrReader");
@@ -3971,7 +4169,7 @@ async function startQrScanner() {
             }
         );
     } catch (err) {
-        console.error('Error starting QR scanner:', err);
+        logError('Error starting QR scanner:', err);
         showToast('Не вдалося запустити камеру. Перевірте дозволи.', 'error');
         closeQrScanner();
     }
@@ -3983,13 +4181,13 @@ async function stopQrScanner() {
             await html5QrCode.stop();
             html5QrCode = null;
         } catch (e) {
-            console.log('Error stopping QR scanner:', e);
+            log('Error stopping QR scanner:', e);
         }
     }
 }
 
 async function onQrCodeScanned(decodedText) {
-    console.log('[PWA] QR code scanned:', decodedText);
+    log('[PWA] QR code scanned:', decodedText);
 
     // Зупиняємо сканер
     await stopQrScanner();
@@ -4013,7 +4211,7 @@ function extractTokenFromQrUrl(url) {
         const urlObj = new URL(url);
         return urlObj.searchParams.get('token');
     } catch (e) {
-        console.error('Error parsing QR URL:', e);
+        logError('Error parsing QR URL:', e);
         return null;
     }
 }
@@ -4050,7 +4248,7 @@ async function authorizeQrSession(sessionToken) {
             setTimeout(() => startQrScanner(), 1000);
         }
     } catch (error) {
-        console.error('Error authorizing QR session:', error);
+        logError('Error authorizing QR session:', error);
         showToast(error.message || 'Помилка авторизації', 'error');
         // Перезапускаємо сканер
         setTimeout(() => startQrScanner(), 1000);
