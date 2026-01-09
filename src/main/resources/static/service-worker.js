@@ -1,7 +1,7 @@
 // ZVIT PWA Service Worker
-const CACHE_NAME = 'zvit-cache-v49';
-const STATIC_CACHE = 'zvit-static-v49';
-const DYNAMIC_CACHE = 'zvit-dynamic-v49';
+const CACHE_NAME = 'zvit-cache-v50';
+const STATIC_CACHE = 'zvit-static-v50';
+const DYNAMIC_CACHE = 'zvit-dynamic-v50';
 
 // Статичні ресурси для кешування
 const STATIC_ASSETS = [
@@ -115,6 +115,7 @@ self.addEventListener('push', (event) => {
   if (event.data) {
     try {
       data = event.data.json();
+      console.log('[SW] Push data:', JSON.stringify(data));
     } catch (e) {
       data.body = event.data.text();
     }
@@ -134,10 +135,14 @@ self.addEventListener('push', (event) => {
     );
   }
 
+  // Витягуємо title та body з різних можливих місць в payload
+  const title = data.notification?.title || data.data?.title || data.title || 'ZVIT';
+  const body = data.notification?.body || data.data?.body || data.body || data.message || 'Нове повідомлення';
+
   const options = {
-    body: data.body || data.message,
-    icon: '/icons/icon-192x192.png',
-    badge: '/icons/icon-72x72.png',
+    body: body,
+    icon: '/icons/android-chrome-192.png',
+    badge: '/icons/favicon-32.png',
     vibrate: [100, 50, 100],
     data: {
       url: data.url || '/app',
@@ -156,7 +161,7 @@ self.addEventListener('push', (event) => {
   };
 
   event.waitUntil(
-    self.registration.showNotification(data.title, options)
+    self.registration.showNotification(title, options)
   );
 });
 
