@@ -2989,8 +2989,14 @@ async function endUrgentSession() {
         if (response.success) {
             showToast('Терміновий збір завершено', 'success');
             hideUrgentBanner();
-            // Оновити статуси
+            // Прибираємо терміновий статус з localStorage
+            clearUrgentReportForGroup(currentGroup.id);
+            // Оновити статуси на поточному екрані
             loadGroupStatuses(currentGroup.id);
+            // Оновити список груп (щоб прибрати плашку "ТЕРМІНОВО")
+            if (typeof loadReportsScreen === 'function') {
+                loadReportsScreen();
+            }
         } else {
             showToast(response.message || 'Помилка завершення збору', 'error');
         }
