@@ -1168,17 +1168,13 @@ async function loadGroups() {
         }
     } catch (error) {
         console.error('[PWA] Groups loading error:', error);
-        // Не показуємо помилку якщо сесія закінчилась (logout вже обробив це)
-        if (!localStorage.getItem('zvit_token')) {
-            return; // Користувач вже розлогінений, не показуємо помилку
+        // Якщо токен є але сервер не відповідає - перенаправляємо на логін
+        // (скоріш за все токен протух або сервер перезавантажився)
+        if (localStorage.getItem('zvit_token')) {
+            console.log('[PWA] Server error with existing token - redirecting to login');
+            showToast('Сесія закінчилась. Увійдіть знову.', 'warning');
+            logout();
         }
-        container.innerHTML = `
-            <div class="card" style="text-align: center; color: var(--danger);">
-                <p>Помилка завантаження груп</p>
-                <p style="font-size: 12px; margin-top: 5px; opacity: 0.7;">${error.message || 'Невідома помилка'}</p>
-                <button class="btn btn-secondary" style="margin-top: 10px;" onclick="loadGroups()">Спробувати знову</button>
-            </div>
-        `;
     }
 }
 
@@ -2334,17 +2330,12 @@ async function loadReportsScreen() {
         }
     } catch (error) {
         console.error('[PWA] Groups loading error:', error);
-        // Не показуємо помилку якщо сесія закінчилась (logout вже обробив це)
-        if (!localStorage.getItem('zvit_token')) {
-            return; // Користувач вже розлогінений, не показуємо помилку
+        // Якщо токен є але сервер не відповідає - перенаправляємо на логін
+        if (localStorage.getItem('zvit_token')) {
+            console.log('[PWA] Server error with existing token - redirecting to login');
+            showToast('Сесія закінчилась. Увійдіть знову.', 'warning');
+            logout();
         }
-        container.innerHTML = `
-            <div class="card" style="text-align: center; color: var(--danger);">
-                <p>Помилка завантаження груп</p>
-                <p style="font-size: 12px; margin-top: 5px; opacity: 0.7;">${error.message || 'Невідома помилка'}</p>
-                <button class="btn btn-secondary" style="margin-top: 10px;" onclick="loadReportsScreen()">Спробувати знову</button>
-            </div>
-        `;
     }
 }
 
