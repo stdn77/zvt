@@ -1,7 +1,7 @@
 // ZVIT PWA Application
 
 // Debug mode - set to false in production
-const DEBUG = false;
+const DEBUG = true;
 
 // Logger - only logs in debug mode
 const log = DEBUG ? console.log.bind(console) : () => {};
