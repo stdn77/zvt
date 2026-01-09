@@ -24,8 +24,8 @@ public class Group {
     @Column(name = "external_name", nullable = false, length = 100)
     private String externalName; // Назва яку бачать всі
 
-    @Column(name = "access_code", unique = true, nullable = false, length = 11)
-    private String accessCode; // GROUP-12345
+    @Column(name = "access_code", unique = true, nullable = false, length = 12)
+    private String accessCode; // ABC-1234-XYZ
 
     @Column(name = "internal_code", unique = true, nullable = false, length = 17)
     private String internalCode; // @st64Q52z11HGtrps (тільки для адмінів)
