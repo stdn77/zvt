@@ -1,5 +1,17 @@
 // ZVIT PWA Application
 
+// Constants
+const STORAGE_KEYS = {
+    TOKEN: 'zvit_token',
+    USER: 'zvit_user',
+    VERIFIED_PHONE: 'zvit_verified_phone',
+    URGENT_REPORTS: 'zvit_urgent_reports',
+    FCM_TOKEN: 'zvit_fcm_token',
+    PENDING_PHONE: 'zvit_pending_phone',
+    PENDING_PASSWORD: 'zvit_pending_password',
+    PENDING_NAME: 'zvit_pending_name'
+};
+
 // State
 let currentUser = null;
 let currentGroup = null;
@@ -47,14 +59,10 @@ function getCookie(name) {
     return null;
 }
 
-function deleteCookie(name) {
-    document.cookie = name + "=;expires=Thu, 01 Jan 1970 00:00:00 UTC;path=/;";
-}
-
 // Urgent reports storage
 function getUrgentReportsFromStorage() {
     try {
-        const data = localStorage.getItem('zvit_urgent_reports');
+        const data = localStorage.getItem(STORAGE_KEYS.URGENT_REPORTS);
         return data ? JSON.parse(data) : {};
     } catch (e) {
         return {};
@@ -62,7 +70,7 @@ function getUrgentReportsFromStorage() {
 }
 
 function saveUrgentReportsToStorage(reports) {
-    localStorage.setItem('zvit_urgent_reports', JSON.stringify(reports));
+    localStorage.setItem(STORAGE_KEYS.URGENT_REPORTS, JSON.stringify(reports));
 }
 
 function setUrgentReportForGroup(groupId, deadline, message) {
@@ -494,12 +502,8 @@ function goToRegister() {
     showScreen('registerScreen');
 }
 
-function isPhoneVerified() {
-    return localStorage.getItem('zvit_verified_phone') !== null;
-}
-
 function getVerifiedPhone() {
-    return localStorage.getItem('zvit_verified_phone');
+    return localStorage.getItem(STORAGE_KEYS.VERIFIED_PHONE);
 }
 
 // ==========================================
@@ -556,17 +560,17 @@ document.addEventListener('DOMContentLoaded', () => {
 
 async function initApp() {
     // Check if user is logged in
-    const token = localStorage.getItem('zvit_token');
-    const userData = localStorage.getItem('zvit_user');
-    let verifiedPhone = localStorage.getItem('zvit_verified_phone');
+    const token = localStorage.getItem(STORAGE_KEYS.TOKEN);
+    const userData = localStorage.getItem(STORAGE_KEYS.USER);
+    let verifiedPhone = localStorage.getItem(STORAGE_KEYS.VERIFIED_PHONE);
 
     // iOS PWA fix: check cookie as fallback for verified phone
     // (iOS uses different localStorage for standalone PWA)
     if (!verifiedPhone) {
-        const cookiePhone = getCookie('zvit_verified_phone');
+        const cookiePhone = getCookie(STORAGE_KEYS.VERIFIED_PHONE);
         if (cookiePhone) {
             verifiedPhone = cookiePhone;
-            localStorage.setItem('zvit_verified_phone', cookiePhone);
+            localStorage.setItem(STORAGE_KEYS.VERIFIED_PHONE, cookiePhone);
         }
     }
 
@@ -1016,8 +1020,8 @@ async function handleVerify(e) {
 }
 
 function logout() {
-    localStorage.removeItem('zvit_token');
-    localStorage.removeItem('zvit_user');
+    localStorage.removeItem(STORAGE_KEYS.TOKEN);
+    localStorage.removeItem(STORAGE_KEYS.USER);
     // Keep verified phone in localStorage and cookie for easier re-login
     currentUser = null;
     currentGroup = null;
@@ -1170,7 +1174,7 @@ async function loadGroups() {
         console.error('[PWA] Groups loading error:', error);
         // Якщо токен є але сервер не відповідає - перенаправляємо на логін
         // (скоріш за все токен протух або сервер перезавантажився)
-        if (localStorage.getItem('zvit_token')) {
+        if (localStorage.getItem(STORAGE_KEYS.TOKEN)) {
             console.log('[PWA] Server error with existing token - redirecting to login');
             showToast('Сесія закінчилась. Увійдіть знову.', 'warning');
             logout();
@@ -2331,7 +2335,7 @@ async function loadReportsScreen() {
     } catch (error) {
         console.error('[PWA] Groups loading error:', error);
         // Якщо токен є але сервер не відповідає - перенаправляємо на логін
-        if (localStorage.getItem('zvit_token')) {
+        if (localStorage.getItem(STORAGE_KEYS.TOKEN)) {
             console.log('[PWA] Server error with existing token - redirecting to login');
             showToast('Сесія закінчилась. Увійдіть знову.', 'warning');
             logout();
@@ -3185,14 +3189,6 @@ async function submitUrgentReport() {
     }
 }
 
-function getPlural(n, one, few, many) {
-    const mod10 = n % 10;
-    const mod100 = n % 100;
-    if (mod10 === 1 && mod100 !== 11) return one;
-    if (mod10 >= 2 && mod10 <= 4 && (mod100 < 10 || mod100 >= 20)) return few;
-    return many;
-}
-
 function openReportForGroup(groupId, groupName, reportType, isAdmin, positiveWord, negativeWord) {
     // Зберігаємо вибрану групу для звіту
     currentGroup = {
@@ -3604,7 +3600,7 @@ function handleNotificationClick(data) {
 
 // API Helper
 async function apiRequest(endpoint, method = 'GET', body = null) {
-    const token = localStorage.getItem('zvit_token');
+    const token = localStorage.getItem(STORAGE_KEYS.TOKEN);
     const headers = {
         'Content-Type': 'application/json'
     };
