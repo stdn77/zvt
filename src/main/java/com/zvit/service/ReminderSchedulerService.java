@@ -123,7 +123,7 @@ public class ReminderSchedulerService {
     }
 
     /**
-     * Надсилає нагадування всім учасникам групи, які використовують тільки PWA
+     * Надсилає нагадування всім учасникам групи через Push (PWA/Web)
      */
     private int sendRemindersForGroup(Group group) {
         log.debug("Sending reminders for group: {}", group.getExternalName());
@@ -136,12 +136,13 @@ public class ReminderSchedulerService {
             return 0;
         }
 
-        // Collect web tokens for users who DON'T have Android token
-        List<String> webTokens = new ArrayList<>();
+        // Collect ALL tokens (both Android and Web) for push notifications
+        List<String> allTokens = new ArrayList<>();
         Map<String, String> data = new HashMap<>();
         data.put("groupId", group.getId());
         data.put("groupName", group.getExternalName());
         data.put("type", "REMINDER");
+        data.put("tag", "reminder-" + group.getId());
 
         for (GroupMember member : members) {
             try {
@@ -154,15 +155,14 @@ public class ReminderSchedulerService {
                     continue;
                 }
 
-                // Skip users who have Android app (they get local reminders)
+                // Add Android token if available
                 if (user.getFcmToken() != null && !user.getFcmToken().isEmpty()) {
-                    log.debug("User {} has Android token, skipping server reminder", user.getId());
-                    continue;
+                    allTokens.add(user.getFcmToken());
                 }
 
-                // Add web token if available
+                // Add Web token if available
                 if (user.getFcmTokenWeb() != null && !user.getFcmTokenWeb().isEmpty()) {
-                    webTokens.add(user.getFcmTokenWeb());
+                    allTokens.add(user.getFcmTokenWeb());
                 }
 
             } catch (Exception e) {
@@ -170,7 +170,7 @@ public class ReminderSchedulerService {
             }
         }
 
-        if (webTokens.isEmpty()) {
+        if (allTokens.isEmpty()) {
             return 0;
         }
 
@@ -178,8 +178,8 @@ public class ReminderSchedulerService {
         String title = "⏰ Час звітувати!";
         String body = group.getExternalName() + " - надішліть свій звіт";
 
-        int sent = firebaseService.sendPushNotificationToMultiple(webTokens, title, body, data);
-        log.debug("Sent {} web reminders for group {}", sent, group.getExternalName());
+        int sent = firebaseService.sendPushNotificationToMultiple(allTokens, title, body, data);
+        log.info("🔔 Sent {} reminders for group {} ({} tokens)", sent, group.getExternalName(), allTokens.size());
 
         return sent;
     }
