@@ -7,7 +7,7 @@
   "background_color": "#1a1a2e",
   "theme_color": "#667eea",
   "orientation": "portrait-primary",
-  "scope": "/",
+  "scope": "/app",
   "lang": "uk",
   "icons": [
     {
