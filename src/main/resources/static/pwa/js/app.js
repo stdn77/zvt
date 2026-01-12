@@ -814,7 +814,7 @@ async function initApp() {
 async function registerServiceWorker() {
     if ('serviceWorker' in navigator) {
         try {
-            const registration = await navigator.serviceWorker.register('/service-worker.js');
+            const registration = await navigator.serviceWorker.register('/service-worker.js', { scope: '/app/' });
             log('SW registered:', registration);
 
             // Listen for messages from SW
