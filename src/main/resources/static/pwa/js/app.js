@@ -9,7 +9,7 @@ const logError = console.error.bind(console); // Always log errors
 const logWarn = console.warn.bind(console);   // Always log warnings
 
 // App version (sync with service-worker cache version)
-const APP_VERSION = 'PWA 1.0.55';
+const APP_VERSION = 'PWA 1.0.56';
 
 // Constants
 const STORAGE_KEYS = {
@@ -172,6 +172,7 @@ function initDOMCache() {
         extendedField4Label: document.getElementById('extendedField4Label'),
         extendedField5Label: document.getElementById('extendedField5Label'),
         extendedReportComment: document.getElementById('extendedReportComment'),
+        saveExtendedReportData: document.getElementById('saveExtendedReportData'),
 
         // Call options
         callOptionsPhone: document.getElementById('callOptionsPhone'),
@@ -3679,13 +3680,41 @@ function openExtendedReportModal() {
     // Встановлюємо назву групи
     DOM.extendedReportGroupName.textContent = currentGroup.name;
 
-    // Скидаємо форму
-    DOM.extendedField1.value = '';
-    DOM.extendedField2.value = '';
-    DOM.extendedField3.value = '';
-    DOM.extendedField4.value = '';
-    DOM.extendedField5.value = '';
-    DOM.extendedReportComment.value = '';
+    // Завантажуємо збережені дані якщо є
+    const savedKey = `extendedReport_${currentGroup.id}`;
+    const savedData = localStorage.getItem(savedKey);
+    const saveEnabled = localStorage.getItem('saveExtendedReportEnabled') === 'true';
+
+    if (savedData && saveEnabled) {
+        try {
+            const data = JSON.parse(savedData);
+            DOM.extendedField1.value = data.field1 || '';
+            DOM.extendedField2.value = data.field2 || '';
+            DOM.extendedField3.value = data.field3 || '';
+            DOM.extendedField4.value = data.field4 || '';
+            DOM.extendedField5.value = data.field5 || '';
+            DOM.extendedReportComment.value = data.comment || '';
+        } catch (e) {
+            // Якщо помилка парсингу, скидаємо форму
+            DOM.extendedField1.value = '';
+            DOM.extendedField2.value = '';
+            DOM.extendedField3.value = '';
+            DOM.extendedField4.value = '';
+            DOM.extendedField5.value = '';
+            DOM.extendedReportComment.value = '';
+        }
+    } else {
+        // Скидаємо форму
+        DOM.extendedField1.value = '';
+        DOM.extendedField2.value = '';
+        DOM.extendedField3.value = '';
+        DOM.extendedField4.value = '';
+        DOM.extendedField5.value = '';
+        DOM.extendedReportComment.value = '';
+    }
+
+    // Встановлюємо стан чекбокса
+    DOM.saveExtendedReportData.checked = saveEnabled;
 
     // Встановлюємо назви полів (якщо є в групі)
     const labels = ['Поле 1', 'Поле 2', 'Поле 3', 'Поле 4', 'Поле 5'];
@@ -3769,6 +3798,17 @@ async function submitExtendedReport() {
     const field4 = DOM.extendedField4.value.trim();
     const field5 = DOM.extendedField5.value.trim();
     const comment = DOM.extendedReportComment.value.trim();
+
+    // Зберігаємо стан чекбокса та дані якщо увімкнено
+    const saveEnabled = DOM.saveExtendedReportData.checked;
+    localStorage.setItem('saveExtendedReportEnabled', saveEnabled.toString());
+
+    if (saveEnabled) {
+        const savedKey = `extendedReport_${currentGroup.id}`;
+        localStorage.setItem(savedKey, JSON.stringify({
+            field1, field2, field3, field4, field5, comment
+        }));
+    }
 
     try {
         // Шифруємо поля якщо є публічний ключ
