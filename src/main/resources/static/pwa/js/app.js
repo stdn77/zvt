@@ -8,6 +8,9 @@ const log = DEBUG ? console.log.bind(console) : () => {};
 const logError = console.error.bind(console); // Always log errors
 const logWarn = console.warn.bind(console);   // Always log warnings
 
+// App version (sync with service-worker cache version)
+const APP_VERSION = 'PWA 1.0.55';
+
 // Constants
 const STORAGE_KEYS = {
     TOKEN: 'zvit_token',
@@ -80,6 +83,7 @@ function initDOMCache() {
         profileName: document.getElementById('profileName'),
         profilePhone: document.getElementById('profilePhone'),
         profileEmail: document.getElementById('profileEmail'),
+        appVersion: document.getElementById('appVersion'),
         editNameInput: document.getElementById('editNameInput'),
         editEmailInput: document.getElementById('editEmailInput'),
         notificationsToggle: document.getElementById('notificationsToggle'),
@@ -112,6 +116,8 @@ function initDOMCache() {
         fixedTime1: document.getElementById('fixedTime1'),
         fixedTime2: document.getElementById('fixedTime2'),
         fixedTime3: document.getElementById('fixedTime3'),
+        fixedTime4: document.getElementById('fixedTime4'),
+        fixedTime5: document.getElementById('fixedTime5'),
         intervalStart: document.getElementById('intervalStart'),
         hoursPickerItems: document.getElementById('hoursPickerItems'),
         minutesPickerItems: document.getElementById('minutesPickerItems'),
@@ -1140,6 +1146,10 @@ async function updateSettingsScreen() {
         DOM.profilePhone.textContent = currentUser.phone || '-';
         DOM.profileEmail.textContent = currentUser.email || 'Не вказано';
     }
+    // Display app version
+    if (DOM.appVersion) {
+        DOM.appVersion.textContent = APP_VERSION;
+    }
     // Load notification setting from server (synced with server)
     await loadNotificationsSettingFromServer();
 }
@@ -1462,7 +1472,37 @@ function showEditNameDialog() {
 function showEditEmailDialog() {
     const currentEmail = currentUser?.email || '';
     DOM.editEmailInput.value = currentEmail;
+
+    // Show delete button only if email exists
+    const deleteBtn = document.getElementById('deleteEmailBtn');
+    if (deleteBtn) {
+        deleteBtn.style.display = currentEmail ? 'block' : 'none';
+    }
+
     DOM.editEmailModal.classList.add('active');
+}
+
+async function deleteProfileEmail() {
+    if (!confirm('Видалити email? Ви не зможете відновити доступ до акаунта через email.')) {
+        return;
+    }
+
+    try {
+        const response = await apiRequest('/pwa/profile', 'PUT', { email: '' });
+
+        if (response.success) {
+            currentUser.email = null;
+            localStorage.setItem(STORAGE_KEYS.USER, JSON.stringify(currentUser));
+            DOM.profileEmail.textContent = 'Не вказано';
+            closeModal('editEmailModal');
+            showToast('Email видалено', 'success');
+        } else {
+            throw new Error(response.message || 'Помилка видалення email');
+        }
+    } catch (error) {
+        logError('Delete email error:', error);
+        showToast(error.message || 'Помилка видалення email');
+    }
 }
 
 async function saveProfileName() {
@@ -1759,6 +1799,8 @@ function showScheduleDialog() {
         if (times[0]) DOM.fixedTime1.value = times[0];
         if (times[1]) DOM.fixedTime2.value = times[1];
         if (times[2]) DOM.fixedTime3.value = times[2];
+        if (times[3]) DOM.fixedTime4.value = times[3];
+        if (times[4]) DOM.fixedTime5.value = times[4];
     }
 
     if (currentGroup.intervalStartTime) {
@@ -1980,9 +2022,13 @@ async function saveSchedule() {
         const t1 = DOM.fixedTime1.value;
         const t2 = DOM.fixedTime2.value;
         const t3 = DOM.fixedTime3.value;
+        const t4 = DOM.fixedTime4.value;
+        const t5 = DOM.fixedTime5.value;
         if (t1) times.push(t1);
         if (t2) times.push(t2);
         if (t3) times.push(t3);
+        if (t4) times.push(t4);
+        if (t5) times.push(t5);
         request.fixedTimes = times;
     }
 

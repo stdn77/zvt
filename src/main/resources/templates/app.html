@@ -207,6 +207,16 @@
             border: 2px solid var(--primary);
         }
 
+        .btn-danger {
+            background: #dc3545;
+            color: white;
+            border: none;
+        }
+
+        .btn-danger:hover {
+            background: #c82333;
+        }
+
         .auth-link {
             text-align: center;
             margin-top: 20px;
@@ -1591,7 +1601,7 @@
         <div class="card">
             <div class="settings-item">
                 <span class="settings-label">Версія</span>
-                <span class="settings-value">PWA 1.0.54</span>
+                <span class="settings-value" id="appVersion">PWA 1.0</span>
             </div>
         </div>
 
@@ -1946,7 +1956,10 @@
                 <label class="form-label">Email</label>
                 <input type="email" class="form-input" id="editEmailInput" placeholder="email@example.com">
             </div>
-            <button class="btn btn-primary" onclick="saveProfileEmail()">Зберегти</button>
+            <div style="display: flex; gap: 12px;">
+                <button class="btn btn-primary" style="flex: 1;" onclick="saveProfileEmail()">Зберегти</button>
+                <button class="btn btn-danger" id="deleteEmailBtn" style="flex: 1; display: none;" onclick="deleteProfileEmail()">Видалити</button>
+            </div>
         </div>
     </div>
 
@@ -2035,6 +2048,14 @@
                 <div class="form-group">
                     <label class="form-label">Час 3</label>
                     <input type="time" class="form-input" id="fixedTime3">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Час 4</label>
+                    <input type="time" class="form-input" id="fixedTime4">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Час 5</label>
+                    <input type="time" class="form-input" id="fixedTime5">
                 </div>
             </div>
 
