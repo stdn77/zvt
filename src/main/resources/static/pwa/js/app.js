@@ -222,6 +222,7 @@ let phoneVerificationId = null;
 let phoneVerificationPhone = null;
 let phoneVerificationTimer = null;
 let recaptchaVerifier = null;
+let passwordResetMode = false; // Flag for password reset flow
 
 // Device detection
 function isIOS() {
@@ -412,9 +413,24 @@ function togglePassword(inputId, button) {
     button.querySelector('svg').innerHTML = isPassword ? eyeClosed : eyeOpen;
 }
 
-// Forgot Password
+// Forgot Password - Start password reset flow
+function startPasswordReset() {
+    passwordResetMode = true;
+    resetPhoneVerification();
+
+    // Update phone verify screen title for reset mode
+    const titleEl = document.querySelector('#phoneVerifyScreen .auth-title');
+    const subtitleEl = document.querySelector('#phoneVerifyScreen .auth-subtitle');
+    if (titleEl) titleEl.textContent = 'Скидання паролю';
+    if (subtitleEl) subtitleEl.textContent = 'Підтвердіть номер телефону';
+
+    showScreen('phoneVerifyScreen');
+    initPhoneVerification();
+}
+
+// Legacy function for backwards compatibility
 function showForgotPasswordInfo() {
-    DOM.forgotPasswordModal.classList.add('active');
+    startPasswordReset();
 }
 
 // ==========================================
@@ -621,15 +637,31 @@ async function verifyOtpCode() {
         localStorage.setItem('zvit_verified_phone', phoneVerificationPhone);
         setCookie('zvit_verified_phone', phoneVerificationPhone);
 
-        // Sign out from Firebase (we use our own auth system)
-        await firebase.auth().signOut();
-
-        showToast('Номер підтверджено!');
-
         // Clear timer
         if (phoneVerificationTimer) {
             clearInterval(phoneVerificationTimer);
         }
+
+        // Handle password reset flow
+        if (passwordResetMode) {
+            // Get Firebase ID token before signing out
+            const user = firebase.auth().currentUser;
+            if (user) {
+                const idToken = await user.getIdToken();
+                // Store token temporarily for password reset
+                sessionStorage.setItem('firebase_reset_token', idToken);
+                sessionStorage.setItem('reset_phone', phoneVerificationPhone);
+            }
+
+            await firebase.auth().signOut();
+            showToast('Номер підтверджено!');
+            showNewPasswordModal();
+            return;
+        }
+
+        // Normal flow - sign out and show choice
+        await firebase.auth().signOut();
+        showToast('Номер підтверджено!');
 
         // Pre-fill phone in login form
         DOM.loginPhone.value = phoneVerificationPhone;
@@ -699,6 +731,156 @@ function goToRegister() {
 
 function getVerifiedPhone() {
     return localStorage.getItem(STORAGE_KEYS.VERIFIED_PHONE);
+}
+
+// ==========================================
+// PASSWORD RESET
+// ==========================================
+
+function showNewPasswordModal() {
+    const phone = sessionStorage.getItem('reset_phone') || '';
+
+    // Create modal for new password
+    const modal = document.createElement('div');
+    modal.className = 'modal active';
+    modal.id = 'newPasswordModal';
+    modal.innerHTML = `
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>Новий пароль</h2>
+                <button class="modal-close" onclick="cancelPasswordReset()">&times;</button>
+            </div>
+            <p style="margin-bottom: 16px; color: var(--text-secondary);">
+                Встановіть новий пароль для номера<br>
+                <strong style="color: var(--text-primary);">${formatPhoneDisplay(phone)}</strong>
+            </p>
+            <div class="form-group">
+                <label class="form-label">Новий пароль</label>
+                <div class="password-wrapper">
+                    <input type="password" class="form-input" id="newPasswordInput"
+                           placeholder="Мінімум 6 символів" minlength="6" required>
+                    <button type="button" class="password-toggle" onclick="togglePassword('newPasswordInput', this)">
+                        <svg viewBox="0 0 24 24" fill="currentColor" class="eye-icon">
+                            <path d="M12 4.5C7 4.5 2.73 7.61 1 12c1.73 4.39 6 7.5 11 7.5s9.27-3.11 11-7.5c-1.73-4.39-6-7.5-11-7.5zM12 17c-2.76 0-5-2.24-5-5s2.24-5 5-5 5 2.24 5 5-2.24 5-5 5zm0-8c-1.66 0-3 1.34-3 3s1.34 3 3 3 3-1.34 3-3-1.34-3-3-3z"/>
+                        </svg>
+                    </button>
+                </div>
+            </div>
+            <div class="form-group">
+                <label class="form-label">Підтвердження паролю</label>
+                <div class="password-wrapper">
+                    <input type="password" class="form-input" id="confirmPasswordInput"
+                           placeholder="Повторіть пароль" minlength="6" required>
+                    <button type="button" class="password-toggle" onclick="togglePassword('confirmPasswordInput', this)">
+                        <svg viewBox="0 0 24 24" fill="currentColor" class="eye-icon">
+                            <path d="M12 4.5C7 4.5 2.73 7.61 1 12c1.73 4.39 6 7.5 11 7.5s9.27-3.11 11-7.5c-1.73-4.39-6-7.5-11-7.5zM12 17c-2.76 0-5-2.24-5-5s2.24-5 5-5 5 2.24 5 5-2.24 5-5 5zm0-8c-1.66 0-3 1.34-3 3s1.34 3 3 3 3-1.34 3-3-1.34-3-3-3z"/>
+                        </svg>
+                    </button>
+                </div>
+            </div>
+            <button class="btn btn-primary" id="submitNewPasswordBtn" onclick="submitNewPassword()" style="width: 100%;">
+                Зберегти пароль
+            </button>
+        </div>
+    `;
+    document.body.appendChild(modal);
+
+    // Focus on password input
+    setTimeout(() => {
+        document.getElementById('newPasswordInput')?.focus();
+    }, 100);
+}
+
+function cancelPasswordReset() {
+    // Clean up and go back to login
+    passwordResetMode = false;
+    sessionStorage.removeItem('firebase_reset_token');
+    sessionStorage.removeItem('reset_phone');
+
+    const modal = document.getElementById('newPasswordModal');
+    if (modal) modal.remove();
+
+    // Restore phone verify screen titles
+    const titleEl = document.querySelector('#phoneVerifyScreen .auth-title');
+    const subtitleEl = document.querySelector('#phoneVerifyScreen .auth-subtitle');
+    if (titleEl) titleEl.textContent = 'Верифікація';
+    if (subtitleEl) subtitleEl.textContent = 'Підтвердіть номер телефону';
+
+    showScreen('loginScreen');
+}
+
+async function submitNewPassword() {
+    const newPassword = document.getElementById('newPasswordInput')?.value || '';
+    const confirmPassword = document.getElementById('confirmPasswordInput')?.value || '';
+    const btn = document.getElementById('submitNewPasswordBtn');
+
+    // Validation
+    if (newPassword.length < 6) {
+        showToast('Пароль має містити мінімум 6 символів');
+        return;
+    }
+
+    if (newPassword !== confirmPassword) {
+        showToast('Паролі не співпадають');
+        return;
+    }
+
+    const firebaseIdToken = sessionStorage.getItem('firebase_reset_token');
+    const phone = sessionStorage.getItem('reset_phone');
+
+    if (!firebaseIdToken || !phone) {
+        showToast('Помилка: сесія скидання закінчилась');
+        cancelPasswordReset();
+        return;
+    }
+
+    btn.disabled = true;
+    btn.textContent = 'Збереження...';
+
+    try {
+        const response = await fetch('/api/v1/auth/reset-password', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                phone: phone,
+                newPassword: newPassword,
+                firebaseIdToken: firebaseIdToken
+            })
+        });
+
+        const data = await response.json();
+
+        if (response.ok && data.success) {
+            showToast('Пароль успішно змінено!', 'success');
+
+            // Clean up
+            passwordResetMode = false;
+            sessionStorage.removeItem('firebase_reset_token');
+            sessionStorage.removeItem('reset_phone');
+
+            const modal = document.getElementById('newPasswordModal');
+            if (modal) modal.remove();
+
+            // Restore phone verify screen titles
+            const titleEl = document.querySelector('#phoneVerifyScreen .auth-title');
+            const subtitleEl = document.querySelector('#phoneVerifyScreen .auth-subtitle');
+            if (titleEl) titleEl.textContent = 'Верифікація';
+            if (subtitleEl) subtitleEl.textContent = 'Підтвердіть номер телефону';
+
+            // Pre-fill phone and go to login
+            DOM.loginPhone.value = phone;
+            showScreen('loginScreen');
+        } else {
+            throw new Error(data.message || 'Помилка скидання паролю');
+        }
+    } catch (error) {
+        logError('Password reset error:', error);
+        showToast(error.message || 'Помилка скидання паролю');
+        btn.disabled = false;
+        btn.textContent = 'Зберегти пароль';
+    }
 }
 
 // ==========================================
