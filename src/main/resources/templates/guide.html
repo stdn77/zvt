@@ -224,6 +224,25 @@
             flex-shrink: 0;
         }
 
+        .platform-badge {
+            display: inline-block;
+            padding: 2px 8px;
+            border-radius: 4px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            margin-left: 8px;
+        }
+
+        .platform-badge.android {
+            background: rgba(61, 220, 132, 0.2);
+            color: #3ddc84;
+        }
+
+        .platform-badge.pwa {
+            background: rgba(59, 130, 246, 0.2);
+            color: #3b82f6;
+        }
+
         /* Footer */
         footer {
             text-align: center;
@@ -275,30 +294,33 @@
         <nav class="toc">
             <h2>📑 Зміст</h2>
             <ul class="toc-list">
-                <li><a href="#step-1"><span class="toc-number">1</span> Реєстрація</a></li>
-                <li><a href="#step-2"><span class="toc-number">2</span> Верифікація телефона</a></li>
+                <li><a href="#step-1"><span class="toc-number">1</span> Верифікація телефону</a></li>
+                <li><a href="#step-2"><span class="toc-number">2</span> Реєстрація</a></li>
                 <li><a href="#step-3"><span class="toc-number">3</span> Вхід у систему</a></li>
-                <li><a href="#step-4"><span class="toc-number">4</span> Створення групи</a></li>
-                <li><a href="#step-5"><span class="toc-number">5</span> Налаштування групи</a></li>
-                <li><a href="#step-6"><span class="toc-number">6</span> Додавання користувачів</a></li>
-                <li><a href="#step-7"><span class="toc-number">7</span> Приєднання до групи</a></li>
-                <li><a href="#step-8"><span class="toc-number">8</span> Налаштування сповіщень</a></li>
-                <li><a href="#step-9"><span class="toc-number">9</span> Надсилання звіту</a></li>
-                <li><a href="#step-10"><span class="toc-number">10</span> Терміновий звіт</a></li>
-                <li><a href="#step-11"><span class="toc-number">11</span> Перегляд звітів (мобільний)</a></li>
-                <li><a href="#step-12"><span class="toc-number">12</span> Перегляд звітів (веб)</a></li>
+                <li><a href="#step-4"><span class="toc-number">4</span> Скидання пароля</a></li>
+                <li><a href="#step-5"><span class="toc-number">5</span> Профіль користувача</a></li>
+                <li><a href="#step-6"><span class="toc-number">6</span> Створення групи</a></li>
+                <li><a href="#step-7"><span class="toc-number">7</span> Налаштування групи</a></li>
+                <li><a href="#step-8"><span class="toc-number">8</span> Ролі в групі</a></li>
+                <li><a href="#step-9"><span class="toc-number">9</span> Додавання учасників</a></li>
+                <li><a href="#step-10"><span class="toc-number">10</span> Приєднання до групи</a></li>
+                <li><a href="#step-11"><span class="toc-number">11</span> Налаштування сповіщень</a></li>
+                <li><a href="#step-12"><span class="toc-number">12</span> Надсилання звіту</a></li>
+                <li><a href="#step-13"><span class="toc-number">13</span> Терміновий звіт</a></li>
+                <li><a href="#step-14"><span class="toc-number">14</span> Перегляд звітів</a></li>
+                <li><a href="#step-15"><span class="toc-number">15</span> Встановлення PWA</a></li>
             </ul>
         </nav>
 
-        <!-- Step 1: Registration -->
+        <!-- Step 1: Phone Verification -->
         <section class="step" id="step-1">
             <div class="step-header">
                 <div class="step-number">1</div>
-                <h3>Реєстрація</h3>
-                <span class="step-icon">📝</span>
+                <h3>Верифікація телефону</h3>
+                <span class="step-icon">📱</span>
             </div>
             <div class="step-content">
-                <p>Для початку роботи з ZVIT необхідно створити обліковий запис.</p>
+                <p>Перший крок для роботи з ZVIT — підтвердження вашого номера телефону через SMS.</p>
 
                 <div class="action-list">
                     <div class="action-item">
@@ -307,63 +329,71 @@
                     </div>
                     <div class="action-item">
                         <span class="action-icon">2️⃣</span>
-                        <span>На екрані входу натисніть <strong>"Реєстрація"</strong></span>
+                        <span>Введіть ваш <strong>номер телефону</strong> у форматі +380XXXXXXXXX</span>
                     </div>
                     <div class="action-item">
                         <span class="action-icon">3️⃣</span>
-                        <span>Введіть ваше <strong>ім'я</strong> (мінімум 2 символи)</span>
+                        <span>Натисніть <strong>"Отримати код"</strong></span>
                     </div>
                     <div class="action-item">
                         <span class="action-icon">4️⃣</span>
-                        <span>Введіть <strong>номер телефону</strong> у форматі +380XXXXXXXXX</span>
+                        <span>На ваш телефон надійде <strong>SMS з 6-значним кодом</strong></span>
                     </div>
                     <div class="action-item">
                         <span class="action-icon">5️⃣</span>
-                        <span>Створіть <strong>пароль</strong> (мінімум 6 символів)</span>
+                        <span>Введіть код у відповідне поле</span>
                     </div>
                     <div class="action-item">
                         <span class="action-icon">6️⃣</span>
-                        <span>Натисніть <strong>"Зареєструватися"</strong></span>
-                    </div>
-                </div>
-
-                <div class="highlight">
-                    <strong>💡 Порада:</strong> Використовуйте реальний номер телефону — він знадобиться для верифікації та відновлення доступу.
-                </div>
-            </div>
-        </section>
-
-        <!-- Step 2: Phone Verification -->
-        <section class="step" id="step-2">
-            <div class="step-header">
-                <div class="step-number">2</div>
-                <h3>Верифікація телефона</h3>
-                <span class="step-icon">📱</span>
-            </div>
-            <div class="step-content">
-                <p>Після реєстрації необхідно підтвердити ваш номер телефону для підвищення безпеки акаунту.</p>
-
-                <div class="action-list">
-                    <div class="action-item">
-                        <span class="action-icon">1️⃣</span>
-                        <span>Після реєстрації ви перейдете на екран верифікації</span>
-                    </div>
-                    <div class="action-item">
-                        <span class="action-icon">2️⃣</span>
-                        <span>На ваш телефон надійде <strong>SMS з кодом</strong></span>
-                    </div>
-                    <div class="action-item">
-                        <span class="action-icon">3️⃣</span>
-                        <span>Введіть <strong>6-значний код</strong> у відповідне поле</span>
-                    </div>
-                    <div class="action-item">
-                        <span class="action-icon">4️⃣</span>
-                        <span>Код підтвердиться автоматично</span>
+                        <span>Після верифікації оберіть: <strong>"Є акаунт"</strong> (вхід) або <strong>"Немає акаунту"</strong> (реєстрація)</span>
                     </div>
                 </div>
 
                 <div class="highlight warning">
                     <strong>⚠️ Важливо:</strong> Якщо SMS не надходить протягом 60 секунд, натисніть "Надіслати повторно". Перевірте правильність номера телефону.
+                </div>
+
+                <div class="highlight info">
+                    <strong>ℹ️ Android:</strong> На пристроях з двома SIM-картками додаток автоматично визначить доступні номери.
+                </div>
+            </div>
+        </section>
+
+        <!-- Step 2: Registration -->
+        <section class="step" id="step-2">
+            <div class="step-header">
+                <div class="step-number">2</div>
+                <h3>Реєстрація</h3>
+                <span class="step-icon">📝</span>
+            </div>
+            <div class="step-content">
+                <p>Якщо у вас ще немає акаунту, створіть його після верифікації телефону.</p>
+
+                <div class="action-list">
+                    <div class="action-item">
+                        <span class="action-icon">1️⃣</span>
+                        <span>Після верифікації оберіть <strong>"Немає акаунту"</strong></span>
+                    </div>
+                    <div class="action-item">
+                        <span class="action-icon">2️⃣</span>
+                        <span>Введіть ваше <strong>ім'я</strong> (мінімум 2 символи)</span>
+                    </div>
+                    <div class="action-item">
+                        <span class="action-icon">3️⃣</span>
+                        <span>Створіть <strong>пароль</strong> (мінімум 6 символів)</span>
+                    </div>
+                    <div class="action-item">
+                        <span class="action-icon">4️⃣</span>
+                        <span>Повторіть пароль для підтвердження</span>
+                    </div>
+                    <div class="action-item">
+                        <span class="action-icon">5️⃣</span>
+                        <span>Натисніть <strong>"Зареєструватися"</strong></span>
+                    </div>
+                </div>
+
+                <div class="highlight">
+                    <strong>💡 Порада:</strong> Email можна додати пізніше в налаштуваннях профілю для відновлення доступу.
                 </div>
             </div>
         </section>
@@ -376,20 +406,20 @@
                 <span class="step-icon">🔐</span>
             </div>
             <div class="step-content">
-                <p>Після успішної реєстрації та верифікації ви можете входити у свій акаунт.</p>
+                <p>Якщо у вас вже є акаунт, увійдіть після верифікації телефону.</p>
 
                 <div class="action-list">
                     <div class="action-item">
                         <span class="action-icon">1️⃣</span>
-                        <span>Відкрийте додаток ZVIT</span>
+                        <span>Після верифікації оберіть <strong>"Є акаунт"</strong></span>
                     </div>
                     <div class="action-item">
                         <span class="action-icon">2️⃣</span>
-                        <span>Введіть ваш <strong>номер телефону</strong></span>
+                        <span>Введіть ваш <strong>пароль</strong></span>
                     </div>
                     <div class="action-item">
                         <span class="action-icon">3️⃣</span>
-                        <span>Введіть <strong>пароль</strong></span>
+                        <span>Увімкніть <strong>"Запам'ятати мене"</strong> для автоматичного входу</span>
                     </div>
                     <div class="action-item">
                         <span class="action-icon">4️⃣</span>
@@ -398,15 +428,102 @@
                 </div>
 
                 <div class="highlight info">
-                    <strong>ℹ️ Автовхід:</strong> Після першого входу додаток запам'ятає вас, і наступного разу вхід буде автоматичним.
+                    <strong>ℹ️ Автовхід:</strong> Якщо увімкнено "Запам'ятати мене", наступного разу вхід буде автоматичним.
                 </div>
             </div>
         </section>
 
-        <!-- Step 4: Create Group -->
+        <!-- Step 4: Password Reset -->
         <section class="step" id="step-4">
             <div class="step-header">
                 <div class="step-number">4</div>
+                <h3>Скидання пароля</h3>
+                <span class="step-icon">🔑</span>
+            </div>
+            <div class="step-content">
+                <p>Якщо ви забули пароль, його можна скинути через верифікацію телефону.</p>
+
+                <div class="action-list">
+                    <div class="action-item">
+                        <span class="action-icon">1️⃣</span>
+                        <span>На екрані входу натисніть <strong>"Забули пароль?"</strong></span>
+                    </div>
+                    <div class="action-item">
+                        <span class="action-icon">2️⃣</span>
+                        <span>Введіть ваш <strong>номер телефону</strong></span>
+                    </div>
+                    <div class="action-item">
+                        <span class="action-icon">3️⃣</span>
+                        <span>Отримайте та введіть <strong>SMS-код</strong></span>
+                    </div>
+                    <div class="action-item">
+                        <span class="action-icon">4️⃣</span>
+                        <span>Введіть <strong>новий пароль</strong> (мінімум 6 символів)</span>
+                    </div>
+                    <div class="action-item">
+                        <span class="action-icon">5️⃣</span>
+                        <span>Підтвердіть новий пароль</span>
+                    </div>
+                    <div class="action-item">
+                        <span class="action-icon">6️⃣</span>
+                        <span>Натисніть <strong>"Змінити пароль"</strong></span>
+                    </div>
+                </div>
+
+                <div class="highlight">
+                    <strong>💡 Порада:</strong> Після зміни пароля ви зможете увійти з новими даними.
+                </div>
+            </div>
+        </section>
+
+        <!-- Step 5: User Profile -->
+        <section class="step" id="step-5">
+            <div class="step-header">
+                <div class="step-number">5</div>
+                <h3>Профіль користувача</h3>
+                <span class="step-icon">👤</span>
+            </div>
+            <div class="step-content">
+                <p>Керуйте своїми особистими даними в розділі профілю.</p>
+
+                <div class="action-list">
+                    <div class="action-item">
+                        <span class="action-icon">👤</span>
+                        <span><strong>Перегляд профілю:</strong><br>
+                        Перейдіть на вкладку "Профіль" або "Налаштування" для перегляду своїх даних.</span>
+                    </div>
+                    <div class="action-item">
+                        <span class="action-icon">✏️</span>
+                        <span><strong>Редагування імені:</strong><br>
+                        Натисніть на своє ім'я та введіть нове (мінімум 2 символи).</span>
+                    </div>
+                    <div class="action-item">
+                        <span class="action-icon">📧</span>
+                        <span><strong>Додавання/редагування email:</strong><br>
+                        Натисніть на поле email, введіть адресу. Email використовується для відновлення доступу.</span>
+                    </div>
+                    <div class="action-item">
+                        <span class="action-icon">🗑️</span>
+                        <span><strong>Видалення email:</strong><br>
+                        В режимі редагування email натисніть кнопку "Видалити".</span>
+                    </div>
+                    <div class="action-item">
+                        <span class="action-icon">ℹ️</span>
+                        <span><strong>Версія додатку:</strong><br>
+                        Внизу профілю відображається поточна версія програми.</span>
+                    </div>
+                </div>
+
+                <div class="highlight warning">
+                    <strong>⚠️ Важливо:</strong> Номер телефону змінити неможливо. Новий номер означає створення нового акаунту.
+                </div>
+            </div>
+        </section>
+
+        <!-- Step 6: Create Group -->
+        <section class="step" id="step-6">
+            <div class="step-header">
+                <div class="step-number">6</div>
                 <h3>Створення групи</h3>
                 <span class="step-icon">👥</span>
             </div>
@@ -416,107 +533,181 @@
                 <div class="action-list">
                     <div class="action-item">
                         <span class="action-icon">1️⃣</span>
-                        <span>На екрані <strong>"Групи"</strong> натисніть кнопку <strong>"+"</strong> у верхньому правому куті</span>
+                        <span>На екрані <strong>"Групи"</strong> натисніть кнопку <strong>"+"</strong></span>
                     </div>
                     <div class="action-item">
                         <span class="action-icon">2️⃣</span>
-                        <span>Введіть <strong>назву групи</strong></span>
+                        <span>Оберіть <strong>"Створити групу"</strong></span>
                     </div>
                     <div class="action-item">
                         <span class="action-icon">3️⃣</span>
+                        <span>Введіть <strong>назву групи</strong> (мінімум 3 символи)</span>
+                    </div>
+                    <div class="action-item">
+                        <span class="action-icon">4️⃣</span>
                         <span>Оберіть <strong>тип звітності</strong>:
                             <ul>
-                                <li><strong>Простий</strong> — швидкий звіт "Все ОК" / "Потрібна допомога"</li>
-                                <li><strong>Розширений</strong> — звіт з кількома полями для даних</li>
+                                <li><strong>Простий</strong> — швидкий звіт "ОК" / "НЕ ОК" з опціональним коментарем</li>
+                                <li><strong>Розширений</strong> — звіт з 5 полями для детальних даних</li>
                             </ul>
                         </span>
                     </div>
                     <div class="action-item">
-                        <span class="action-icon">4️⃣</span>
+                        <span class="action-icon">5️⃣</span>
                         <span>Натисніть <strong>"Створити"</strong></span>
                     </div>
                 </div>
 
                 <div class="highlight">
-                    <strong>💡 Порада:</strong> Після створення групи ви отримаєте унікальний <strong>6-значний код</strong> для запрошення учасників.
+                    <strong>💡 Результат:</strong> Ви станете адміністратором групи та отримаєте унікальний <strong>8-символьний код доступу</strong> для запрошення учасників.
                 </div>
             </div>
         </section>
 
-        <!-- Step 5: Group Settings -->
-        <section class="step" id="step-5">
+        <!-- Step 7: Group Settings -->
+        <section class="step" id="step-7">
             <div class="step-header">
-                <div class="step-number">5</div>
+                <div class="step-number">7</div>
                 <h3>Налаштування групи</h3>
                 <span class="step-icon">⚙️</span>
             </div>
             <div class="step-content">
-                <p>Налаштуйте розклад звітування та інші параметри групи.</p>
+                <p>Налаштуйте розклад звітування та інші параметри групи (тільки для адміністраторів).</p>
 
                 <div class="action-list">
                     <div class="action-item">
-                        <span class="action-icon">1️⃣</span>
-                        <span>Відкрийте групу, натиснувши на неї у списку</span>
-                    </div>
-                    <div class="action-item">
-                        <span class="action-icon">2️⃣</span>
-                        <span>Натисніть на <strong>іконку налаштувань</strong> (⚙️)</span>
-                    </div>
-                    <div class="action-item">
-                        <span class="action-icon">3️⃣</span>
-                        <span>Налаштуйте <strong>розклад звітування</strong>:
+                        <span class="action-icon">📅</span>
+                        <span><strong>Розклад звітування:</strong>
                             <ul>
-                                <li><strong>Фіксовані часи</strong> — оберіть конкретні години (наприклад: 08:00, 14:00, 20:00)</li>
-                                <li><strong>Інтервал</strong> — встановіть періодичність (від 5 хвилин до 24 годин)</li>
+                                <li><strong>Фіксований час</strong> — до 5 конкретних годин на день (наприклад: 08:00, 12:00, 15:00, 18:00, 21:00)</li>
+                                <li><strong>Інтервал</strong> — періодичність від 5 хвилин до 24 годин з часом початку</li>
                             </ul>
                         </span>
                     </div>
                     <div class="action-item">
-                        <span class="action-icon">4️⃣</span>
-                        <span>Налаштуйте <strong>власні слова</strong> для статусів (за замовчуванням: "Так" / "Ні")</span>
+                        <span class="action-icon">💬</span>
+                        <span><strong>Слова звіту</strong> (для простого типу):<br>
+                        За замовчуванням: "ОК" / "НЕ ОК". Можна змінити на:
+                            <ul>
+                                <li>ТАК / НІ</li>
+                                <li>ДОБРЕ / ПОГАНО</li>
+                                <li>ГАРАЗД / ПРОБЛЕМА</li>
+                                <li>+ / -</li>
+                                <li>Або власні слова (до 20 символів)</li>
+                            </ul>
+                        </span>
                     </div>
                     <div class="action-item">
-                        <span class="action-icon">5️⃣</span>
-                        <span>Збережіть налаштування</span>
+                        <span class="action-icon">📋</span>
+                        <span><strong>Назви полів</strong> (для розширеного типу):<br>
+                        Налаштуйте власні назви для 5 полів звіту.</span>
+                    </div>
+                    <div class="action-item">
+                        <span class="action-icon">🔄</span>
+                        <span><strong>Тип звіту:</strong><br>
+                        Можна переключати між простим та розширеним типом в будь-який момент.</span>
+                    </div>
+                    <div class="action-item">
+                        <span class="action-icon">🔑</span>
+                        <span><strong>Код доступу:</strong><br>
+                        Перегляд, копіювання, відправка або оновлення коду запрошення.</span>
                     </div>
                 </div>
             </div>
         </section>
 
-        <!-- Step 6: Add Users -->
-        <section class="step" id="step-6">
+        <!-- Step 8: Roles -->
+        <section class="step" id="step-8">
             <div class="step-header">
-                <div class="step-number">6</div>
-                <h3>Додавання користувачів до групи</h3>
+                <div class="step-number">8</div>
+                <h3>Ролі в групі</h3>
+                <span class="step-icon">👑</span>
+            </div>
+            <div class="step-content">
+                <p>В групі є три рівні доступу з різними правами.</p>
+
+                <div class="action-list">
+                    <div class="action-item">
+                        <span class="action-icon">👑</span>
+                        <span><strong>Адміністратор (Admin):</strong>
+                            <ul>
+                                <li>Повний контроль над групою</li>
+                                <li>Налаштування розкладу та типу звіту</li>
+                                <li>Управління учасниками та їх ролями</li>
+                                <li>Видалення групи</li>
+                                <li>Ініціювання термінових звітів</li>
+                                <li>Перегляд всіх звітів</li>
+                            </ul>
+                        </span>
+                    </div>
+                    <div class="action-item">
+                        <span class="action-icon">🛡️</span>
+                        <span><strong>Модератор (Moderator):</strong>
+                            <ul>
+                                <li>Схвалення/відхилення заявок на вступ</li>
+                                <li>Видалення учасників</li>
+                                <li>Перегляд звітів учасників</li>
+                                <li>Перегляд коду доступу</li>
+                            </ul>
+                        </span>
+                    </div>
+                    <div class="action-item">
+                        <span class="action-icon">👤</span>
+                        <span><strong>Учасник (Member):</strong>
+                            <ul>
+                                <li>Відправка звітів</li>
+                                <li>Перегляд власних звітів</li>
+                                <li>Отримання сповіщень</li>
+                            </ul>
+                        </span>
+                    </div>
+                </div>
+
+                <div class="highlight info">
+                    <strong>ℹ️ Зміна ролі:</strong> Тільки адміністратор може змінювати ролі учасників. Натисніть на учасника у списку та оберіть нову роль.
+                </div>
+            </div>
+        </section>
+
+        <!-- Step 9: Add Users -->
+        <section class="step" id="step-9">
+            <div class="step-header">
+                <div class="step-number">9</div>
+                <h3>Додавання учасників до групи</h3>
                 <span class="step-icon">➕</span>
             </div>
             <div class="step-content">
-                <p>Як адміністратор групи, ви можете запрошувати нових учасників.</p>
+                <p>Як адміністратор або модератор, ви можете запрошувати нових учасників.</p>
 
                 <div class="action-list">
                     <div class="action-item">
                         <span class="action-icon">📋</span>
                         <span><strong>Спосіб 1: Код доступу</strong><br>
-                        Надішліть 6-значний код групи учасникам через месенджер. Вони зможуть приєднатися самостійно.</span>
+                        Надішліть <strong>8-символьний код</strong> групи учасникам через месенджер. Вони зможуть приєднатися самостійно.</span>
                     </div>
                     <div class="action-item">
-                        <span class="action-icon">📱</span>
-                        <span><strong>Спосіб 2: Пряме додавання</strong><br>
-                        У налаштуваннях групи натисніть "Додати учасника" та введіть номер телефону зареєстрованого користувача.</span>
+                        <span class="action-icon">📤</span>
+                        <span><strong>Спосіб 2: Поділитися</strong><br>
+                        Натисніть "Поділитися" та оберіть месенджер для відправки коду.</span>
+                    </div>
+                    <div class="action-item">
+                        <span class="action-icon">📷</span>
+                        <span><strong>Спосіб 3: QR-код</strong><br>
+                        Покажіть QR-код групи іншому користувачу для сканування.</span>
                     </div>
                 </div>
 
                 <div class="highlight">
-                    <strong>💡 Порада:</strong> Ви можете надати права адміністратора іншим учасникам, натиснувши на їх ім'я у списку та обравши "Зробити адміністратором".
+                    <strong>💡 Схвалення:</strong> Нові учасники можуть потрапляти в статус "Очікує" і потребувати схвалення адміністратором або модератором.
                 </div>
             </div>
         </section>
 
-        <!-- Step 7: Join Group -->
-        <section class="step" id="step-7">
+        <!-- Step 10: Join Group -->
+        <section class="step" id="step-10">
             <div class="step-header">
-                <div class="step-number">7</div>
-                <h3>Приєднання користувача до групи</h3>
+                <div class="step-number">10</div>
+                <h3>Приєднання до групи</h3>
                 <span class="step-icon">🔗</span>
             </div>
             <div class="step-content">
@@ -524,20 +715,24 @@
 
                 <div class="action-list">
                     <div class="action-item">
-                        <span class="action-icon">1️⃣</span>
-                        <span>На екрані <strong>"Групи"</strong> натисніть <strong>"Приєднатися"</strong></span>
+                        <span class="action-icon">📝</span>
+                        <span><strong>Спосіб 1: Ввести код</strong>
+                            <ul>
+                                <li>Натисніть <strong>"+"</strong> → <strong>"Приєднатися"</strong></li>
+                                <li>Введіть <strong>8-символьний код</strong></li>
+                                <li>Натисніть <strong>"Приєднатися"</strong></li>
+                            </ul>
+                        </span>
                     </div>
                     <div class="action-item">
-                        <span class="action-icon">2️⃣</span>
-                        <span>Введіть <strong>6-значний код</strong>, який вам надіслав адміністратор</span>
-                    </div>
-                    <div class="action-item">
-                        <span class="action-icon">3️⃣</span>
-                        <span>Натисніть <strong>"Приєднатися"</strong></span>
-                    </div>
-                    <div class="action-item">
-                        <span class="action-icon">4️⃣</span>
-                        <span>Група з'явиться у вашому списку</span>
+                        <span class="action-icon">📷</span>
+                        <span><strong>Спосіб 2: Сканувати QR</strong>
+                            <ul>
+                                <li>Натисніть іконку <strong>QR-сканера</strong></li>
+                                <li>Наведіть камеру на QR-код групи</li>
+                                <li>Підтвердіть приєднання</li>
+                            </ul>
+                        </span>
                     </div>
                 </div>
 
@@ -547,11 +742,11 @@
             </div>
         </section>
 
-        <!-- Step 8: Notification Settings -->
-        <section class="step" id="step-8">
+        <!-- Step 11: Notification Settings -->
+        <section class="step" id="step-11">
             <div class="step-header">
-                <div class="step-number">8</div>
-                <h3>Налаштування сповіщень користувача</h3>
+                <div class="step-number">11</div>
+                <h3>Налаштування сповіщень</h3>
                 <span class="step-icon">🔔</span>
             </div>
             <div class="step-content">
@@ -559,33 +754,32 @@
 
                 <div class="action-list">
                     <div class="action-item">
-                        <span class="action-icon">1️⃣</span>
-                        <span>Перейдіть на вкладку <strong>"Профіль"</strong></span>
+                        <span class="action-icon">🔔</span>
+                        <span><strong>Push-сповіщення:</strong><br>
+                        Увімкніть/вимкніть сповіщення в розділі "Профіль" або "Налаштування".</span>
                     </div>
                     <div class="action-item">
-                        <span class="action-icon">2️⃣</span>
-                        <span>Знайдіть розділ <strong>"Сповіщення"</strong></span>
+                        <span class="action-icon">🔊</span>
+                        <span><strong>Звук сповіщення:</strong> <span class="platform-badge android">Android</span><br>
+                        Оберіть звук зі списку доступних та прослухайте попередній перегляд.</span>
                     </div>
                     <div class="action-item">
-                        <span class="action-icon">3️⃣</span>
-                        <span>Увімкніть/вимкніть <strong>нагадування</strong></span>
-                    </div>
-                    <div class="action-item">
-                        <span class="action-icon">4️⃣</span>
-                        <span>Оберіть <strong>звук сповіщення</strong> зі списку</span>
+                        <span class="action-icon">⏰</span>
+                        <span><strong>Локальні нагадування:</strong> <span class="platform-badge android">Android</span><br>
+                        Автоматичні нагадування за розкладом групи, навіть без інтернету.</span>
                     </div>
                 </div>
 
                 <div class="highlight warning">
-                    <strong>⚠️ Для MIUI (Xiaomi):</strong> Додаток використовує спеціальний режим нагадувань. Переконайтеся, що ZVIT має дозвіл на "Автозапуск" та не обмежений оптимізацією батареї.
+                    <strong>⚠️ Для Android (Xiaomi/MIUI, Huawei):</strong> Переконайтеся, що ZVIT має дозвіл на "Автозапуск" та не обмежений оптимізацією батареї. Інакше нагадування можуть не приходити.
                 </div>
             </div>
         </section>
 
-        <!-- Step 9: Send Report -->
-        <section class="step" id="step-9">
+        <!-- Step 12: Send Report -->
+        <section class="step" id="step-12">
             <div class="step-header">
-                <div class="step-number">9</div>
+                <div class="step-number">12</div>
                 <h3>Надсилання звіту</h3>
                 <span class="step-icon">📊</span>
             </div>
@@ -594,144 +788,169 @@
 
                 <div class="action-list">
                     <div class="action-item">
-                        <span class="action-icon">1️⃣</span>
-                        <span>Перейдіть на вкладку <strong>"Звіти"</strong></span>
-                    </div>
-                    <div class="action-item">
-                        <span class="action-icon">2️⃣</span>
-                        <span>Знайдіть групу та натисніть <strong>"Відправити звіт"</strong></span>
-                    </div>
-                    <div class="action-item">
-                        <span class="action-icon">3️⃣</span>
-                        <span>Для <strong>простого звіту</strong>: оберіть статус ("Все ОК" або "Потрібна допомога") та додайте коментар (опціонально)</span>
-                    </div>
-                    <div class="action-item">
-                        <span class="action-icon">4️⃣</span>
-                        <span>Для <strong>розширеного звіту</strong>: заповніть всі необхідні поля</span>
-                    </div>
-                    <div class="action-item">
-                        <span class="action-icon">5️⃣</span>
-                        <span>Натисніть <strong>"Відправити"</strong></span>
-                    </div>
-                </div>
-
-                <div class="highlight">
-                    <strong>💡 Порада:</strong> Коли надходить нагадування, натисніть на нього — відкриється додаток з готовою формою звіту.
-                </div>
-            </div>
-        </section>
-
-        <!-- Step 10: Urgent Report -->
-        <section class="step" id="step-10">
-            <div class="step-header">
-                <div class="step-number">10</div>
-                <h3>Створення термінового звіту</h3>
-                <span class="step-icon">🚨</span>
-            </div>
-            <div class="step-content">
-                <p>Терміновий збір дозволяє миттєво опитати всіх учасників групи у надзвичайній ситуації.</p>
-
-                <div class="action-list">
-                    <div class="action-item">
-                        <span class="action-icon">1️⃣</span>
-                        <span>Відкрийте групу (тільки для адміністраторів)</span>
-                    </div>
-                    <div class="action-item">
-                        <span class="action-icon">2️⃣</span>
-                        <span>Натисніть кнопку <strong>"Терміновий збір"</strong> (🚨)</span>
-                    </div>
-                    <div class="action-item">
-                        <span class="action-icon">3️⃣</span>
-                        <span>Введіть <strong>причину</strong> термінового збору</span>
-                    </div>
-                    <div class="action-item">
-                        <span class="action-icon">4️⃣</span>
-                        <span>Встановіть <strong>дедлайн</strong> для відповідей</span>
-                    </div>
-                    <div class="action-item">
-                        <span class="action-icon">5️⃣</span>
-                        <span>Натисніть <strong>"Відправити терміново"</strong></span>
-                    </div>
-                </div>
-
-                <div class="highlight warning">
-                    <strong>⚠️ Увага:</strong> Всі учасники групи отримають негайне push-сповіщення з високим пріоритетом. Використовуйте цю функцію відповідально!
-                </div>
-            </div>
-        </section>
-
-        <!-- Step 11: View Reports Mobile -->
-        <section class="step" id="step-11">
-            <div class="step-header">
-                <div class="step-number">11</div>
-                <h3>Перегляд звітів на мобільному додатку</h3>
-                <span class="step-icon">📱</span>
-            </div>
-            <div class="step-content">
-                <p>Переглядайте статуси учасників та історію звітів прямо в додатку.</p>
-
-                <div class="action-list">
-                    <div class="action-item">
-                        <span class="action-icon">👀</span>
-                        <span><strong>Статус групи:</strong><br>
-                        На вкладці "Звіти" ви бачите колір статусу кожної групи:
+                        <span class="action-icon">📝</span>
+                        <span><strong>Простий звіт:</strong>
                             <ul>
-                                <li>🟢 <strong>Зелений</strong> — всі звітували</li>
-                                <li>🟡 <strong>Жовтий</strong> — очікуємо звіти</li>
-                                <li>🔴 <strong>Червоний</strong> — є пропущені звіти</li>
+                                <li>Оберіть статус: <strong>"ОК"</strong> або <strong>"НЕ ОК"</strong></li>
+                                <li>Додайте коментар (опціонально)</li>
+                                <li>Натисніть <strong>"Надіслати"</strong></li>
                             </ul>
                         </span>
                     </div>
                     <div class="action-item">
                         <span class="action-icon">📋</span>
-                        <span><strong>Детальний перегляд:</strong><br>
-                        Натисніть "Переглянути статус" на картці групи, щоб побачити список всіх учасників та їх статуси.</span>
+                        <span><strong>Розширений звіт:</strong>
+                            <ul>
+                                <li>Заповніть необхідні поля (1-5)</li>
+                                <li>Додайте коментар (опціонально)</li>
+                                <li>Увімкніть <strong>"Зберігати попередній звіт"</strong> для автозаповнення наступного разу</li>
+                                <li>Натисніть <strong>"Надіслати"</strong></li>
+                            </ul>
+                        </span>
                     </div>
-                    <div class="action-item">
-                        <span class="action-icon">📜</span>
-                        <span><strong>Історія звітів:</strong><br>
-                        Натисніть на учасника, щоб переглянути його історію звітів.</span>
-                    </div>
+                </div>
+
+                <div class="highlight">
+                    <strong>💡 Збереження даних:</strong> Якщо увімкнено "Зберігати попередній звіт", при наступному відкритті форми поля будуть автоматично заповнені вашими попередніми даними. Це зручно для повторюваних звітів.
+                </div>
+
+                <div class="highlight info">
+                    <strong>ℹ️ PWA офлайн:</strong> Якщо немає інтернету, звіт збережеться локально і буде відправлено автоматично при відновленні з'єднання.
                 </div>
             </div>
         </section>
 
-        <!-- Step 12: View Reports Web -->
-        <section class="step" id="step-12">
+        <!-- Step 13: Urgent Report -->
+        <section class="step" id="step-13">
             <div class="step-header">
-                <div class="step-number">12</div>
-                <h3>Перегляд звітів у веб-інтерфейсі</h3>
-                <span class="step-icon">🌐</span>
+                <div class="step-number">13</div>
+                <h3>Терміновий звіт</h3>
+                <span class="step-icon">🚨</span>
             </div>
             <div class="step-content">
-                <p>Адміністратори можуть переглядати звіти через веб-браузер без встановлення додатку.</p>
+                <p>Терміновий збір дозволяє миттєво опитати всіх учасників групи у надзвичайній ситуації (тільки для адміністраторів).</p>
 
                 <div class="action-list">
                     <div class="action-item">
                         <span class="action-icon">1️⃣</span>
-                        <span>Перейдіть на <strong><a href="https://zvit.online" target="_blank" style="color: #4ade80;">zvit.online</a></strong></span>
+                        <span>Відкрийте групу та натисніть кнопку <strong>"Терміновий збір"</strong> (🚨)</span>
                     </div>
                     <div class="action-item">
                         <span class="action-icon">2️⃣</span>
-                        <span>Натисніть <strong>"Увійти як адміністратор"</strong></span>
+                        <span>Введіть <strong>повідомлення</strong> для учасників (опціонально)</span>
                     </div>
                     <div class="action-item">
                         <span class="action-icon">3️⃣</span>
-                        <span>Відскануйте <strong>QR-код</strong> за допомогою мобільного додатку ZVIT</span>
+                        <span>Встановіть <strong>дедлайн</strong>: 30, 60, 90 або 120 хвилин</span>
                     </div>
                     <div class="action-item">
                         <span class="action-icon">4️⃣</span>
-                        <span>Після авторизації ви побачите <strong>панель звітів</strong> з усіма групами</span>
+                        <span>Натисніть <strong>"Відправити"</strong></span>
+                    </div>
+                </div>
+
+                <div class="highlight">
+                    <strong>💡 Що відбувається:</strong>
+                    <ul style="margin-top: 10px;">
+                        <li>Всі учасники отримують push-сповіщення</li>
+                        <li>В додатку з'являється червоний банер з таймером</li>
+                        <li>Адміністратор бачить статус відповідей в реальному часі</li>
+                        <li>Можна завершити сесію достроково</li>
+                    </ul>
+                </div>
+
+                <div class="highlight warning">
+                    <strong>⚠️ Увага:</strong> Використовуйте цю функцію відповідально — всі учасники отримають сповіщення з високим пріоритетом!
+                </div>
+            </div>
+        </section>
+
+        <!-- Step 14: View Reports -->
+        <section class="step" id="step-14">
+            <div class="step-header">
+                <div class="step-number">14</div>
+                <h3>Перегляд звітів</h3>
+                <span class="step-icon">📱</span>
+            </div>
+            <div class="step-content">
+                <p>Переглядайте статуси учасників та історію звітів.</p>
+
+                <div class="action-list">
+                    <div class="action-item">
+                        <span class="action-icon">🎨</span>
+                        <span><strong>Кольорові статуси:</strong>
+                            <ul>
+                                <li>🟢 <strong>Зелений</strong> — звіт "ОК" відправлено вчасно</li>
+                                <li>🔴 <strong>Червоний</strong> — звіт "НЕ ОК" або прострочено</li>
+                                <li>🟡 <strong>Жовтий</strong> — очікується звіт</li>
+                                <li>⚪ <strong>Сірий</strong> — немає розкладу</li>
+                            </ul>
+                        </span>
+                    </div>
+                    <div class="action-item">
+                        <span class="action-icon">👁️</span>
+                        <span><strong>Мої звіти:</strong><br>
+                        Перегляд власної історії звітів у кожній групі.</span>
+                    </div>
+                    <div class="action-item">
+                        <span class="action-icon">📊</span>
+                        <span><strong>Статус групи</strong> (для адмінів):<br>
+                        Плитки всіх учасників з кольоровим кодуванням та статистикою.</span>
+                    </div>
+                    <div class="action-item">
+                        <span class="action-icon">📜</span>
+                        <span><strong>Звіти учасника:</strong><br>
+                        Натисніть на учасника для перегляду його історії звітів.</span>
                     </div>
                 </div>
 
                 <div class="highlight info">
-                    <strong>ℹ️ Переваги веб-інтерфейсу:</strong>
+                    <strong>ℹ️ Веб-доступ:</strong> Адміністратори можуть переглядати звіти через браузер на <a href="https://zvit.online" style="color: #4ade80;">zvit.online</a>. Увійдіть як адміністратор та відскануйте QR-код мобільним додатком.
+                </div>
+            </div>
+        </section>
+
+        <!-- Step 15: PWA Installation -->
+        <section class="step" id="step-15">
+            <div class="step-header">
+                <div class="step-number">15</div>
+                <h3>Встановлення PWA</h3>
+                <span class="step-icon">📲</span>
+            </div>
+            <div class="step-content">
+                <p>Веб-версію ZVIT можна встановити як додаток на телефон без Google Play.</p>
+
+                <div class="action-list">
+                    <div class="action-item">
+                        <span class="action-icon">🤖</span>
+                        <span><strong>Android (Chrome):</strong>
+                            <ul>
+                                <li>Відкрийте <a href="https://zvit.online/app" style="color: #4ade80;">zvit.online/app</a> в Chrome</li>
+                                <li>Натисніть кнопку <strong>"Встановити"</strong> внизу екрану</li>
+                                <li>Або: меню (⋮) → "Встановити додаток"</li>
+                            </ul>
+                        </span>
+                    </div>
+                    <div class="action-item">
+                        <span class="action-icon">🍎</span>
+                        <span><strong>iOS (Safari):</strong>
+                            <ul>
+                                <li>Відкрийте <a href="https://zvit.online/app" style="color: #4ade80;">zvit.online/app</a> в Safari</li>
+                                <li>Натисніть кнопку <strong>"Поділитися"</strong> (📤)</li>
+                                <li>Оберіть <strong>"На Початковий екран"</strong></li>
+                                <li>Натисніть <strong>"Додати"</strong></li>
+                            </ul>
+                        </span>
+                    </div>
+                </div>
+
+                <div class="highlight">
+                    <strong>💡 Переваги PWA:</strong>
                     <ul style="margin-top: 10px;">
-                        <li>Зручний перегляд на великому екрані</li>
-                        <li>Фільтрація звітів за датою та учасниками</li>
-                        <li>Автоматичне оновлення статусів у реальному часі</li>
-                        <li>Не потребує встановлення додаткового ПЗ</li>
+                        <li>Працює офлайн (кешує інтерфейс)</li>
+                        <li>Push-сповіщення</li>
+                        <li>Не потребує оновлень з магазину</li>
+                        <li>Займає менше місця</li>
                     </ul>
                 </div>
             </div>
@@ -739,12 +958,15 @@
 
         <!-- Footer -->
         <footer>
-            <p>&copy; 2025 ZVIT. Усі права захищено.</p>
+            <p>&copy; 2025-2026 ZVIT. Усі права захищено.</p>
             <p style="margin-top: 10px;">
                 <a href="/">Головна</a> |
                 <a href="/privacy-policy">Політика конфіденційності</a> |
                 <a href="/terms">Умови використання</a> |
                 <a href="mailto:zvit.sup@gmail.com">Підтримка</a>
+            </p>
+            <p style="margin-top: 15px; font-size: 0.85rem; color: #94a3b8;">
+                PWA версія: 1.0.56 | Android версія: 1.02.12
             </p>
         </footer>
     </div>
