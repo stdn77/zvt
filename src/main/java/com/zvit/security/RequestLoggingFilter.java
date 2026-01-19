@@ -31,6 +31,13 @@ public class RequestLoggingFilter extends OncePerRequestFilter {
                                     HttpServletResponse response,
                                     FilterChain filterChain) throws ServletException, IOException {
 
+        // Skip logging for health check endpoint
+        String uri = request.getRequestURI();
+        if (uri.equals("/api/health") || uri.equals("/actuator/health")) {
+            filterChain.doFilter(request, response);
+            return;
+        }
+
         // Wrap request and response to cache content
         ContentCachingRequestWrapper wrappedRequest = new ContentCachingRequestWrapper(request);
         ContentCachingResponseWrapper wrappedResponse = new ContentCachingResponseWrapper(response);
