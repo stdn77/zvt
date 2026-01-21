@@ -9,7 +9,7 @@ const logError = console.error.bind(console); // Always log errors
 const logWarn = console.warn.bind(console);   // Always log warnings
 
 // App version (sync with service-worker cache version)
-const APP_VERSION = 'PWA 1.0.56';
+const APP_VERSION = 'PWA 1.0.57';
 
 // Constants
 const STORAGE_KEYS = {
@@ -314,7 +314,7 @@ function formatUrgentDeadline(deadlineStr) {
     if (!deadlineStr) return '';
     const deadline = parseServerDate(deadlineStr);
     if (!deadline) return '';
-    return deadline.toLocaleTimeString('uk-UA', { hour: '2-digit', minute: '2-digit' });
+    return deadline.toLocaleTimeString('uk-UA', { hour: '2-digit', minute: '2-digit', timeZone: 'Europe/Kiev' });
 }
 
 // Обробка термінового звіту з push-повідомлення
@@ -3129,7 +3129,7 @@ function showUrgentBanner(session) {
             const requestedDate = parseServerDate(session.requestedAt);
             if (requestedDate) {
                 const requestedTime = requestedDate.toLocaleTimeString('uk-UA', {
-                    hour: '2-digit', minute: '2-digit'
+                    hour: '2-digit', minute: '2-digit', timeZone: 'Europe/Kiev'
                 });
                 infoText += ` о ${requestedTime}`;
             }
@@ -3261,10 +3261,10 @@ function renderUserTiles(users) {
         if (!isAdmin && user.lastReportAt) {
             const reportDate = parseServerDate(user.lastReportAt);
             if (reportDate) {
-                const time = reportDate.toLocaleTimeString('uk-UA', { hour: '2-digit', minute: '2-digit' });
-                const day = String(reportDate.getDate()).padStart(2, '0');
-                const month = String(reportDate.getMonth() + 1).padStart(2, '0');
-                timeDateText = `${time}   ${day}.${month}`;
+                const time = reportDate.toLocaleTimeString('uk-UA', { hour: '2-digit', minute: '2-digit', timeZone: 'Europe/Kiev' });
+                // Використовуємо toLocaleDateString для правильного дня/місяця в Київському timezone
+                const kyivDate = reportDate.toLocaleDateString('uk-UA', { day: '2-digit', month: '2-digit', timeZone: 'Europe/Kiev' });
+                timeDateText = `${time}   ${kyivDate}`;
             }
         }
 
@@ -3481,10 +3481,8 @@ function renderUserReportsList(reports) {
     reports.forEach(report => {
         const date = parseServerDate(report.submittedAt);
         if (!date) return;
-        const day = String(date.getDate()).padStart(2, '0');
-        const month = String(date.getMonth() + 1).padStart(2, '0');
-        const time = date.toLocaleTimeString('uk-UA', { hour: '2-digit', minute: '2-digit' });
-        const dateStr = `${day}.${month}`;
+        const time = date.toLocaleTimeString('uk-UA', { hour: '2-digit', minute: '2-digit', timeZone: 'Europe/Kiev' });
+        const dateStr = date.toLocaleDateString('uk-UA', { day: '2-digit', month: '2-digit', timeZone: 'Europe/Kiev' });
 
         // Тип звіту
         let typeText = 'Звіт';
@@ -4235,6 +4233,9 @@ function formatTime(dateString) {
     const now = new Date();
     const diff = now - date;
 
+    // Завжди використовуємо Europe/Kiev timezone для відображення
+    const kyivOptions = { timeZone: 'Europe/Kiev' };
+
     // Less than 1 hour
     if (diff < 3600000) {
         const minutes = Math.floor(diff / 60000);
@@ -4243,16 +4244,16 @@ function formatTime(dateString) {
 
     // Today
     if (date.toDateString() === now.toDateString()) {
-        return date.toLocaleTimeString('uk-UA', { hour: '2-digit', minute: '2-digit' });
+        return date.toLocaleTimeString('uk-UA', { hour: '2-digit', minute: '2-digit', ...kyivOptions });
     }
 
     // This week
     if (diff < 604800000) {
-        return date.toLocaleDateString('uk-UA', { weekday: 'short', hour: '2-digit', minute: '2-digit' });
+        return date.toLocaleDateString('uk-UA', { weekday: 'short', hour: '2-digit', minute: '2-digit', ...kyivOptions });
     }
 
     // Older
-    return date.toLocaleDateString('uk-UA', { day: 'numeric', month: 'short' });
+    return date.toLocaleDateString('uk-UA', { day: 'numeric', month: 'short', ...kyivOptions });
 }
 
 // Handle system back button
