@@ -1623,8 +1623,8 @@ function renderGroups(groups) {
         const id = group.groupId || group.id;
         const members = group.currentMembers || group.memberCount || 0;
         const hasAdminRights = group.userRole === 'ADMIN' || group.userRole === 'MODER';
-        const roleLabels = { 'ADMIN': 'Адміністратор', 'MODER': 'Модератор', 'MEMBER': 'Учасник' };
-        const role = roleLabels[group.userRole] || 'Учасник';
+        const roleLabels = { 'ADMIN': 'Адміністратор', 'MODER': 'Модератор', 'MEMBER': 'Користувач' };
+        const role = roleLabels[group.userRole] || 'Користувач';
         const roleClass = hasAdminRights ? 'admin-role' : '';
         const cardClass = hasAdminRights ? 'admin' : 'member';
         const reportType = group.reportType === 'EXTENDED' ? 'Розширений' : 'Простий';
@@ -1635,7 +1635,7 @@ function renderGroups(groups) {
         return `
         <div class="card group-card ${cardClass}" ${onclick}>
             <div class="group-name">${escapeHtml(name)}</div>
-            <div class="group-members">${members} учасн.</div>
+            <div class="group-members">${members} корист.</div>
             <div class="group-role ${roleClass}">${role}</div>
             <div class="group-report-type">${reportType}</div>
         </div>
@@ -2303,7 +2303,7 @@ async function loadGroupMembersForAdmin() {
                 membersInfo.textContent = response.data.length;
             }
         } else {
-            container.innerHTML = '<p style="color: var(--text-secondary); text-align: center; padding: 20px;">Не вдалося завантажити учасників</p>';
+            container.innerHTML = '<p style="color: var(--text-secondary); text-align: center; padding: 20px;">Не вдалося завантажити користувачів</p>';
         }
     } catch (error) {
         container.innerHTML = '<p style="color: var(--text-secondary); text-align: center; padding: 20px;">Помилка завантаження</p>';
@@ -2318,7 +2318,7 @@ function renderMembersForAdmin(members) {
     const container = DOM.adminMembersList;
 
     if (!members || members.length === 0) {
-        container.innerHTML = '<p style="color: var(--text-secondary); text-align: center; padding: 20px;">Немає учасників</p>';
+        container.innerHTML = '<p style="color: var(--text-secondary); text-align: center; padding: 20px;">Немає користувачів</p>';
         return;
     }
 
@@ -2337,9 +2337,9 @@ function renderMembersForAdmin(members) {
             'MODER': 'background: #7B1FA2; color: white;',
             'MEMBER': 'background: rgba(255,255,255,0.15); color: var(--text-secondary);'
         };
-        const roleLabels = { 'ADMIN': 'Адмін', 'MODER': 'Модер', 'MEMBER': 'Учасник' };
+        const roleLabels = { 'ADMIN': 'Адмін', 'MODER': 'Модер', 'MEMBER': 'Користувач' };
         const roleStyle = isPending ? 'background: var(--warning); color: white;' : (roleStyles[role] || roleStyles['MEMBER']);
-        const roleLabel = isPending ? 'Очікує' : (roleLabels[role] || 'Учасник');
+        const roleLabel = isPending ? 'Очікує' : (roleLabels[role] || 'Користувач');
 
         return `
             <div class="report-item" style="align-items: center; gap: 12px;">
@@ -2443,7 +2443,7 @@ function showRoleChangeDialog(memberId, currentRole) {
     const roleOptions = [
         { value: 'ADMIN', label: 'Адміністратор', desc: 'Повний доступ, не звітує' },
         { value: 'MODER', label: 'Модератор', desc: 'Повний доступ, звітує' },
-        { value: 'MEMBER', label: 'Учасник', desc: 'Тільки звітує' }
+        { value: 'MEMBER', label: 'Користувач', desc: 'Тільки звітує' }
     ];
 
     let optionsHtml = roleOptions.map(opt => `
@@ -2491,13 +2491,13 @@ async function changeMemberRole(memberId, newRole) {
 async function removeMember(memberId) {
     if (!currentGroup || !memberId) return;
 
-    if (!confirm('Видалити учасника з групи?')) return;
+    if (!confirm('Видалити користувача з групи?')) return;
 
     try {
         const response = await apiRequest(`/pwa/groups/${currentGroup.id}/members/${memberId}`, 'DELETE');
 
         if (response.success) {
-            showToast('Учасника видалено', 'success');
+            showToast('Користувача видалено', 'success');
             loadGroupMembers();
             loadGroupDetails(currentGroup.id);
         } else {
@@ -2515,7 +2515,7 @@ async function approveMember(memberId) {
         const response = await apiRequest(`/pwa/groups/${currentGroup.id}/members/${memberId}/approve`, 'POST');
 
         if (response.success) {
-            showToast('Учасника схвалено', 'success');
+            showToast('Користувача схвалено', 'success');
             loadGroupMembers();
             loadGroupDetails(currentGroup.id);
         } else {
@@ -2806,7 +2806,7 @@ function renderReportGroups(groups) {
 
     // Групи де учасник (тільки кнопка звіту)
     if (memberGroups.length > 0) {
-        html += `<div class="section-title" style="padding: 8px 0; font-size: 16px; font-weight: bold; margin-top: 8px;">Групи де я учасник</div>`;
+        html += `<div class="section-title" style="padding: 8px 0; font-size: 16px; font-weight: bold; margin-top: 8px;">Групи де я користувач</div>`;
         memberGroups.forEach(group => {
             html += renderReportGroupCard(group, 'MEMBER');
         });
@@ -2826,8 +2826,8 @@ function renderReportGroups(groups) {
 function renderReportGroupCard(group, role) {
     const membersCount = group.currentMembers || 0;
     const reportedCount = group.reportedCount || 0;
-    const roleLabels = { 'ADMIN': 'Адміністратор', 'MODER': 'Модератор', 'MEMBER': 'Учасник' };
-    const roleText = roleLabels[role] || 'Учасник';
+    const roleLabels = { 'ADMIN': 'Адміністратор', 'MODER': 'Модератор', 'MEMBER': 'Користувач' };
+    const roleText = roleLabels[role] || 'Користувач';
     const groupName = group.externalName || group.name || 'Група';
     const groupId = group.groupId || group.id;
 
@@ -3071,7 +3071,7 @@ async function loadGroupStatuses(groupId) {
             } else {
                 container.innerHTML = `
                     <div style="grid-column: 1 / -1; text-align: center; padding: 32px; color: var(--text-secondary);">
-                        <p>Немає учасників у групі</p>
+                        <p>Немає користувачів у групі</p>
                     </div>
                 `;
             }
@@ -3079,7 +3079,7 @@ async function loadGroupStatuses(groupId) {
             hideUrgentBanner();
             container.innerHTML = `
                 <div style="grid-column: 1 / -1; text-align: center; padding: 32px; color: var(--text-secondary);">
-                    <p>Немає учасників у групі</p>
+                    <p>Немає користувачів у групі</p>
                 </div>
             `;
         }

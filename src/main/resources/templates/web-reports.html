@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ZVIT - Звіти учасників</title>
+    <title>ZVIT - Звіти користувачів</title>
     <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg viewBox='0 0 1024 1024' xmlns='http://www.w3.org/2000/svg'%3E%3Cdefs%3E%3ClinearGradient id='iconBg' x1='0%25' y1='0%25' x2='100%25' y2='100%25'%3E%3Cstop offset='0%25' stop-color='%230f172a' /%3E%3Cstop offset='100%25' stop-color='%231e293b' /%3E%3C/linearGradient%3E%3ClinearGradient id='iconGrad' x1='0%25' y1='0%25' x2='100%25' y2='100%25'%3E%3Cstop offset='0%25' stop-color='%2322c55e' /%3E%3Cstop offset='100%25' stop-color='%2316a34a' /%3E%3C/linearGradient%3E%3Cfilter id='iconGlow' x='-50%25' y='-50%25' width='200%25' height='200%25'%3E%3CfeGaussianBlur stdDeviation='15' result='blur'/%3E%3CfeMerge%3E%3CfeMergeNode in='blur'/%3E%3CfeMergeNode in='SourceGraphic'/%3E%3C/feMerge%3E%3C/filter%3E%3C/defs%3E%3Crect width='1024' height='1024' rx='225' fill='url(%23iconBg)'/%3E%3Ccircle cx='512' cy='512' r='390' fill='none' stroke='%2322c55e' stroke-width='15' opacity='0.12'/%3E%3Ccircle cx='512' cy='512' r='297' fill='none' stroke='%2322c55e' stroke-width='15' opacity='0.25'/%3E%3Ccircle cx='512' cy='512' r='205' fill='none' stroke='%2322c55e' stroke-width='20' opacity='0.45'/%3E%3Ccircle cx='512' cy='512' r='143' fill='url(%23iconGrad)' filter='url(%23iconGlow)'/%3E%3Cpolyline points='440,512 492,564 584,460' fill='none' stroke='white' stroke-width='36' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E">
     <style>
         * {
@@ -438,7 +438,7 @@
                         <circle cx="512" cy="512" r="143" fill="url(#headerIconGrad)"/>
                         <polyline points="440,512 492,564 584,460" fill="none" stroke="white" stroke-width="36" stroke-linecap="round" stroke-linejoin="round"/>
                     </svg>
-                    ZVIT - Звіти учасників
+                    ZVIT - Звіти користувачів
                 </h1>
                 <div class="group-line">
                     <span id="groupName">Завантаження...</span>
@@ -481,7 +481,7 @@
             <div class="filter-group">
                 <label>Фільтр:</label>
                 <select id="statusFilter">
-                    <option value="all">Всі учасники</option>
+                    <option value="all">Всі користувачі</option>
                     <option value="reported">Звітували (зелені)</option>
                     <option value="awaiting">Очікую звіт (жовті)</option>
                     <option value="not-reported">Не звітували (червоні)</option>
@@ -507,7 +507,7 @@
     <div id="userModal" class="modal">
         <div class="modal-content">
             <div class="modal-header">
-                <h2 id="modalUserName">Деталі учасника</h2>
+                <h2 id="modalUserName">Деталі користувача</h2>
                 <span class="close" onclick="closeModal()">&times;</span>
             </div>
             <div class="modal-body">
@@ -560,7 +560,8 @@
                 if (urgentSession.requestedByUserName && urgentSession.requestedAt) {
                     const requestedTime = new Date(urgentSession.requestedAt).toLocaleTimeString('uk-UA', {
                         hour: '2-digit',
-                        minute: '2-digit'
+                        minute: '2-digit',
+                        timeZone: 'Europe/Kiev'
                     });
                     infoText = `Запит від: ${urgentSession.requestedByUserName} о ${requestedTime}`;
                 }
@@ -749,7 +750,7 @@
             if (users.length > 0 && users[0].nextScheduledTime) {
                 const nextTime = new Date(users[0].nextScheduledTime);
                 document.getElementById('nextReportTime').textContent =
-                    nextTime.toLocaleTimeString('uk-UA', { hour: '2-digit', minute: '2-digit' });
+                    nextTime.toLocaleTimeString('uk-UA', { hour: '2-digit', minute: '2-digit', timeZone: 'Europe/Kiev' });
             }
         }
 
@@ -788,7 +789,7 @@
             if (filtered.length === 0) {
                 document.getElementById('userGrid').innerHTML = `
                     <div class="loading">
-                        <p>Учасників не знайдено</p>
+                        <p>Користувачів не знайдено</p>
                     </div>
                 `;
                 return;
@@ -858,7 +859,7 @@
             currentUserId = userId;
             currentUserName = userName;
 
-            document.getElementById('modalUserName').textContent = 'Деталі учасника';
+            document.getElementById('modalUserName').textContent = 'Деталі користувача';
             document.getElementById('modalName').textContent = userName;
             document.getElementById('modalPhone').textContent = phoneNumber;
             document.getElementById('modalReports').innerHTML = `
@@ -981,14 +982,14 @@
                     throw new Error('Failed to remove member');
                 }
 
-                alert('Учасника видалено');
+                alert('Користувача видалено');
                 closeModal();
                 // Перезавантажуємо список користувачів
                 loadReports();
 
             } catch (error) {
                 console.error('Error removing member:', error);
-                alert('Помилка видалення учасника');
+                alert('Помилка видалення користувача');
             }
         }
 

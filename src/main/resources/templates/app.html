@@ -1412,7 +1412,7 @@
             <!-- Інформація про групу -->
             <div class="card" style="margin-bottom: 12px; padding: 12px 16px;">
                 <div class="group-info-row">
-                    <span class="group-info-label">Учасників</span>
+                    <span class="group-info-label">Користувачів</span>
                     <span class="group-info-value" id="groupMembersInfo">0/10</span>
                 </div>
                 <div class="group-info-row" onclick="showChangeReportTypeDialog()" style="cursor: pointer;">
@@ -1448,13 +1448,13 @@
                     Розклад
                 </button>
             </div>
-            <!-- Заголовок учасників -->
+            <!-- Заголовок користувачів -->
             <div style="margin-bottom: 6px; display: flex; justify-content: space-between; align-items: center;">
-                <span style="font-weight: 500;">Учасники групи</span>
+                <span style="font-weight: 500;">Користувачі групи</span>
                 <span style="color: var(--primary); font-size: 14px; cursor: pointer;" onclick="loadGroupMembers()">Оновити</span>
             </div>
 
-            <!-- Список учасників -->
+            <!-- Список користувачів -->
             <div id="adminMembersList">
                 <div class="loading">
                     <div class="spinner"></div>
@@ -1732,7 +1732,7 @@
             </div>
 
             <p style="font-size: 12px; color: var(--text-secondary); margin-bottom: 16px;">
-                Всім учасникам групи буде надіслано push-сповіщення з проханням терміново надіслати звіт.
+                Всім користувачам групи буде надіслано push-сповіщення з проханням терміново надіслати звіт.
             </p>
 
             <button class="btn btn-danger" style="width: 100%;" onclick="submitUrgentReport()">ВІДПРАВИТИ ТЕРМІНОВО</button>
@@ -1991,7 +1991,7 @@
     <div class="modal" id="addMemberModal">
         <div class="modal-content">
             <div class="modal-header">
-                <h2>Додати учасника</h2>
+                <h2>Додати користувача</h2>
                 <button class="modal-close" onclick="closeModal('addMemberModal')">&times;</button>
             </div>
             <p style="color: var(--text-secondary); margin-bottom: 16px;">

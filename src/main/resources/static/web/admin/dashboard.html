@@ -467,7 +467,7 @@
 
                 renderDashboard(result.data);
                 document.getElementById('loading').style.display = 'none';
-                document.getElementById('lastUpdate').textContent = `🔄 Оновлено: ${new Date().toLocaleTimeString('uk-UA')}`;
+                document.getElementById('lastUpdate').textContent = `🔄 Оновлено: ${new Date().toLocaleTimeString('uk-UA', { timeZone: 'Europe/Kiev' })}`;
 
             } catch (error) {
                 document.getElementById('loading').innerHTML = `<div class="error">❌ ${error.message}</div>`;
@@ -489,7 +489,7 @@
         function formatTime(dateString) {
             if (!dateString) return '';
             const date = new Date(dateString);
-            return date.toLocaleTimeString('uk-UA', { hour: '2-digit', minute: '2-digit' });
+            return date.toLocaleTimeString('uk-UA', { hour: '2-digit', minute: '2-digit', timeZone: 'Europe/Kiev' });
         }
 
         function renderDashboard(users) {
@@ -579,7 +579,7 @@
                     </div>
                     <div class="detail-row">
                         <span class="detail-label">📅 Приєднався:</span>
-                        <span class="detail-value">${new Date(member.joinedAt).toLocaleDateString('uk-UA')}</span>
+                        <span class="detail-value">${new Date(member.joinedAt).toLocaleDateString('uk-UA', { timeZone: 'Europe/Kiev' })}</span>
                     </div>
                 `;
 
