@@ -183,6 +183,7 @@
             font-weight: 600;
             cursor: pointer;
             transition: all 0.3s;
+            white-space: nowrap;
         }
 
         .btn-primary {
@@ -1638,7 +1639,7 @@
                 <textarea class="form-textarea" id="simpleReportComment" placeholder="Додатковий коментар..."></textarea>
             </div>
 
-            <div style="display: flex; gap: 12px;">
+            <div style="display: flex; flex-wrap: wrap; gap: 12px;">
                 <button class="btn btn-secondary" style="flex: 1;" onclick="closeModal('simpleReportModal')">Скасувати</button>
                 <button class="btn btn-primary" style="flex: 1;" onclick="submitSimpleReport()">Відправити</button>
             </div>
@@ -1694,7 +1695,7 @@
                 </label>
             </div>
 
-            <div style="display: flex; gap: 12px;">
+            <div style="display: flex; flex-wrap: wrap; gap: 12px;">
                 <button class="btn btn-secondary" style="flex: 1;" onclick="closeModal('extendedReportModal')">Скасувати</button>
                 <button class="btn btn-primary" style="flex: 1;" onclick="submitExtendedReport()">Надіслати</button>
             </div>
@@ -1963,7 +1964,7 @@
                 <label class="form-label">Email</label>
                 <input type="email" class="form-input" id="editEmailInput" placeholder="email@example.com">
             </div>
-            <div style="display: flex; gap: 12px;">
+            <div style="display: flex; flex-wrap: wrap; gap: 12px;">
                 <button class="btn btn-primary" style="flex: 1;" onclick="saveProfileEmail()">Зберегти</button>
                 <button class="btn btn-danger" id="deleteEmailBtn" style="flex: 1; display: none;" onclick="deleteProfileEmail()">Видалити</button>
             </div>
@@ -1980,7 +1981,7 @@
             <p style="margin-bottom: 20px; color: var(--text-secondary);">
                 Ви впевнені, що хочете вийти з групи "<span id="leaveGroupName"></span>"?
             </p>
-            <div style="display: flex; gap: 12px;">
+            <div style="display: flex; flex-wrap: wrap; gap: 12px;">
                 <button class="btn btn-secondary" style="flex: 1;" onclick="closeModal('leaveGroupModal')">Скасувати</button>
                 <button class="btn" style="flex: 1; background: var(--danger);" onclick="confirmLeaveGroup()">Вийти</button>
             </div>
@@ -2000,7 +2001,7 @@
             <div style="background: var(--bg-card); border-radius: 12px; padding: 20px; text-align: center; margin-bottom: 16px;">
                 <span id="addMemberCode" style="font-size: 24px; font-weight: bold; letter-spacing: 2px; color: var(--primary);">GROUP-00000</span>
             </div>
-            <div style="display: flex; gap: 12px;">
+            <div style="display: flex; flex-wrap: wrap; gap: 12px;">
                 <button class="btn btn-secondary" style="flex: 1;" onclick="copyAccessCodeFromModal()">
                     <svg viewBox="0 0 24 24" fill="currentColor" width="18" height="18" style="margin-right: 8px;">
                         <path d="M16 1H4c-1.1 0-2 .9-2 2v14h2V3h12V1zm3 4H8c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h11c1.1 0 2-.9 2-2V7c0-1.1-.9-2-2-2zm0 16H8V7h11v14z"/>
@@ -2228,7 +2229,7 @@
             <p style="margin-bottom: 20px; color: var(--text-secondary);">
                 Ви впевнені, що хочете видалити групу? Всі дані будуть втрачені назавжди.
             </p>
-            <div style="display: flex; gap: 12px;">
+            <div style="display: flex; flex-wrap: wrap; gap: 12px;">
                 <button class="btn btn-secondary" style="flex: 1;" onclick="closeModal('deleteGroupModal')">Скасувати</button>
                 <button class="btn" style="flex: 1; background: var(--danger);" onclick="confirmDeleteGroup()">Видалити</button>
             </div>
