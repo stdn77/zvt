@@ -14,8 +14,6 @@ import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
 
 import java.io.IOException;
-import java.time.LocalDateTime;
-import java.time.ZoneId;
 
 /**
  * Фільтр для відстеження версії додатку користувачів.
@@ -27,7 +25,6 @@ import java.time.ZoneId;
 public class AppVersionFilter extends OncePerRequestFilter {
 
     private final UserRepository userRepository;
-    private static final ZoneId KYIV_ZONE = ZoneId.of("Europe/Kiev");
 
     @Override
     protected void doFilterInternal(
@@ -74,9 +71,7 @@ public class AppVersionFilter extends OncePerRequestFilter {
                 needsUpdate = true;
             }
 
-            // Завжди оновлювати lastSeenAt
-            user.setLastSeenAt(LocalDateTime.now(KYIV_ZONE));
-            needsUpdate = true;
+            // lastSeenAt не оновлюємо - час останнього звіту відстежується окремо
 
             if (needsUpdate) {
                 userRepository.save(user);
