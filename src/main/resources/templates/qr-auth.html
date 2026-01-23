@@ -195,6 +195,12 @@
                             window.location.href = `/web/reports?token=${sessionToken}`;
                         }, 1000);
                     }
+                } else if (response.status === 404 || response.status === 410) {
+                    // Сесію не знайдено або прострочено
+                    document.getElementById('status').className = 'status expired';
+                    document.getElementById('status').innerHTML = '❌ QR код прострочений. <a href="javascript:location.reload()">Оновіть сторінку</a>';
+                    clearInterval(pollingInterval);
+                    clearInterval(timerInterval);
                 }
             } catch (error) {
                 console.error('Error checking status:', error);
