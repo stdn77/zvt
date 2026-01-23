@@ -9,7 +9,7 @@ const logError = console.error.bind(console); // Always log errors
 const logWarn = console.warn.bind(console);   // Always log warnings
 
 // App version (sync with service-worker cache version)
-const APP_VERSION = 'PWA 1.0.57';
+const APP_VERSION = 'PWA 1.03.01';
 
 // Constants
 const STORAGE_KEYS = {
@@ -2326,6 +2326,8 @@ function renderMembersForAdmin(members) {
         const name = member.name || member.userName || 'Невідомий';
         const phone = member.phoneNumber || '';
         const role = member.role || 'MEMBER';
+        const appVersion = member.appVersion || '';
+        const appPlatform = member.appPlatform || '';
         const isAdmin = role === 'ADMIN';
         const isModerator = role === 'MODER';
         const isPending = member.status === 'PENDING';
@@ -2349,6 +2351,11 @@ function renderMembersForAdmin(members) {
                     ${phone && !isPending ? `
                         <div onclick="showContactOptions('${phone}')" style="font-size: 13px; color: var(--primary); cursor: pointer; margin-top: 2px;">
                             ${escapeHtml(phone)}
+                        </div>
+                    ` : ''}
+                    ${appVersion ? `
+                        <div style="font-size: 11px; color: var(--text-secondary); margin-top: 2px;">
+                            v${escapeHtml(appVersion)}${appPlatform ? ` (${escapeHtml(appPlatform)})` : ''}
                         </div>
                     ` : ''}
                 </div>
@@ -4072,7 +4079,9 @@ function handleNotificationClick(data) {
 async function apiRequest(endpoint, method = 'GET', body = null) {
     const token = localStorage.getItem(STORAGE_KEYS.TOKEN);
     const headers = {
-        'Content-Type': 'application/json'
+        'Content-Type': 'application/json',
+        'X-App-Version': APP_VERSION.replace('PWA ', ''),
+        'X-App-Platform': 'PWA'
     };
 
     if (token) {
