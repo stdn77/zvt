@@ -7,6 +7,7 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 import java.time.LocalDateTime;
+import java.time.ZoneId;
 
 @Entity
 @Table(name = "qr_sessions")
@@ -35,7 +36,7 @@ public class QrSession {
 
     @Column(name = "created_at", nullable = false)
     @Builder.Default
-    private LocalDateTime createdAt = LocalDateTime.now();
+    private LocalDateTime createdAt = LocalDateTime.now(ZoneId.of("Europe/Kiev"));
 
     @Column(name = "expires_at", nullable = false)
     private LocalDateTime expiresAt; // Час закінчення сесії (5 хвилин для QR, 24 години після авторизації)

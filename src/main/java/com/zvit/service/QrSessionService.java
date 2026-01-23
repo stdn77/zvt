@@ -21,6 +21,7 @@ import org.springframework.web.server.ResponseStatusException;
 import java.security.SecureRandom;
 import java.time.Duration;
 import java.time.LocalDateTime;
+import java.time.ZoneId;
 import java.util.Base64;
 
 @Service
@@ -39,6 +40,7 @@ public class QrSessionService {
 
     private static final int QR_EXPIRY_MINUTES = 10; // QR код дійсний 10 хвилин
     private static final int SESSION_EXPIRY_HOURS = 24; // Авторизована сесія дійсна 24 години
+    private static final ZoneId KYIV_ZONE = ZoneId.of("Europe/Kiev");
 
     /**
      * Створити нову QR сесію
@@ -46,17 +48,18 @@ public class QrSessionService {
     @Transactional
     public QrSessionResponse createSession() {
         // Видалити прострочені сесії перед створенням нової
-        qrSessionRepository.deleteExpiredSessions(LocalDateTime.now());
+        qrSessionRepository.deleteExpiredSessions(LocalDateTime.now(KYIV_ZONE));
 
         // Згенерувати унікальний токен
         String sessionToken = generateSecureToken();
 
         // Створити нову сесію
+        LocalDateTime now = LocalDateTime.now(KYIV_ZONE);
         QrSession session = QrSession.builder()
                 .sessionToken(sessionToken)
                 .isAuthorized(false)
-                .createdAt(LocalDateTime.now())
-                .expiresAt(LocalDateTime.now().plusMinutes(QR_EXPIRY_MINUTES))
+                .createdAt(now)
+                .expiresAt(now.plusMinutes(QR_EXPIRY_MINUTES))
                 .build();
 
         qrSessionRepository.save(session);
@@ -66,7 +69,7 @@ public class QrSessionService {
         // Створити URL для QR коду
         String qrUrl = baseUrl + "/web/auth?token=" + sessionToken;
 
-        long expiresIn = Duration.between(LocalDateTime.now(), session.getExpiresAt()).getSeconds();
+        long expiresIn = Duration.between(now, session.getExpiresAt()).getSeconds();
 
         return QrSessionResponse.builder()
                 .sessionToken(sessionToken)
@@ -92,8 +95,10 @@ public class QrSessionService {
         QrSession session = qrSessionRepository.findBySessionToken(request.getSessionToken())
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "QR сесію не знайдено"));
 
+        LocalDateTime now = LocalDateTime.now(KYIV_ZONE);
+
         // Перевірити чи сесія не прострочена
-        if (session.getExpiresAt().isBefore(LocalDateTime.now())) {
+        if (session.getExpiresAt().isBefore(now)) {
             throw new ResponseStatusException(HttpStatus.GONE, "QR код прострочений");
         }
 
@@ -116,9 +121,9 @@ public class QrSessionService {
         session.setUserId(userId);
         session.setGroupId(request.getGroupId());
         session.setIsAuthorized(true);
-        session.setAuthorizedAt(LocalDateTime.now());
-        session.setExpiresAt(LocalDateTime.now().plusHours(SESSION_EXPIRY_HOURS)); // Продовжити на 24 години
-        session.setLastActivityAt(LocalDateTime.now());
+        session.setAuthorizedAt(now);
+        session.setExpiresAt(now.plusHours(SESSION_EXPIRY_HOURS)); // Продовжити на 24 години
+        session.setLastActivityAt(now);
 
         qrSessionRepository.save(session);
 
@@ -133,18 +138,20 @@ public class QrSessionService {
         QrSession session = qrSessionRepository.findBySessionToken(sessionToken)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "QR сесію не знайдено"));
 
+        LocalDateTime now = LocalDateTime.now(KYIV_ZONE);
+
         // Перевірити чи сесія не прострочена
-        if (session.getExpiresAt().isBefore(LocalDateTime.now())) {
+        if (session.getExpiresAt().isBefore(now)) {
             throw new ResponseStatusException(HttpStatus.GONE, "Сесія прострочена");
         }
 
         // Оновити останню активність
         if (session.getIsAuthorized()) {
-            session.setLastActivityAt(LocalDateTime.now());
+            session.setLastActivityAt(now);
             qrSessionRepository.save(session);
         }
 
-        long expiresIn = Duration.between(LocalDateTime.now(), session.getExpiresAt()).getSeconds();
+        long expiresIn = Duration.between(now, session.getExpiresAt()).getSeconds();
 
         return QrSessionResponse.builder()
                 .sessionToken(session.getSessionToken())
@@ -164,12 +171,14 @@ public class QrSessionService {
             throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Сесія не авторизована");
         }
 
-        if (session.getExpiresAt().isBefore(LocalDateTime.now())) {
+        LocalDateTime now = LocalDateTime.now(KYIV_ZONE);
+
+        if (session.getExpiresAt().isBefore(now)) {
             throw new ResponseStatusException(HttpStatus.GONE, "Сесія прострочена");
         }
 
         // Оновити останню активність
-        session.setLastActivityAt(LocalDateTime.now());
+        session.setLastActivityAt(now);
         qrSessionRepository.save(session);
 
         return session;
@@ -190,7 +199,7 @@ public class QrSessionService {
     @Scheduled(fixedRate = 3600000) // 1 година
     @Transactional
     public void cleanupExpiredSessions() {
-        LocalDateTime now = LocalDateTime.now();
+        LocalDateTime now = LocalDateTime.now(KYIV_ZONE);
         qrSessionRepository.deleteExpiredSessions(now);
         log.info("Cleaned up expired QR sessions");
     }

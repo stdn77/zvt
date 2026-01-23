@@ -7,6 +7,7 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 import java.time.LocalDateTime;
+import java.time.ZoneId;
 
 @Entity
 @Table(name = "reports")
@@ -71,6 +72,6 @@ public class Report {
 
     @PrePersist
     protected void onCreate() {
-        submittedAt = LocalDateTime.now();
+        submittedAt = LocalDateTime.now(ZoneId.of("Europe/Kiev"));
     }
 }
