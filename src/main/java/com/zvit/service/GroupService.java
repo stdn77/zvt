@@ -594,7 +594,7 @@ public class GroupService {
             builder.appPlatform(member.getUser().getAppPlatform());
         }
 
-        return builder.build()
+        return builder.build();
     }
 
     private String hashPhone(String phone) {
