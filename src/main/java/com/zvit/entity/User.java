@@ -65,4 +65,13 @@ public class User {
     @Column(name = "notifications_enabled", nullable = false)
     @Builder.Default
     private boolean notificationsEnabled = true;
+
+    @Column(name = "app_version", length = 20)
+    private String appVersion;
+
+    @Column(name = "app_platform", length = 20)
+    private String appPlatform;
+
+    @Column(name = "last_seen_at")
+    private LocalDateTime lastSeenAt;
 }

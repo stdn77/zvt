@@ -588,9 +588,13 @@ public class GroupService {
                 // Якщо не вдалося розшифрувати, просто не додаємо номер
                 builder.phoneNumber(null);
             }
+
+            // Додаємо інформацію про версію додатку для адмінів
+            builder.appVersion(member.getUser().getAppVersion());
+            builder.appPlatform(member.getUser().getAppPlatform());
         }
 
-        return builder.build();
+        return builder.build()
     }
 
     private String hashPhone(String phone) {

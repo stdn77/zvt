@@ -1,5 +1,6 @@
 package com.zvit.config;
 
+import com.zvit.security.AppVersionFilter;
 import com.zvit.security.JwtAuthenticationFilter;
 import com.zvit.security.RateLimitFilter;
 import lombok.RequiredArgsConstructor;
@@ -20,6 +21,7 @@ public class SecurityConfig {
 
     private final JwtAuthenticationFilter jwtAuthFilter;
     private final RateLimitFilter rateLimitFilter;
+    private final AppVersionFilter appVersionFilter;
 
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
@@ -68,7 +70,9 @@ public class SecurityConfig {
             )
             // Rate limiting фільтр виконується першим
             .addFilterBefore(rateLimitFilter, UsernamePasswordAuthenticationFilter.class)
-            .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class);
+            .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class)
+            // App version filter виконується після JWT автентифікації
+            .addFilterAfter(appVersionFilter, JwtAuthenticationFilter.class);
 
         return http.build();
     }

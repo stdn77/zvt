@@ -18,4 +18,6 @@ public class GroupMemberResponse {
     private String role;
     private String status; // PENDING, ACCEPTED, REJECTED
     private LocalDateTime joinedAt;
+    private String appVersion;
+    private String appPlatform;
 }

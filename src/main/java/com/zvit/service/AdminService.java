@@ -112,6 +112,8 @@ public class AdminService {
             .phoneNumber(decryptedPhone)
             .role(member.getRole().name())
             .joinedAt(member.getJoinedAt())
+            .appVersion(member.getUser().getAppVersion())
+            .appPlatform(member.getUser().getAppPlatform())
             .build();
     }
 
