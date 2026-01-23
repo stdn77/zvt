@@ -12,6 +12,7 @@ import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalTime;
+import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
 import java.util.*;
 
@@ -29,6 +30,7 @@ public class ReminderSchedulerService {
     private final UserRepository userRepository;
     private final FirebaseService firebaseService;
 
+    private static final ZoneId KYIV_ZONE = ZoneId.of("Europe/Kiev");
     private static final DateTimeFormatter TIME_FORMATTER = DateTimeFormatter.ofPattern("HH:mm");
 
     /**
@@ -40,10 +42,10 @@ public class ReminderSchedulerService {
             return;
         }
 
-        LocalTime now = LocalTime.now();
+        LocalTime now = LocalTime.now(KYIV_ZONE);
         String currentTime = now.format(TIME_FORMATTER);
 
-        log.debug("🔔 Checking reminders at {}", currentTime);
+        log.debug("🔔 Checking reminders at {} (Kyiv)", currentTime);
 
         try {
             // Get all groups that have schedule configured
