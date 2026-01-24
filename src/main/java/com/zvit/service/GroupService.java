@@ -20,6 +20,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
+import java.time.ZoneId;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
@@ -618,7 +619,7 @@ public class GroupService {
     @Scheduled(fixedRate = 3600000) // 1 година в мілісекундах
     @Transactional
     public void cleanupExpiredPendingMembers() {
-        LocalDateTime cutoffTime = LocalDateTime.now().minusHours(24);
+        LocalDateTime cutoffTime = LocalDateTime.now(ZoneId.of("Europe/Kiev")).minusHours(24);
         int deletedCount = groupMemberRepository.deleteExpiredPendingMembers(cutoffTime);
 
         if (deletedCount > 0) {

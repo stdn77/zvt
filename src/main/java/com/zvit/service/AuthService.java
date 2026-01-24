@@ -18,6 +18,7 @@ import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.time.LocalDateTime;
+import java.time.ZoneId;
 import java.util.UUID;
 
 @Slf4j
@@ -88,8 +89,8 @@ public class AuthService {
                 .phoneVerified(false)
                 .emailVerified(false)
                 .active(true)
-                .createdAt(LocalDateTime.now())
-                .updatedAt(LocalDateTime.now())
+                .createdAt(LocalDateTime.now(ZoneId.of("Europe/Kiev")))
+                .updatedAt(LocalDateTime.now(ZoneId.of("Europe/Kiev")))
                 .build();
 
         userRepository.save(user);
@@ -138,7 +139,7 @@ public class AuthService {
             throw new BusinessException("Обліковий запис деактивовано");
         }
 
-        user.setLastLoginAt(LocalDateTime.now());
+        user.setLastLoginAt(LocalDateTime.now(ZoneId.of("Europe/Kiev")));
         userRepository.save(user);
 
         String jwtToken = jwtService.generateToken(user.getId(), phone);
@@ -216,7 +217,7 @@ public class AuthService {
 
         // Оновлюємо пароль
         user.setPasswordHash(passwordEncoder.encode(newPassword));
-        user.setUpdatedAt(LocalDateTime.now());
+        user.setUpdatedAt(LocalDateTime.now(ZoneId.of("Europe/Kiev")));
         userRepository.save(user);
 
         log.info("   ✅ Password reset successful for user: {}", user.getId());

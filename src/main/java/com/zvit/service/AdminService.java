@@ -18,6 +18,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.time.LocalDateTime;
+import java.time.ZoneId;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
@@ -68,7 +69,7 @@ public class AdminService {
         dashboardTokens.put(token, new DashboardToken(
             groupId, 
             userId, 
-            LocalDateTime.now().plusHours(24)
+            LocalDateTime.now(ZoneId.of("Europe/Kiev")).plusHours(24)
         ));
         
         return token;
@@ -81,7 +82,7 @@ public class AdminService {
             throw new RuntimeException("Невалідний токен");
         }
 
-        if (dashboardToken.expiresAt.isBefore(LocalDateTime.now())) {
+        if (dashboardToken.expiresAt.isBefore(LocalDateTime.now(ZoneId.of("Europe/Kiev")))) {
             dashboardTokens.remove(token);
             throw new RuntimeException("Токен закінчився");
         }
@@ -96,7 +97,7 @@ public class AdminService {
     public GroupMemberResponse getMemberDetails(String userId, String token) {
         DashboardToken dashboardToken = dashboardTokens.get(token);
         
-        if (dashboardToken == null || dashboardToken.expiresAt.isBefore(LocalDateTime.now())) {
+        if (dashboardToken == null || dashboardToken.expiresAt.isBefore(LocalDateTime.now(ZoneId.of("Europe/Kiev")))) {
             throw new RuntimeException("Невалідний або закінчений токен");
         }
 

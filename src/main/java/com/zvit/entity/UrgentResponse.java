@@ -7,6 +7,7 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 import java.time.LocalDateTime;
+import java.time.ZoneId;
 
 /**
  * Відповідь користувача на терміновий запит
@@ -43,7 +44,7 @@ public class UrgentResponse {
     @PrePersist
     protected void onCreate() {
         if (respondedAt == null) {
-            respondedAt = LocalDateTime.now();
+            respondedAt = LocalDateTime.now(ZoneId.of("Europe/Kiev"));
         }
     }
 }

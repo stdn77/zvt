@@ -7,6 +7,7 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 import java.time.LocalDateTime;
+import java.time.ZoneId;
 import java.util.Random;
 
 @Entity
@@ -112,8 +113,8 @@ public class Group {
 
     @PrePersist
     protected void onCreate() {
-        createdAt = LocalDateTime.now();
-        updatedAt = LocalDateTime.now();
+        createdAt = LocalDateTime.now(ZoneId.of("Europe/Kiev"));
+        updatedAt = LocalDateTime.now(ZoneId.of("Europe/Kiev"));
         
         // Генерувати коди якщо не встановлені
         if (accessCode == null) {
@@ -126,7 +127,7 @@ public class Group {
 
     @PreUpdate
     protected void onUpdate() {
-        updatedAt = LocalDateTime.now();
+        updatedAt = LocalDateTime.now(ZoneId.of("Europe/Kiev"));
     }
 
     private String generateAccessCode() {
@@ -169,6 +170,6 @@ public class Group {
      */
     public void regenerateAccessCode() {
         this.accessCode = generateAccessCode();
-        this.updatedAt = LocalDateTime.now();
+        this.updatedAt = LocalDateTime.now(ZoneId.of("Europe/Kiev"));
     }
 }

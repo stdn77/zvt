@@ -7,6 +7,7 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 import java.time.LocalDateTime;
+import java.time.ZoneId;
 
 @Entity
 @Table(name = "group_members")
@@ -54,6 +55,6 @@ public class GroupMember {
 
     @PrePersist
     protected void onCreate() {
-        joinedAt = LocalDateTime.now();
+        joinedAt = LocalDateTime.now(ZoneId.of("Europe/Kiev"));
     }
 }

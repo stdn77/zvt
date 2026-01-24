@@ -12,6 +12,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
 import java.time.LocalDateTime;
+import java.time.ZoneId;
 
 @Slf4j
 @Service
@@ -125,7 +126,7 @@ public class UserService {
             }
         }
 
-        user.setUpdatedAt(LocalDateTime.now());
+        user.setUpdatedAt(LocalDateTime.now(ZoneId.of("Europe/Kiev")));
         userRepository.save(user);
         log.info("   ✅ Profile updated successfully");
     }
@@ -158,7 +159,7 @@ public class UserService {
         log.info("🔔 Updating notifications setting for user {}: {}", userId, enabled);
         User user = getUserById(userId);
         user.setNotificationsEnabled(enabled);
-        user.setUpdatedAt(LocalDateTime.now());
+        user.setUpdatedAt(LocalDateTime.now(ZoneId.of("Europe/Kiev")));
         userRepository.save(user);
         log.info("   ✅ Notifications setting updated");
     }
