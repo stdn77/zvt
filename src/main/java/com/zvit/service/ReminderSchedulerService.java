@@ -157,14 +157,29 @@ public class ReminderSchedulerService {
                     continue;
                 }
 
-                // Add Android token if available
-                if (user.getFcmToken() != null && !user.getFcmToken().isEmpty()) {
-                    allTokens.add(user.getFcmToken());
+                // Відправляємо тільки на ОДИН пристрій щоб уникнути дублювання
+                // Пріоритет: останній використовуваний пристрій (appPlatform)
+                String platform = user.getAppPlatform();
+                String tokenToUse = null;
+
+                if ("PWA".equals(platform)) {
+                    // Користувач останній раз був в PWA - пріоритет PWA
+                    if (user.getFcmTokenWeb() != null && !user.getFcmTokenWeb().isEmpty()) {
+                        tokenToUse = user.getFcmTokenWeb();
+                    } else if (user.getFcmToken() != null && !user.getFcmToken().isEmpty()) {
+                        tokenToUse = user.getFcmToken();
+                    }
+                } else {
+                    // Android або невідомо - пріоритет Android
+                    if (user.getFcmToken() != null && !user.getFcmToken().isEmpty()) {
+                        tokenToUse = user.getFcmToken();
+                    } else if (user.getFcmTokenWeb() != null && !user.getFcmTokenWeb().isEmpty()) {
+                        tokenToUse = user.getFcmTokenWeb();
+                    }
                 }
 
-                // Add Web token if available
-                if (user.getFcmTokenWeb() != null && !user.getFcmTokenWeb().isEmpty()) {
-                    allTokens.add(user.getFcmTokenWeb());
+                if (tokenToUse != null) {
+                    allTokens.add(tokenToUse);
                 }
 
             } catch (Exception e) {
