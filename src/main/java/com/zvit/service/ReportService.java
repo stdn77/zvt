@@ -442,10 +442,11 @@ public class ReportService {
         }
         // Якщо є дані для обчислення кольору
         else if (lastReportTime != null && previousScheduledTime != null && nextScheduledTime != null) {
-            long mzz = previousScheduledTime.atZone(ZoneId.systemDefault()).toInstant().toEpochMilli();
-            long mvz = lastReportTime.atZone(ZoneId.systemDefault()).toInstant().toEpochMilli();
-            long nz = nextScheduledTime.atZone(ZoneId.systemDefault()).toInstant().toEpochMilli();
-            long ct = serverTime.atZone(ZoneId.systemDefault()).toInstant().toEpochMilli();
+            ZoneId kyivZone = ZoneId.of("Europe/Kiev");
+            long mzz = previousScheduledTime.atZone(kyivZone).toInstant().toEpochMilli();
+            long mvz = lastReportTime.atZone(kyivZone).toInstant().toEpochMilli();
+            long nz = nextScheduledTime.atZone(kyivZone).toInstant().toEpochMilli();
+            long ct = serverTime.atZone(kyivZone).toInstant().toEpochMilli();
 
             long periodMillis = nz - mzz;
             long cp = periodMillis / 4;
