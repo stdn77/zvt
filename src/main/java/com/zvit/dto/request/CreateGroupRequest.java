@@ -17,10 +17,11 @@ public class CreateGroupRequest {
     @NotBlank(message = "Назва групи обов'язкова")
     private String externalName;
 
-    @NotNull(message = "Максимальна кількість учасників обов'язкова")
-    @Min(value = 2, message = "Мінімум 2 учасники")
-    @Max(value = 300, message = "Максимум 300 учасників")
-    private Integer maxMembers;
+    // TODO: Повернути валідацію після тестування
+    // @NotNull(message = "Максимальна кількість учасників обов'язкова")
+    // @Min(value = 2, message = "Мінімум 2 учасники")
+    // @Max(value = 300, message = "Максимум 300 учасників")
+    private Integer maxMembers = 300;
 
     @NotNull(message = "Тип звіту обов'язковий")
     private Group.ReportType reportType;
