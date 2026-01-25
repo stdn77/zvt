@@ -138,8 +138,11 @@ public class ReminderSchedulerService {
             return 0;
         }
 
-        // Collect ALL tokens (both Android and Web) for push notifications
-        List<String> allTokens = new ArrayList<>();
+        // Розділяємо токени по ролях
+        List<String> memberTokens = new ArrayList<>();  // MEMBER - тільки "Час звітувати"
+        List<String> moderTokens = new ArrayList<>();   // MODER - обидва повідомлення
+        List<String> adminTokens = new ArrayList<>();   // ADMIN - тільки "Перегляньте звіти"
+
         Map<String, String> data = new HashMap<>();
         data.put("groupId", group.getId());
         data.put("groupName", group.getExternalName());
@@ -158,19 +161,16 @@ public class ReminderSchedulerService {
                 }
 
                 // Відправляємо тільки на ОДИН пристрій щоб уникнути дублювання
-                // Пріоритет: останній використовуваний пристрій (appPlatform)
                 String platform = user.getAppPlatform();
                 String tokenToUse = null;
 
                 if ("PWA".equals(platform)) {
-                    // Користувач останній раз був в PWA - пріоритет PWA
                     if (user.getFcmTokenWeb() != null && !user.getFcmTokenWeb().isEmpty()) {
                         tokenToUse = user.getFcmTokenWeb();
                     } else if (user.getFcmToken() != null && !user.getFcmToken().isEmpty()) {
                         tokenToUse = user.getFcmToken();
                     }
                 } else {
-                    // Android або невідомо - пріоритет Android
                     if (user.getFcmToken() != null && !user.getFcmToken().isEmpty()) {
                         tokenToUse = user.getFcmToken();
                     } else if (user.getFcmTokenWeb() != null && !user.getFcmTokenWeb().isEmpty()) {
@@ -179,7 +179,14 @@ public class ReminderSchedulerService {
                 }
 
                 if (tokenToUse != null) {
-                    allTokens.add(tokenToUse);
+                    // Розподіляємо по ролях
+                    if (member.getRole() == GroupMember.Role.ADMIN) {
+                        adminTokens.add(tokenToUse);
+                    } else if (member.getRole() == GroupMember.Role.MODER) {
+                        moderTokens.add(tokenToUse);
+                    } else {
+                        memberTokens.add(tokenToUse);
+                    }
                 }
 
             } catch (Exception e) {
@@ -187,17 +194,45 @@ public class ReminderSchedulerService {
             }
         }
 
-        if (allTokens.isEmpty()) {
-            return 0;
+        int totalSent = 0;
+        String groupName = group.getExternalName();
+
+        // 1. MEMBER - тільки "Час звітувати"
+        if (!memberTokens.isEmpty()) {
+            String title = "⏰ Час звітувати!";
+            String body = groupName + " - надішліть свій звіт";
+            totalSent += firebaseService.sendPushNotificationToMultiple(memberTokens, title, body, data);
         }
 
-        // Send notifications
-        String title = "⏰ Час звітувати!";
-        String body = group.getExternalName() + " - надішліть свій звіт";
+        // 2. MODER - "Час звітувати" + "Перегляньте звіти"
+        if (!moderTokens.isEmpty()) {
+            // Спочатку "Час звітувати"
+            String title1 = "⏰ Час звітувати!";
+            String body1 = groupName + " - надішліть свій звіт";
+            Map<String, String> data1 = new HashMap<>(data);
+            data1.put("tag", "reminder-report-" + group.getId());
+            totalSent += firebaseService.sendPushNotificationToMultiple(moderTokens, title1, body1, data1);
 
-        int sent = firebaseService.sendPushNotificationToMultiple(allTokens, title, body, data);
-        log.info("🔔 Sent {} reminders for group {} ({} tokens)", sent, group.getExternalName(), allTokens.size());
+            // Потім "Перегляньте звіти"
+            String title2 = "📋 Перегляньте звіти";
+            String body2 = groupName + " - перевірте звіти учасників";
+            Map<String, String> data2 = new HashMap<>(data);
+            data2.put("tag", "reminder-review-" + group.getId());
+            totalSent += firebaseService.sendPushNotificationToMultiple(moderTokens, title2, body2, data2);
+        }
 
-        return sent;
+        // 3. ADMIN - тільки "Перегляньте звіти"
+        if (!adminTokens.isEmpty()) {
+            String title = "📋 Перегляньте звіти";
+            String body = groupName + " - перевірте звіти учасників";
+            Map<String, String> data3 = new HashMap<>(data);
+            data3.put("tag", "reminder-review-" + group.getId());
+            totalSent += firebaseService.sendPushNotificationToMultiple(adminTokens, title, body, data3);
+        }
+
+        log.info("🔔 Sent {} reminders for group {} (members: {}, moders: {}, admins: {})",
+                totalSent, groupName, memberTokens.size(), moderTokens.size(), adminTokens.size());
+
+        return totalSent;
     }
 }
