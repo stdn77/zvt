@@ -164,6 +164,16 @@ public class GroupController {
         return ResponseEntity.ok(ApiResponse.success("Налаштування групи оновлено", null));
     }
 
+    @PostMapping("/{groupId}/regenerate-code")
+    public ResponseEntity<ApiResponse<String>> regenerateAccessCode(
+            @PathVariable String groupId,
+            Authentication authentication
+    ) {
+        String userId = authentication.getName();
+        String newCode = groupService.regenerateAccessCode(groupId, userId);
+        return ResponseEntity.ok(ApiResponse.success("Код доступу змінено", newCode));
+    }
+
     @PostMapping("/{groupId}/members/{memberId}/approve")
     public ResponseEntity<ApiResponse<Void>> approveMember(
             @PathVariable String groupId,
