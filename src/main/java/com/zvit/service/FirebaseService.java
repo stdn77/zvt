@@ -47,28 +47,21 @@ public class FirebaseService {
         try {
             Message.Builder messageBuilder = Message.builder()
                     .setToken(fcmToken)
-                    .setNotification(Notification.builder()
-                            .setTitle(title)
-                            .setBody(body)
-                            .setImage("https://zvit.online/icons/android-chrome-192.png")
-                            .build())
-                    // Android specific settings
+                    // Android config with notification
                     .setAndroidConfig(AndroidConfig.builder()
                             .setPriority(AndroidConfig.Priority.HIGH)
                             .setNotification(AndroidNotification.builder()
+                                    .setTitle(title)
+                                    .setBody(body)
                                     .setSound("default")
                                     .setClickAction("OPEN_REPORTS")
                                     .setIcon("ic_notification")
                                     .build())
                             .build())
-                    // Web Push settings (for PWA)
+                    // Web Push - тільки data, service worker покаже сповіщення
                     .setWebpushConfig(WebpushConfig.builder()
-                            .setNotification(WebpushNotification.builder()
-                                    .setTitle(title)
-                                    .setBody(body)
-                                    .setIcon("https://zvit.online/icons/android-chrome-192.png")
-                                    .setBadge("https://zvit.online/icons/android-chrome-192.png")
-                                    .build())
+                            .putData("title", title)
+                            .putData("body", body)
                             .build());
 
             // Додаємо data payload якщо є
@@ -116,27 +109,21 @@ public class FirebaseService {
             for (String token : validTokens) {
                 Message.Builder messageBuilder = Message.builder()
                         .setToken(token)
-                        .setNotification(Notification.builder()
-                                .setTitle(title)
-                                .setBody(body)
-                                .setImage("https://zvit.online/icons/android-chrome-192.png")
-                                .build())
+                        // Android config with notification
                         .setAndroidConfig(AndroidConfig.builder()
                                 .setPriority(AndroidConfig.Priority.HIGH)
                                 .setNotification(AndroidNotification.builder()
+                                        .setTitle(title)
+                                        .setBody(body)
                                         .setSound("default")
                                         .setClickAction("OPEN_REPORTS")
                                         .setIcon("ic_notification")
                                         .build())
                                 .build())
-                        // Web Push settings (for PWA)
+                        // Web Push - тільки data, service worker покаже сповіщення
                         .setWebpushConfig(WebpushConfig.builder()
-                                .setNotification(WebpushNotification.builder()
-                                        .setTitle(title)
-                                        .setBody(body)
-                                        .setIcon("https://zvit.online/icons/android-chrome-192.png")
-                                        .setBadge("https://zvit.online/icons/android-chrome-192.png")
-                                        .build())
+                                .putData("title", title)
+                                .putData("body", body)
                                 .build());
 
                 if (data != null && !data.isEmpty()) {
