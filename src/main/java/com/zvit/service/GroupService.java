@@ -368,16 +368,24 @@ public class GroupService {
             // Перевіряємо чи сповіщення увімкнені
             if (!member.getUser().isNotificationsEnabled()) continue;
 
-            // Додаємо Android токен
-            String androidToken = member.getUser().getFcmToken();
-            if (androidToken != null && !androidToken.isEmpty()) {
-                fcmTokens.add(androidToken);
+            // Відправляємо тільки на ОДИН пристрій щоб уникнути дублювання
+            String platform = member.getUser().getAppPlatform();
+            String tokenToUse = null;
+
+            if ("PWA".equals(platform)) {
+                // Користувач останній раз був в PWA - пріоритет PWA
+                String webToken = member.getUser().getFcmTokenWeb();
+                String androidToken = member.getUser().getFcmToken();
+                tokenToUse = (webToken != null && !webToken.isEmpty()) ? webToken : androidToken;
+            } else {
+                // Android або невідомо - пріоритет Android
+                String androidToken = member.getUser().getFcmToken();
+                String webToken = member.getUser().getFcmTokenWeb();
+                tokenToUse = (androidToken != null && !androidToken.isEmpty()) ? androidToken : webToken;
             }
 
-            // Додаємо Web токен (для PWA)
-            String webToken = member.getUser().getFcmTokenWeb();
-            if (webToken != null && !webToken.isEmpty()) {
-                fcmTokens.add(webToken);
+            if (tokenToUse != null && !tokenToUse.isEmpty()) {
+                fcmTokens.add(tokenToUse);
             }
         }
 
