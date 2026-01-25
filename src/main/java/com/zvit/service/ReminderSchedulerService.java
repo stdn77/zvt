@@ -160,33 +160,28 @@ public class ReminderSchedulerService {
                     continue;
                 }
 
-                // Відправляємо тільки на ОДИН пристрій щоб уникнути дублювання
+                // Для REMINDER відправляємо push тільки на PWA
+                // Android має свій локальний alarm (ReportReminderReceiver)
                 String platform = user.getAppPlatform();
-                String tokenToUse = null;
 
-                if ("PWA".equals(platform)) {
-                    if (user.getFcmTokenWeb() != null && !user.getFcmTokenWeb().isEmpty()) {
-                        tokenToUse = user.getFcmTokenWeb();
-                    } else if (user.getFcmToken() != null && !user.getFcmToken().isEmpty()) {
-                        tokenToUse = user.getFcmToken();
-                    }
-                } else {
-                    if (user.getFcmToken() != null && !user.getFcmToken().isEmpty()) {
-                        tokenToUse = user.getFcmToken();
-                    } else if (user.getFcmTokenWeb() != null && !user.getFcmTokenWeb().isEmpty()) {
-                        tokenToUse = user.getFcmTokenWeb();
-                    }
+                // Тільки PWA отримує push-сповіщення про нагадування
+                if (!"PWA".equals(platform)) {
+                    log.debug("User {} is on Android, skipping push (has local alarm)", user.getId());
+                    continue;
                 }
 
-                if (tokenToUse != null) {
-                    // Розподіляємо по ролях
-                    if (member.getRole() == GroupMember.Role.ADMIN) {
-                        adminTokens.add(tokenToUse);
-                    } else if (member.getRole() == GroupMember.Role.MODER) {
-                        moderTokens.add(tokenToUse);
-                    } else {
-                        memberTokens.add(tokenToUse);
-                    }
+                String tokenToUse = user.getFcmTokenWeb();
+                if (tokenToUse == null || tokenToUse.isEmpty()) {
+                    continue;
+                }
+
+                // Розподіляємо по ролях
+                if (member.getRole() == GroupMember.Role.ADMIN) {
+                    adminTokens.add(tokenToUse);
+                } else if (member.getRole() == GroupMember.Role.MODER) {
+                    moderTokens.add(tokenToUse);
+                } else {
+                    memberTokens.add(tokenToUse);
                 }
 
             } catch (Exception e) {
