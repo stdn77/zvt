@@ -125,7 +125,7 @@ public class ReminderSchedulerService {
     }
 
     /**
-     * Надсилає нагадування всім учасникам групи через Push (PWA/Web)
+     * Надсилає нагадування всім учасникам групи через Push (PWA та Android)
      */
     private int sendRemindersForGroup(Group group) {
         log.debug("Sending reminders for group: {}", group.getExternalName());
@@ -160,18 +160,12 @@ public class ReminderSchedulerService {
                     continue;
                 }
 
-                // Для REMINDER відправляємо push тільки на PWA
-                // Android має свій локальний alarm (ReportReminderReceiver)
+                // Вибираємо токен залежно від платформи (PWA або Android)
                 String platform = user.getAppPlatform();
+                String tokenToUse = "PWA".equals(platform) ? user.getFcmTokenWeb() : user.getFcmToken();
 
-                // Тільки PWA отримує push-сповіщення про нагадування
-                if (!"PWA".equals(platform)) {
-                    log.debug("User {} is on Android, skipping push (has local alarm)", user.getId());
-                    continue;
-                }
-
-                String tokenToUse = user.getFcmTokenWeb();
                 if (tokenToUse == null || tokenToUse.isEmpty()) {
+                    log.debug("User {} has no FCM token for platform {}", user.getId(), platform);
                     continue;
                 }
 
