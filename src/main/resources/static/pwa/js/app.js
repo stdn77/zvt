@@ -1629,12 +1629,20 @@ function renderGroups(groups) {
         const cardClass = hasAdminRights ? 'admin' : 'member';
         const reportType = group.reportType === 'EXTENDED' ? 'Розширений' : 'Простий';
 
+        // Перевіряємо чи показувати дзвіночок (сповіщення увімкнені + група має розклад)
+        const notificationsEnabled = DOM.notificationsToggle && DOM.notificationsToggle.classList.contains('active');
+        const hasSchedule = group.scheduleType && (
+            (group.scheduleType === 'FIXED_TIMES' && group.fixedTimes && group.fixedTimes.length > 0) ||
+            (group.scheduleType === 'INTERVAL' && group.intervalMinutes > 0)
+        );
+        const bellIcon = (notificationsEnabled && hasSchedule) ? ' 🔔' : '';
+
         // Admins and moderators can click to open group
         const onclick = hasAdminRights ? `onclick="openGroup('${id}', '${escapeHtml(name)}')"` : '';
 
         return `
         <div class="card group-card ${cardClass}" ${onclick}>
-            <div class="group-name">${escapeHtml(name)}</div>
+            <div class="group-name">${escapeHtml(name)}${bellIcon}</div>
             <div class="group-members">${members} корист.</div>
             <div class="group-role ${roleClass}">${role}</div>
             <div class="group-report-type">${reportType}</div>
