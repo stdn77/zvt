@@ -1629,20 +1629,12 @@ function renderGroups(groups) {
         const cardClass = hasAdminRights ? 'admin' : 'member';
         const reportType = group.reportType === 'EXTENDED' ? 'Розширений' : 'Простий';
 
-        // Перевіряємо чи показувати дзвіночок (сповіщення увімкнені + група має розклад)
-        const notificationsEnabled = DOM.notificationsToggle && DOM.notificationsToggle.classList.contains('active');
-        const hasSchedule = group.scheduleType && (
-            (group.scheduleType === 'FIXED_TIMES' && group.fixedTimes && group.fixedTimes.length > 0) ||
-            (group.scheduleType === 'INTERVAL' && group.intervalMinutes > 0)
-        );
-        const bellIcon = (notificationsEnabled && hasSchedule) ? ' 🔔' : '';
-
         // Admins and moderators can click to open group
         const onclick = hasAdminRights ? `onclick="openGroup('${id}', '${escapeHtml(name)}')"` : '';
 
         return `
         <div class="card group-card ${cardClass}" ${onclick}>
-            <div class="group-name">${escapeHtml(name)}${bellIcon}</div>
+            <div class="group-name">${escapeHtml(name)}</div>
             <div class="group-members">${members} корист.</div>
             <div class="group-role ${roleClass}">${role}</div>
             <div class="group-report-type">${reportType}</div>
@@ -2854,6 +2846,14 @@ function renderReportGroupCard(group, role) {
     // Екрануємо для безпечного використання в onclick
     const safeGroupName = groupName.replace(/'/g, "\\'").replace(/"/g, '&quot;');
 
+    // Перевіряємо чи показувати дзвіночок (сповіщення увімкнені + група має розклад)
+    const notificationsEnabled = DOM.notificationsToggle && DOM.notificationsToggle.classList.contains('active');
+    const hasSchedule = group.scheduleType && (
+        (group.scheduleType === 'FIXED_TIMES' && group.fixedTimes && group.fixedTimes.length > 0) ||
+        (group.scheduleType === 'INTERVAL' && group.intervalMinutes > 0)
+    );
+    const bellIcon = (notificationsEnabled && hasSchedule) ? ' 🔔' : '';
+
     // Обраховуємо час наступного звіту
     const nextReportTime = calculateNextReportTime(group);
     const nextReportText = nextReportTime ? `Наступний звіт о ${nextReportTime}` : '';
@@ -2944,7 +2944,7 @@ function renderReportGroupCard(group, role) {
                     <!-- Інформація -->
                     <div style="flex: 1; min-width: 0;">
                         <div style="font-size: 15px; font-weight: bold; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">
-                            ${escapeHtml(groupName)} ${hasAdminRights ? `(${membersCount})` : ''}
+                            ${escapeHtml(groupName)}${bellIcon} ${hasAdminRights ? `(${membersCount})` : ''}
                         </div>
                         <div style="font-size: 12px; color: var(--text-secondary); margin-top: 2px;">
                             ${roleText}
