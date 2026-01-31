@@ -482,21 +482,9 @@ public class ReportService {
                 colorHex = "#A5D6A7";  // Зелений
                 percentageElapsed = 0.0;
             } else {
-                // Звіт старий (до червоної зони попереднього дедлайну)
-                // Колір залежить від поточного часу до наступного дедлайну
-                if (ct > (nz - cp)) {
-                    // Останні 25% періоду - червоний
-                    colorHex = "#EF9A9A";  // Червоний
-                    percentageElapsed = 90.0;
-                } else if (ct > (nz - pp)) {
-                    // 50-75% періоду - жовтий
-                    colorHex = "#FFF176";  // Жовтий
-                    percentageElapsed = 60.0;
-                } else {
-                    // Перші 50% періоду - зелений
-                    colorHex = "#A5D6A7";  // Зелений
-                    percentageElapsed = 25.0;
-                }
+                // Пропущений дедлайн — завжди червоний
+                colorHex = "#EF9A9A";
+                percentageElapsed = 100.0;
             }
         }
 
