@@ -104,11 +104,11 @@ report:
   color:
     default: "#E0E0E0"
     admin: "#006400"
-    early: "#C8E6C9"
-    overdue: "#FFCDD2"
-    critical: "#FFCDD2"
-    warning: "#FFF59D"
-    normal: "#C8E6C9"
+    early: "#A5D6A7"
+    overdue: "#EF9A9A"
+    critical: "#EF9A9A"
+    warning: "#FFF176"
+    normal: "#A5D6A7"
   percentage:
     early: 25.0
     warning: 60.0

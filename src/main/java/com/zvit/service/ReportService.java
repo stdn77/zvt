@@ -213,6 +213,18 @@ public class ReportService {
                 })
                 .collect(Collectors.toList());
 
+        // Сортування плиток: спочатку найдавніші звіти, потім найновіші
+        // Null (без звітів) — на початку, адміни — в кінці
+        userStatuses.sort((a, b) -> {
+            boolean aAdmin = a.getRole() != null && a.getRole().name().equals("ADMIN");
+            boolean bAdmin = b.getRole() != null && b.getRole().name().equals("ADMIN");
+            if (aAdmin != bAdmin) return aAdmin ? 1 : -1;
+            if (a.getLastReportAt() == null && b.getLastReportAt() == null) return 0;
+            if (a.getLastReportAt() == null) return -1;
+            if (b.getLastReportAt() == null) return 1;
+            return a.getLastReportAt().compareTo(b.getLastReportAt());
+        });
+
         // Формуємо інформацію про терміновий збір
         UrgentSessionInfo urgentSession = buildUrgentSessionInfo(group, members, serverTime);
 
@@ -453,31 +465,36 @@ public class ReportService {
             long pp = periodMillis / 2;  // 50% періоду
 
             // ЛОГІКА КОЛЬОРІВ:
-            // 50% часу після дедлайну - зелений
-            // наступні 25% - жовтий
-            // останні 25% - червоний
+            // Зелена зона: перші 50% періоду
+            // Жовта зона: 50-75% періоду
+            // Червона зона: останні 25% періоду
+            //
+            // Якщо звіт подано у червоній зоні (останні 25% перед MZZ),
+            // він зараховується на цей дедлайн → завжди зелений.
 
-            if (mvz < (mzz - cp)) {
-                // Звіт занадто старий (поданий до початку "вікна" попереднього періоду)
-                colorHex = "#FFCDD2";  // Світло-червоний
-                percentageElapsed = 100.0;
+            if (mvz >= (mzz - cp) && mvz < mzz) {
+                // Звіт подано у червоній зоні перед дедлайном —
+                // зараховується на цей дедлайн, завжди зелений
+                colorHex = "#A5D6A7";  // Зелений
+                percentageElapsed = 0.0;
             } else if (mvz >= mzz) {
                 // Звіт поданий ПІСЛЯ дедлайну (в поточному періоді) - завжди зелений
-                colorHex = "#C8E6C9";  // Світло-зелений
+                colorHex = "#A5D6A7";  // Зелений
                 percentageElapsed = 0.0;
             } else {
-                // Звіт поданий вчасно - колір залежить від поточного часу
+                // Звіт старий (до червоної зони попереднього дедлайну)
+                // Колір залежить від поточного часу до наступного дедлайну
                 if (ct > (nz - cp)) {
                     // Останні 25% періоду - червоний
-                    colorHex = "#FFCDD2";  // Світло-червоний
+                    colorHex = "#EF9A9A";  // Червоний
                     percentageElapsed = 90.0;
                 } else if (ct > (nz - pp)) {
                     // 50-75% періоду - жовтий
-                    colorHex = "#FFF59D";  // Світло-жовтий
+                    colorHex = "#FFF176";  // Жовтий
                     percentageElapsed = 60.0;
                 } else {
                     // Перші 50% періоду - зелений
-                    colorHex = "#C8E6C9";  // Світло-зелений
+                    colorHex = "#A5D6A7";  // Зелений
                     percentageElapsed = 25.0;
                 }
             }

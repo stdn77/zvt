@@ -3449,6 +3449,19 @@ function renderUserTiles(users) {
         return;
     }
 
+    // Сортування: спочатку найдавніші звіти, потім найновіші, адміни в кінці
+    users.sort((a, b) => {
+        const aAdmin = a.role === 'ADMIN';
+        const bAdmin = b.role === 'ADMIN';
+        if (aAdmin !== bAdmin) return aAdmin ? 1 : -1;
+        const t1 = a.lastReportAt || '';
+        const t2 = b.lastReportAt || '';
+        if (!t1 && !t2) return 0;
+        if (!t1) return -1;
+        if (!t2) return 1;
+        return t1.localeCompare(t2);
+    });
+
     let html = '';
     users.forEach(user => {
         const userName = user.userName || 'Невідомий';
