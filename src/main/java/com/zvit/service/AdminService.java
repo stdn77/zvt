@@ -7,6 +7,7 @@ import com.google.zxing.common.BitMatrix;
 import com.google.zxing.qrcode.QRCodeWriter;
 import com.zvit.dto.response.GroupMemberResponse;
 import com.zvit.dto.response.GroupStatusesResponse;
+import com.zvit.dto.response.ReportResponse;
 import com.zvit.dto.response.UserStatusResponse;
 import com.zvit.entity.GroupMember;
 import com.zvit.repository.GroupMemberRepository;
@@ -88,6 +89,27 @@ public class AdminService {
         }
 
         return reportService.getGroupStatuses(
+            dashboardToken.groupId,
+            dashboardToken.userId
+        );
+    }
+
+    /**
+     * Отримати звіти групи по токену дашборду (для статистики)
+     */
+    public List<ReportResponse> getDashboardReports(String token) {
+        DashboardToken dashboardToken = dashboardTokens.get(token);
+
+        if (dashboardToken == null) {
+            throw new RuntimeException("Невалідний токен");
+        }
+
+        if (dashboardToken.expiresAt.isBefore(LocalDateTime.now(ZoneId.of("Europe/Kiev")))) {
+            dashboardTokens.remove(token);
+            throw new RuntimeException("Токен закінчився");
+        }
+
+        return reportService.getAllGroupReports(
             dashboardToken.groupId,
             dashboardToken.userId
         );

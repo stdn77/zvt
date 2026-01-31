@@ -2,6 +2,7 @@ package com.zvit.controller;
 
 import com.zvit.dto.response.GroupMemberResponse;
 import com.zvit.dto.response.GroupStatusesResponse;
+import com.zvit.dto.response.ReportResponse;
 import com.zvit.dto.response.UserStatusResponse;
 import com.zvit.service.AdminService;
 import com.zvit.dto.response.ApiResponse;
@@ -58,6 +59,18 @@ public class AdminController {
     ) {
         GroupStatusesResponse statuses = adminService.getDashboardByToken(token);
         return ResponseEntity.ok(ApiResponse.success("Дашборд отримано", statuses));
+    }
+
+    /**
+     * Звіти групи по токену дашборду (для статистики)
+     * БЕЗ аутентифікації (публічний endpoint)
+     */
+    @GetMapping("/dashboard/{token}/reports")
+    public ResponseEntity<ApiResponse<List<ReportResponse>>> getDashboardReports(
+            @PathVariable String token
+    ) {
+        List<ReportResponse> reports = adminService.getDashboardReports(token);
+        return ResponseEntity.ok(ApiResponse.success("Звіти отримано", reports));
     }
 
     /**

@@ -9,7 +9,7 @@ const logError = console.error.bind(console); // Always log errors
 const logWarn = console.warn.bind(console);   // Always log warnings
 
 // App version (sync with service-worker cache version)
-const APP_VERSION = 'PWA 1.03.05';
+const APP_VERSION = 'PWA 1.03.06';
 
 // Constants
 const STORAGE_KEYS = {
@@ -142,6 +142,7 @@ function initDOMCache() {
 
         // Group status
         groupStatusTitle: document.getElementById('groupStatusTitle'),
+        statisticsBtn: document.getElementById('statisticsBtn'),
         urgentReportBtn: document.getElementById('urgentReportBtn'),
         qrScannerBtn: document.getElementById('qrScannerBtn'),
         urgentSessionBanner: document.getElementById('urgentSessionBanner'),
@@ -2975,6 +2976,10 @@ async function openGroupStatuses(groupId, groupName) {
     DOM.groupStatusTitle.textContent = groupName || 'Статус групи';
 
     // Показуємо кнопки для адміна
+    const statsBtn = DOM.statisticsBtn;
+    if (statsBtn) {
+        statsBtn.style.display = 'flex';
+    }
     const urgentBtn = DOM.urgentReportBtn;
     if (urgentBtn) {
         urgentBtn.style.display = 'flex';
@@ -3249,6 +3254,187 @@ async function endUrgentSession() {
         showToast('Помилка завершення збору', 'error');
     }
 }
+
+// ======================== Статистика розширених звітів ========================
+
+// Відкрити модальне вікно статистики
+async function openStatistics() {
+    if (!currentGroup || !currentGroup.id) {
+        showToast('Помилка: група не вибрана', 'error');
+        return;
+    }
+
+    const modal = document.getElementById('statisticsModal');
+    const content = document.getElementById('statisticsContent');
+    modal.style.display = 'flex';
+    content.innerHTML = '<div class="loading"><div class="spinner"></div></div>';
+
+    try {
+        const response = await apiRequest(`/pwa/groups/${currentGroup.id}/reports`, 'GET');
+        log('[PWA] Statistics reports:', response);
+
+        if (response.success && response.data && response.data.length > 0) {
+            renderStatisticsTable(response.data);
+        } else {
+            content.innerHTML = '<div style="text-align: center; padding: 32px; color: var(--text-secondary);"><p>Немає розширених звітів для статистики</p></div>';
+        }
+    } catch (error) {
+        logError('[PWA] Statistics error:', error);
+        content.innerHTML = `<div style="text-align: center; padding: 32px; color: var(--danger);"><p>Помилка завантаження: ${error.message}</p></div>`;
+    }
+}
+
+// Закрити модальне вікно статистики
+function closeStatisticsModal() {
+    const modal = document.getElementById('statisticsModal');
+    if (modal) modal.style.display = 'none';
+}
+
+// Розбити значення поля за роздільниками "/" та ";"
+function splitFieldValue(value) {
+    if (!value || value.trim() === '') return [];
+    return value.trim().split(/[\/;]/).map(s => s.trim());
+}
+
+// Парсити число (підтримка "," та "." як десятковий роздільник)
+function parseStatNumber(value) {
+    if (!value || value.trim() === '') return null;
+    const normalized = value.trim().replace(',', '.');
+    const num = parseFloat(normalized);
+    return isNaN(num) ? null : num;
+}
+
+// Форматувати число для відображення (UA формат з комою)
+function formatStatNumber(value) {
+    if (value === Math.floor(value) && isFinite(value)) {
+        return value.toString();
+    }
+    let formatted = value.toFixed(3).replace(/0+$/, '').replace(/\.$/, '');
+    return formatted.replace('.', ',');
+}
+
+// Побудувати таблицю статистики
+function renderStatisticsTable(allReports) {
+    const content = document.getElementById('statisticsContent');
+
+    // 1. Фільтруємо тільки EXTENDED звіти
+    const extendedReports = allReports.filter(r => r.reportType === 'EXTENDED');
+    if (extendedReports.length === 0) {
+        content.innerHTML = '<div style="text-align: center; padding: 32px; color: var(--text-secondary);"><p>Немає розширених звітів для статистики</p></div>';
+        return;
+    }
+
+    // 2. Групуємо за userId, беремо найновіший звіт
+    const latestByUser = {};
+    extendedReports.forEach(report => {
+        const userId = report.userId;
+        if (!userId) return;
+        const existing = latestByUser[userId];
+        if (!existing || (report.submittedAt > existing.submittedAt)) {
+            latestByUser[userId] = report;
+        }
+    });
+
+    const reports = Object.values(latestByUser);
+    if (reports.length === 0) {
+        content.innerHTML = '<div style="text-align: center; padding: 32px; color: var(--text-secondary);"><p>Немає розширених звітів для статистики</p></div>';
+        return;
+    }
+
+    // 3. Визначаємо кількість підстовбців для кожного поля T1-T5
+    const fieldKeys = ['field1Value', 'field2Value', 'field3Value', 'field4Value', 'field5Value'];
+    const maxSubCols = [0, 0, 0, 0, 0];
+    reports.forEach(report => {
+        fieldKeys.forEach((key, i) => {
+            const parts = splitFieldValue(report[key]);
+            if (parts.length > maxSubCols[i]) maxSubCols[i] = parts.length;
+        });
+    });
+
+    // 4. Формуємо заголовки
+    const headers = ['Користувач'];
+    for (let i = 0; i < 5; i++) {
+        if (maxSubCols[i] === 0) continue;
+        if (maxSubCols[i] === 1) {
+            headers.push(`T${i + 1}`);
+        } else {
+            for (let j = 1; j <= maxSubCols[i]; j++) {
+                headers.push(`T${i + 1}.${j}`);
+            }
+        }
+    }
+
+    // 5. Будуємо дані рядків
+    const rows = [];
+    reports.forEach(report => {
+        const row = [report.userName || '—'];
+        fieldKeys.forEach((key, i) => {
+            if (maxSubCols[i] === 0) return;
+            const parts = splitFieldValue(report[key]);
+            for (let j = 0; j < maxSubCols[i]; j++) {
+                row.push(j < parts.length ? parts[j] : '');
+            }
+        });
+        rows.push(row);
+    });
+
+    // 6. Обчислюємо суми
+    const colCount = headers.length;
+    const sums = new Array(colCount).fill(0);
+    const hasValue = new Array(colCount).fill(false);
+    rows.forEach(row => {
+        for (let c = 1; c < colCount && c < row.length; c++) {
+            const val = parseStatNumber(row[c]);
+            if (val !== null) {
+                sums[c] += val;
+                hasValue[c] = true;
+            }
+        }
+    });
+
+    // 7. HTML таблиця
+    let html = '<div style="overflow-x: auto;"><table style="width: 100%; border-collapse: collapse; font-size: 13px; min-width: 400px;">';
+
+    // Заголовок
+    html += '<thead><tr style="background: var(--surface-elevated, #1a1a2e);">';
+    headers.forEach((h, i) => {
+        const align = i === 0 ? 'left' : 'right';
+        html += `<th style="padding: 10px 12px; text-align: ${align}; color: var(--text-primary, #e0e0e0); font-weight: 600; border-bottom: 2px solid var(--border, #333); white-space: nowrap;">${h}</th>`;
+    });
+    html += '</tr></thead><tbody>';
+
+    // Рядки даних
+    rows.forEach(row => {
+        html += '<tr style="border-bottom: 1px solid var(--border, #333);">';
+        row.forEach((val, i) => {
+            const align = i === 0 ? 'left' : 'right';
+            const style = i === 0
+                ? `padding: 8px 12px; text-align: ${align}; color: var(--text-primary, #e0e0e0); font-weight: 500; white-space: nowrap;`
+                : `padding: 8px 12px; text-align: ${align}; color: var(--text-secondary, #aaa); font-variant-numeric: tabular-nums;`;
+            html += `<td style="${style}">${val || ''}</td>`;
+        });
+        html += '</tr>';
+    });
+
+    // Рядок сум
+    html += '<tr style="background: var(--surface-elevated, #1a1a2e); border-top: 2px solid var(--border, #333);">';
+    for (let c = 0; c < colCount; c++) {
+        const align = c === 0 ? 'left' : 'right';
+        let val = '';
+        if (c === 0) {
+            val = 'СУМА';
+        } else if (hasValue[c]) {
+            val = formatStatNumber(sums[c]);
+        }
+        html += `<td style="padding: 10px 12px; text-align: ${align}; color: var(--text-primary, #e0e0e0); font-weight: 700; white-space: nowrap;">${val}</td>`;
+    }
+    html += '</tr>';
+
+    html += '</tbody></table></div>';
+    content.innerHTML = html;
+}
+
+// ======================== Кінець блоку статистики ========================
 
 // Відобразити плитки користувачів
 function renderUserTiles(users) {
