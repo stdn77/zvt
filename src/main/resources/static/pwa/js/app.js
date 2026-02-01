@@ -1464,6 +1464,56 @@ async function clearAppCache() {
     }
 }
 
+// Reset All Data
+async function resetAllData() {
+    if (!confirm('Скинути всі дані додатку? Буде видалено кеш, налаштування, збережений номер телефону, токен авторизації. Вам потрібно буде увійти знову.')) {
+        return;
+    }
+
+    try {
+        // Clear Service Worker caches
+        if ('caches' in window) {
+            const cacheNames = await caches.keys();
+            await Promise.all(cacheNames.map(cacheName => caches.delete(cacheName)));
+        }
+
+        // Unregister Service Worker
+        if ('serviceWorker' in navigator) {
+            const registrations = await navigator.serviceWorker.getRegistrations();
+            for (const registration of registrations) {
+                await registration.unregister();
+            }
+        }
+
+        // Clear all storage
+        localStorage.clear();
+        sessionStorage.clear();
+
+        // Clear cookies
+        document.cookie.split(';').forEach(c => {
+            document.cookie = c.replace(/^ +/, '').replace(/=.*/, '=;expires=' + new Date().toUTCString() + ';path=/');
+        });
+
+        // Firebase sign out
+        if (typeof firebase !== 'undefined' && firebase.auth) {
+            try { await firebase.auth().signOut(); } catch (e) { /* ignore */ }
+        }
+
+        showToast('Всі дані скинуто. Перезавантаження...', 'success');
+
+        setTimeout(() => {
+            window.location.reload(true);
+        }, 1000);
+
+    } catch (error) {
+        logError('Error resetting data:', error);
+        // Force reload even on error
+        localStorage.clear();
+        sessionStorage.clear();
+        window.location.reload(true);
+    }
+}
+
 // Profile Editing
 function showEditNameDialog() {
     const currentName = currentUser?.name || '';
