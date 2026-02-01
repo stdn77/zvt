@@ -670,7 +670,7 @@ public class ReportService {
 
         int currentMinutes = now.getHour() * 60 + now.getMinute();
         LocalDateTime previousTime = null;
-        int maxDiff = Integer.MIN_VALUE;
+        int minDiff = Integer.MAX_VALUE;
 
         for (String time : fixedTimes) {
             try {
@@ -680,9 +680,9 @@ public class ReportService {
                 int timeInMinutes = hours * 60 + minutes;
                 int diff = currentMinutes - timeInMinutes;
 
-                // Шукаємо найближчий час, що менший за поточний
-                if (diff > 0 && diff > maxDiff) {
-                    maxDiff = diff;
+                // Шукаємо найближчий час, що менший або рівний поточному
+                if (diff >= 0 && diff < minDiff) {
+                    minDiff = diff;
                     previousTime = now.withHour(hours).withMinute(minutes).withSecond(0).withNano(0);
                 }
             } catch (Exception e) {
