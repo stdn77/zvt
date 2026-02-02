@@ -1,7 +1,7 @@
 // ZVIT PWA Service Worker
-const CACHE_NAME = 'zvit-cache-v62';
-const STATIC_CACHE = 'zvit-static-v62';
-const DYNAMIC_CACHE = 'zvit-dynamic-v62';
+const CACHE_NAME = 'zvit-cache-v63';
+const STATIC_CACHE = 'zvit-static-v63';
+const DYNAMIC_CACHE = 'zvit-dynamic-v63';
 
 // Статичні ресурси для кешування
 const STATIC_ASSETS = [
