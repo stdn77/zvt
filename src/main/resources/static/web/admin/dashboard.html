@@ -229,15 +229,15 @@
         }
 
         .user-card.status-green {
-            background: #81C784;
+            background: #A5D6A7;
         }
 
         .user-card.status-yellow {
-            background: #FFD54F;
+            background: #FFF176;
         }
 
         .user-card.status-red {
-            background: #E57373;
+            background: #EF9A9A;
         }
 
         .user-card.status-gray {
@@ -424,17 +424,17 @@
             <h1 id="groupName">📊 Dashboard</h1>
             <div class="status-legend">
                 <div class="legend-item">
-                    <div class="legend-color" id="greenCount" style="background: #81C784;">0</div>
+                    <div class="legend-color" id="greenCount" style="background: #A5D6A7;">0</div>
                     <span>Звітував недавно</span>
                 </div>
                 <span class="legend-separator">|</span>
                 <div class="legend-item">
-                    <div class="legend-color" id="yellowCount" style="background: #FFD54F;">0</div>
+                    <div class="legend-color" id="yellowCount" style="background: #FFF176;">0</div>
                     <span>Час йде</span>
                 </div>
                 <span class="legend-separator">|</span>
                 <div class="legend-item">
-                    <div class="legend-color" id="redCount" style="background: #E57373;">0</div>
+                    <div class="legend-color" id="redCount" style="background: #EF9A9A;">0</div>
                     <span>Час майже вийшов</span>
                 </div>
                 <span class="legend-separator">|</span>
@@ -546,7 +546,7 @@
                     throw new Error(result.message);
                 }
 
-                renderDashboard(result.data);
+                renderDashboard(result.data.users || result.data);
                 document.getElementById('loading').style.display = 'none';
                 document.getElementById('lastUpdate').textContent = `🔄 Оновлено: ${new Date().toLocaleTimeString('uk-UA', { timeZone: 'Europe/Kiev' })}`;
 
@@ -556,12 +556,18 @@
         }
 
         function getStatusColor(colorHex, percentageElapsed) {
-            if (colorHex === '#00FF00' || (percentageElapsed !== null && percentageElapsed < 50)) {
+            if (colorHex === '#A5D6A7' || colorHex === '#006400') {
                 return 'green';
-            } else if (colorHex === '#FFFF00' || (percentageElapsed !== null && percentageElapsed < 75)) {
+            } else if (colorHex === '#FFF176') {
                 return 'yellow';
-            } else if (colorHex === '#FF0000' || (percentageElapsed !== null && percentageElapsed >= 75)) {
+            } else if (colorHex === '#EF9A9A') {
                 return 'red';
+            } else if (colorHex === '#E0E0E0') {
+                return 'gray';
+            } else if (percentageElapsed !== null && percentageElapsed !== undefined) {
+                if (percentageElapsed < 50) return 'green';
+                else if (percentageElapsed < 75) return 'yellow';
+                else return 'red';
             } else {
                 return 'gray';
             }
