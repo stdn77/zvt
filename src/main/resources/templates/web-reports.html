@@ -714,11 +714,11 @@
             }
             // Use colorHex to determine category
             const color = (user.colorHex || '').toUpperCase();
-            if (color.includes('4CAF50') || color.includes('81C784') || color.includes('C8E6C9')) {
+            if (color.includes('A5D6A7') || color.includes('4CAF50') || color.includes('81C784') || color.includes('C8E6C9') || color.includes('006400')) {
                 return 'green';
-            } else if (color.includes('FFC107') || color.includes('FFD54F') || color.includes('FFF59D')) {
+            } else if (color.includes('FFF176') || color.includes('FFC107') || color.includes('FFD54F') || color.includes('FFF59D')) {
                 return 'yellow';
-            } else if (color.includes('F44336') || color.includes('E57373') || color.includes('FFCDD2')) {
+            } else if (color.includes('EF9A9A') || color.includes('F44336') || color.includes('E57373') || color.includes('FFCDD2')) {
                 return 'red';
             } else {
                 return 'gray';
@@ -809,11 +809,11 @@
 
                     // Assign light background color based on category
                     if (category === 'green') {
-                        bgColor = '#81C784'; // Light green
+                        bgColor = '#A5D6A7'; // Light green
                     } else if (category === 'yellow') {
-                        bgColor = '#FFD54F'; // Light yellow
+                        bgColor = '#FFF176'; // Light yellow
                     } else if (category === 'red') {
-                        bgColor = '#E57373'; // Light red
+                        bgColor = '#EF9A9A'; // Light red
                     } else {
                         bgColor = '#E0E0E0'; // Light gray
                     }
@@ -837,9 +837,9 @@
                 // Для термінового збору змінюємо колір картки (червоний/зелений)
                 if (urgentSession && urgentSession.active && user.role !== 'ADMIN') {
                     if (user.urgentRespondedAt) {
-                        bgColor = '#81C784'; // Зелений - відповів
+                        bgColor = '#A5D6A7'; // Зелений - відповів
                     } else {
-                        bgColor = '#E57373'; // Червоний - не відповів
+                        bgColor = '#EF9A9A'; // Червоний - не відповів
                     }
                 }
 
