@@ -57,6 +57,8 @@ public class SecurityConfig {
                 .requestMatchers("/web/**").permitAll()
                 .requestMatchers("/api/web/**").permitAll() // Web API з session token
                 .requestMatchers("/api/web-session/**").permitAll() // QR session status
+                .requestMatchers("/system/**").permitAll() // System logs page
+                .requestMatchers("/api/system/**").permitAll() // System logs API
                 .requestMatchers("/css/**").permitAll()
                 .requestMatchers("/js/**").permitAll()
                 .requestMatchers("/favicon.ico").permitAll()
