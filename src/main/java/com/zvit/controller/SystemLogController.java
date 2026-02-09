@@ -2,18 +2,19 @@ package com.zvit.controller;
 
 import com.zvit.dto.response.ApiResponse;
 import com.zvit.entity.AdminLog;
+import com.zvit.entity.QrSession;
 import com.zvit.entity.SystemAdmin;
 import com.zvit.entity.User;
 import com.zvit.repository.UserRepository;
-import com.zvit.security.JwtService;
 import com.zvit.service.AdminLogService;
 import com.zvit.service.EncryptionService;
+import com.zvit.service.QrSessionService;
 import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
+import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
 
 import java.time.LocalDate;
@@ -22,33 +23,60 @@ import java.util.Map;
 
 @Controller
 @RequiredArgsConstructor
-@Slf4j
 public class SystemLogController {
 
     private final AdminLogService adminLogService;
-    private final JwtService jwtService;
+    private final QrSessionService qrSessionService;
     private final UserRepository userRepository;
     private final EncryptionService encryptionService;
 
     /**
-     * Сторінка перегляду логів (потребує авторизації)
+     * Сторінка перегляду логів (через QR сесію)
      */
     @GetMapping("/system/logs")
-    public String logsPage(@RequestParam String token) {
-        // Перевіряємо токен
-        if (!isSystemAdmin(token)) {
-            return "redirect:/error";
+    public String logsPage(@RequestParam String token, Model model) {
+        // Перевіряємо QR сесію та права адміна
+        if (!isSystemAdminByQrToken(token)) {
+            return "redirect:/";
         }
+        model.addAttribute("sessionToken", token);
         return "system-logs";
     }
 
     /**
-     * API: Отримати логи з фільтрами
+     * API: Перевірити чи є користувач QR сесії системним адміністратором
+     */
+    @GetMapping("/api/web/check-system-admin")
+    @ResponseBody
+    public ResponseEntity<ApiResponse<Map<String, Object>>> checkSystemAdmin(
+            @RequestParam String token) {
+
+        try {
+            QrSession session = qrSessionService.getAuthorizedSession(token);
+            String phone = getUserPhone(session.getUserId());
+
+            boolean isAdmin = phone != null && adminLogService.isSystemAdmin(phone);
+            boolean isMaster = phone != null && adminLogService.isMasterAdmin(phone);
+
+            return ResponseEntity.ok(ApiResponse.success("Перевірка виконана", Map.of(
+                    "isSystemAdmin", isAdmin,
+                    "isMasterAdmin", isMaster
+            )));
+        } catch (Exception e) {
+            return ResponseEntity.ok(ApiResponse.success("Перевірка виконана", Map.of(
+                    "isSystemAdmin", false,
+                    "isMasterAdmin", false
+            )));
+        }
+    }
+
+    /**
+     * API: Отримати логи з фільтрами (через QR сесію)
      */
     @GetMapping("/api/system/logs")
     @ResponseBody
     public ResponseEntity<ApiResponse<Page<AdminLog>>> getLogs(
-            @RequestHeader("Authorization") String authHeader,
+            @RequestParam String token,
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate dateFrom,
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate dateTo,
             @RequestParam(required = false) String userName,
@@ -59,7 +87,7 @@ public class SystemLogController {
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "50") int size) {
 
-        if (!isSystemAdminByAuth(authHeader)) {
+        if (!isSystemAdminByQrToken(token)) {
             return ResponseEntity.status(403).body(ApiResponse.error("Доступ заборонено"));
         }
 
@@ -76,10 +104,10 @@ public class SystemLogController {
     @PostMapping("/api/system/admins")
     @ResponseBody
     public ResponseEntity<ApiResponse<SystemAdmin>> addAdmin(
-            @RequestHeader("Authorization") String authHeader,
+            @RequestParam String token,
             @RequestBody Map<String, String> request) {
 
-        String adminPhone = getPhoneFromAuth(authHeader);
+        String adminPhone = getPhoneByQrToken(token);
         if (adminPhone == null || !adminLogService.isSystemAdmin(adminPhone)) {
             return ResponseEntity.status(403).body(ApiResponse.error("Доступ заборонено"));
         }
@@ -103,10 +131,10 @@ public class SystemLogController {
     @DeleteMapping("/api/system/admins/{phoneNumber}")
     @ResponseBody
     public ResponseEntity<ApiResponse<String>> removeAdmin(
-            @RequestHeader("Authorization") String authHeader,
+            @RequestParam String token,
             @PathVariable String phoneNumber) {
 
-        String adminPhone = getPhoneFromAuth(authHeader);
+        String adminPhone = getPhoneByQrToken(token);
         if (adminPhone == null || !adminLogService.isMasterAdmin(adminPhone)) {
             return ResponseEntity.status(403).body(ApiResponse.error("Тільки головний адміністратор може видаляти інших"));
         }
@@ -125,9 +153,9 @@ public class SystemLogController {
     @GetMapping("/api/system/admins")
     @ResponseBody
     public ResponseEntity<ApiResponse<List<SystemAdmin>>> getAdmins(
-            @RequestHeader("Authorization") String authHeader) {
+            @RequestParam String token) {
 
-        if (!isSystemAdminByAuth(authHeader)) {
+        if (!isSystemAdminByQrToken(token)) {
             return ResponseEntity.status(403).body(ApiResponse.error("Доступ заборонено"));
         }
 
@@ -136,64 +164,37 @@ public class SystemLogController {
     }
 
     /**
-     * API: Перевірити чи є користувач системним адміністратором
+     * Перевірка чи користувач QR сесії є системним адміном
      */
-    @GetMapping("/api/system/check-admin")
-    @ResponseBody
-    public ResponseEntity<ApiResponse<Map<String, Object>>> checkAdmin(
-            @RequestHeader("Authorization") String authHeader) {
-
-        String phone = getPhoneFromAuth(authHeader);
-        boolean isAdmin = phone != null && adminLogService.isSystemAdmin(phone);
-        boolean isMaster = phone != null && adminLogService.isMasterAdmin(phone);
-
-        return ResponseEntity.ok(ApiResponse.success("Перевірка виконана", Map.of(
-                "isSystemAdmin", isAdmin,
-                "isMasterAdmin", isMaster
-        )));
-    }
-
-    private boolean isSystemAdmin(String token) {
-        try {
-            String userId = jwtService.extractUserId(token);
-            return userRepository.findById(userId)
-                    .map(user -> {
-                        try {
-                            String phone = encryptionService.decrypt(user.getPhoneEncrypted());
-                            return adminLogService.isSystemAdmin(phone);
-                        } catch (Exception e) {
-                            return false;
-                        }
-                    })
-                    .orElse(false);
-        } catch (Exception e) {
-            return false;
-        }
-    }
-
-    private boolean isSystemAdminByAuth(String authHeader) {
-        String phone = getPhoneFromAuth(authHeader);
+    private boolean isSystemAdminByQrToken(String token) {
+        String phone = getPhoneByQrToken(token);
         return phone != null && adminLogService.isSystemAdmin(phone);
     }
 
-    private String getPhoneFromAuth(String authHeader) {
-        if (authHeader == null || !authHeader.startsWith("Bearer ")) {
-            return null;
-        }
+    /**
+     * Отримати телефон користувача за QR токеном
+     */
+    private String getPhoneByQrToken(String token) {
         try {
-            String token = authHeader.substring(7);
-            String userId = jwtService.extractUserId(token);
-            return userRepository.findById(userId)
-                    .map(user -> {
-                        try {
-                            return encryptionService.decrypt(user.getPhoneEncrypted());
-                        } catch (Exception e) {
-                            return null;
-                        }
-                    })
-                    .orElse(null);
+            QrSession session = qrSessionService.getAuthorizedSession(token);
+            return getUserPhone(session.getUserId());
         } catch (Exception e) {
             return null;
         }
+    }
+
+    /**
+     * Отримати телефон користувача за userId
+     */
+    private String getUserPhone(String userId) {
+        return userRepository.findById(userId)
+                .map(user -> {
+                    try {
+                        return encryptionService.decrypt(user.getPhoneEncrypted());
+                    } catch (Exception e) {
+                        return null;
+                    }
+                })
+                .orElse(null);
     }
 }

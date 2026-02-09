@@ -410,6 +410,7 @@
     <div class="header">
         <h1>🔒 Системні логи</h1>
         <div class="header-actions">
+            <button class="btn btn-secondary" onclick="goBack()">← Назад</button>
             <button class="btn btn-secondary" onclick="showAdminsModal()">👥 Адміністратори</button>
             <button class="btn btn-primary" onclick="loadLogs()">🔄 Оновити</button>
         </div>
@@ -553,11 +554,8 @@
             if (requestMethod) params.append('method', requestMethod);
 
             try {
-                const response = await fetch(`/api/system/logs?${params.toString()}`, {
-                    headers: {
-                        'Authorization': `Bearer ${token}`
-                    }
-                });
+                params.append('token', token);
+                const response = await fetch(`/api/system/logs?${params.toString()}`);
 
                 if (!response.ok) {
                     throw new Error('Помилка завантаження');
@@ -681,11 +679,7 @@
             list.innerHTML = '<div class="loading"><div class="spinner"></div></div>';
 
             try {
-                const response = await fetch('/api/system/admins', {
-                    headers: {
-                        'Authorization': `Bearer ${token}`
-                    }
-                });
+                const response = await fetch(`/api/system/admins?token=${token}`);
 
                 const result = await response.json();
                 if (!result.success) {
@@ -731,10 +725,9 @@
             }
 
             try {
-                const response = await fetch('/api/system/admins', {
+                const response = await fetch(`/api/system/admins?token=${token}`, {
                     method: 'POST',
                     headers: {
-                        'Authorization': `Bearer ${token}`,
                         'Content-Type': 'application/json'
                     },
                     body: JSON.stringify({ phoneNumber: phone })
@@ -758,11 +751,8 @@
             }
 
             try {
-                const response = await fetch(`/api/system/admins/${encodeURIComponent(phone)}`, {
-                    method: 'DELETE',
-                    headers: {
-                        'Authorization': `Bearer ${token}`
-                    }
+                const response = await fetch(`/api/system/admins/${encodeURIComponent(phone)}?token=${token}`, {
+                    method: 'DELETE'
                 });
 
                 const result = await response.json();
@@ -781,6 +771,10 @@
             const div = document.createElement('div');
             div.textContent = text;
             return div.innerHTML;
+        }
+
+        function goBack() {
+            window.location.href = `/web/reports?token=${token}`;
         }
 
         // Close modals on outside click

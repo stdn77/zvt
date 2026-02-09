@@ -436,6 +436,23 @@
             background: #F57C00;
         }
 
+        .log-btn {
+            background: #1565C0;
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 13px;
+            font-weight: 500;
+            transition: background 0.2s;
+            display: none;
+        }
+
+        .log-btn:hover {
+            background: #0D47A1;
+        }
+
         #statisticsSection {
             display: none;
             background: #1a1a1a;
@@ -569,6 +586,7 @@
                 <input type="text" id="searchInput" placeholder="Пошук за ім'ям...">
                 <button onclick="loadReports()">🔄 Оновити</button>
                 <button class="stats-btn" onclick="toggleStatistics()">📊 Статистика</button>
+                <button id="logBtn" class="log-btn" onclick="openSystemLogs()">📋 Логи</button>
             </div>
         </div>
 
@@ -1132,6 +1150,28 @@
         }
 
         loadGroupInfo();
+
+        // Перевіряємо чи користувач є системним адміністратором
+        async function checkSystemAdmin() {
+            try {
+                const response = await fetch(`/api/web/check-system-admin?token=${sessionToken}`);
+                if (response.ok) {
+                    const result = await response.json();
+                    if (result.data && result.data.isSystemAdmin) {
+                        document.getElementById('logBtn').style.display = 'inline-block';
+                    }
+                }
+            } catch (error) {
+                console.error('Error checking system admin:', error);
+            }
+        }
+
+        // Перехід на сторінку логів
+        function openSystemLogs() {
+            window.location.href = `/system/logs?token=${sessionToken}`;
+        }
+
+        checkSystemAdmin();
 
         // Приховати URL з токеном (безпека: не показувати токен в адресному рядку)
         if (window.history && window.history.replaceState) {
