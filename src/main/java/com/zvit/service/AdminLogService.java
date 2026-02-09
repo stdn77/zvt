@@ -125,10 +125,11 @@ public class AdminLogService {
             }
         }
 
-        // Перевірка на бота
-        if (isBot(uri)) {
-            userName = BOT_MARKER;
-            phoneNumber = BOT_MARKER;
+        // Перевірка на бота (по IP або URI)
+        String botName = detectBot(ipAddress, uri);
+        if (botName != null) {
+            userName = botName;
+            phoneNumber = botName;
         }
 
         // Обмежуємо довжину тіла запиту
@@ -154,20 +155,112 @@ public class AdminLogService {
         adminLogRepository.save(logEntry);
     }
 
-    private boolean isBot(String uri) {
-        if (uri == null) return false;
-        String lowerUri = uri.toLowerCase();
-        return lowerUri.contains("robots.txt") ||
-               lowerUri.contains("sitemap") ||
-               lowerUri.contains(".php") ||
-               lowerUri.contains("wp-") ||
-               lowerUri.contains("wordpress") ||
-               lowerUri.contains("xmlrpc") ||
-               lowerUri.contains("favicon.ico") ||
-               lowerUri.contains(".env") ||
-               lowerUri.contains("phpmyadmin") ||
-               lowerUri.contains("admin/config") ||
-               lowerUri.contains("actuator");
+    /**
+     * Визначає бота по IP адресі або URI
+     * @return назва бота або null якщо не бот
+     */
+    private String detectBot(String ipAddress, String uri) {
+        // Спочатку перевіряємо по IP
+        if (ipAddress != null) {
+            String botByIp = detectBotByIp(ipAddress);
+            if (botByIp != null) {
+                return botByIp;
+            }
+        }
+
+        // Потім по URI (сканери/хакери)
+        if (uri != null) {
+            String lowerUri = uri.toLowerCase();
+            if (lowerUri.contains("robots.txt") || lowerUri.contains("sitemap")) {
+                return "[БОТ] Crawler";
+            }
+            if (lowerUri.contains(".php") || lowerUri.contains("wp-") ||
+                lowerUri.contains("wordpress") || lowerUri.contains("xmlrpc")) {
+                return "[СКАНЕР] WordPress";
+            }
+            if (lowerUri.contains(".env") || lowerUri.contains("phpmyadmin") ||
+                lowerUri.contains("admin/config") || lowerUri.contains("actuator")) {
+                return "[СКАНЕР] Вразливості";
+            }
+            if (lowerUri.contains("/sdk") || lowerUri.contains("/HNAP1") ||
+                lowerUri.contains("/evox/") || lowerUri.contains("shell") ||
+                lowerUri.contains("cgi-bin")) {
+                return "[СКАНЕР] Експлойти";
+            }
+            if (lowerUri.contains("favicon.ico")) {
+                return "[БОТ] Favicon";
+            }
+        }
+
+        return null;
+    }
+
+    /**
+     * Визначає бота по діапазону IP адрес
+     */
+    private String detectBotByIp(String ip) {
+        if (ip == null) return null;
+
+        // Google (Googlebot)
+        if (ip.startsWith("66.249.") || ip.startsWith("74.125.") ||
+            ip.startsWith("64.233.") || ip.startsWith("72.14.") ||
+            ip.startsWith("209.85.") || ip.startsWith("216.239.")) {
+            return "[БОТ] Google";
+        }
+
+        // Bing (Bingbot)
+        if (ip.startsWith("157.55.") || ip.startsWith("207.46.") ||
+            ip.startsWith("40.77.") || ip.startsWith("52.167.")) {
+            return "[БОТ] Bing";
+        }
+
+        // Yandex
+        if (ip.startsWith("5.255.") || ip.startsWith("77.88.") ||
+            ip.startsWith("87.250.") || ip.startsWith("93.158.") ||
+            ip.startsWith("95.108.") || ip.startsWith("141.8.") ||
+            ip.startsWith("178.154.") || ip.startsWith("213.180.")) {
+            return "[БОТ] Yandex";
+        }
+
+        // Baidu
+        if (ip.startsWith("180.76.") || ip.startsWith("220.181.")) {
+            return "[БОТ] Baidu";
+        }
+
+        // Facebook
+        if (ip.startsWith("31.13.") || ip.startsWith("66.220.") ||
+            ip.startsWith("69.63.") || ip.startsWith("69.171.") ||
+            ip.startsWith("173.252.") || ip.startsWith("179.60.")) {
+            return "[БОТ] Facebook";
+        }
+
+        // Apple
+        if (ip.startsWith("17.")) {
+            return "[БОТ] Apple";
+        }
+
+        // Amazon AWS (часто сканери)
+        if (ip.startsWith("52.") || ip.startsWith("54.") || ip.startsWith("18.")) {
+            return "[СКАНЕР] AWS";
+        }
+
+        // DigitalOcean (часто сканери)
+        if (ip.startsWith("134.122.") || ip.startsWith("167.172.") ||
+            ip.startsWith("165.227.") || ip.startsWith("159.65.")) {
+            return "[СКАНЕР] DigitalOcean";
+        }
+
+        // Semrush
+        if (ip.startsWith("185.191.171.")) {
+            return "[БОТ] Semrush";
+        }
+
+        // Ahrefs
+        if (ip.startsWith("54.36.148.") || ip.startsWith("54.36.149.")) {
+            return "[БОТ] Ahrefs";
+        }
+
+        return null;
     }
 
     public Page<AdminLog> getLogs(LocalDate dateFrom, LocalDate dateTo, String userName,
