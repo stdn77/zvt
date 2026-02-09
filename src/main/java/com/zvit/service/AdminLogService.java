@@ -126,10 +126,17 @@ public class AdminLogService {
         }
 
         // Перевірка на бота (по IP або URI)
-        String botName = detectBot(ipAddress, uri);
-        if (botName != null) {
-            userName = botName;
-            phoneNumber = botName;
+        String botInfo = detectBot(ipAddress, uri);
+        if (botInfo != null) {
+            // Розділяємо "[БОТ] Google" на "[БОТ]" і "Google"
+            int spaceIndex = botInfo.indexOf("] ");
+            if (spaceIndex > 0) {
+                userName = botInfo.substring(0, spaceIndex + 1);  // "[БОТ]" або "[СКАНЕР]"
+                phoneNumber = botInfo.substring(spaceIndex + 2);   // "Google", "Bing" і т.д.
+            } else {
+                userName = botInfo;
+                phoneNumber = "-";
+            }
         }
 
         // Обмежуємо довжину тіла запиту
