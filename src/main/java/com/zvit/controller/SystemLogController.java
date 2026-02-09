@@ -84,6 +84,7 @@ public class SystemLogController {
             @RequestParam(required = false) String ipAddress,
             @RequestParam(required = false) AdminLog.LogLevel level,
             @RequestParam(required = false) String method,
+            @RequestParam(required = false) String status,
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "50") int size) {
 
@@ -92,7 +93,7 @@ public class SystemLogController {
         }
 
         Page<AdminLog> logs = adminLogService.getLogs(
-                dateFrom, dateTo, userName, phoneNumber, ipAddress, level, method, page, size
+                dateFrom, dateTo, userName, phoneNumber, ipAddress, level, method, status, page, size
         );
 
         return ResponseEntity.ok(ApiResponse.success("Логи отримано", logs));

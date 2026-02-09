@@ -172,9 +172,34 @@ public class AdminLogService {
 
     public Page<AdminLog> getLogs(LocalDate dateFrom, LocalDate dateTo, String userName,
                                    String phoneNumber, String ipAddress, AdminLog.LogLevel level,
-                                   String method, int page, int size) {
+                                   String method, String status, int page, int size) {
+        // Парсимо статус
+        Integer statusExact = null;
+        Integer statusMin = null;
+        Integer statusMax = null;
+
+        if (status != null && !status.isEmpty()) {
+            if (status.equals("2xx")) {
+                statusMin = 200;
+                statusMax = 299;
+            } else if (status.equals("4xx")) {
+                statusMin = 400;
+                statusMax = 499;
+            } else if (status.equals("5xx")) {
+                statusMin = 500;
+                statusMax = 599;
+            } else {
+                try {
+                    statusExact = Integer.parseInt(status);
+                } catch (NumberFormatException e) {
+                    // Ігноруємо невалідний статус
+                }
+            }
+        }
+
         return adminLogRepository.findByFilters(
                 dateFrom, dateTo, userName, phoneNumber, ipAddress, level, method,
+                statusExact, statusMin, statusMax,
                 PageRequest.of(page, size)
         );
     }

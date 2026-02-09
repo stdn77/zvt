@@ -457,6 +457,18 @@
                 <option value="PATCH">PATCH</option>
             </select>
         </div>
+        <div class="filter-group">
+            <label>Статус</label>
+            <select id="responseStatus">
+                <option value="">Всі</option>
+                <option value="2xx">2xx (Успіх)</option>
+                <option value="4xx">4xx (Клієнт)</option>
+                <option value="5xx">5xx (Сервер)</option>
+                <option value="403">403 Forbidden</option>
+                <option value="404">404 Not Found</option>
+                <option value="500">500 Server Error</option>
+            </select>
+        </div>
         <div class="filter-group" style="justify-content: flex-end;">
             <button class="btn btn-primary" onclick="applyFilters()">Застосувати</button>
         </div>
@@ -544,6 +556,7 @@
             const ipAddress = document.getElementById('ipAddress').value;
             const logLevel = document.getElementById('logLevel').value;
             const requestMethod = document.getElementById('requestMethod').value;
+            const responseStatus = document.getElementById('responseStatus').value;
 
             if (dateFrom) params.append('dateFrom', dateFrom);
             if (dateTo) params.append('dateTo', dateTo);
@@ -552,6 +565,7 @@
             if (ipAddress) params.append('ipAddress', ipAddress);
             if (logLevel) params.append('level', logLevel);
             if (requestMethod) params.append('method', requestMethod);
+            if (responseStatus) params.append('status', responseStatus);
 
             try {
                 params.append('token', token);

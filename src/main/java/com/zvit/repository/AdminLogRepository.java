@@ -20,7 +20,10 @@ public interface AdminLogRepository extends JpaRepository<AdminLog, Long> {
            "(:phoneNumber IS NULL OR a.phoneNumber LIKE CONCAT('%', :phoneNumber, '%')) AND " +
            "(:ipAddress IS NULL OR a.ipAddress LIKE CONCAT('%', :ipAddress, '%')) AND " +
            "(:logLevel IS NULL OR a.logLevel = :logLevel) AND " +
-           "(:requestMethod IS NULL OR a.requestMethod = :requestMethod) " +
+           "(:requestMethod IS NULL OR a.requestMethod = :requestMethod) AND " +
+           "(:statusExact IS NULL OR a.responseStatus = :statusExact) AND " +
+           "(:statusMin IS NULL OR a.responseStatus >= :statusMin) AND " +
+           "(:statusMax IS NULL OR a.responseStatus <= :statusMax) " +
            "ORDER BY a.logDate DESC, a.logTime DESC")
     Page<AdminLog> findByFilters(
             @Param("dateFrom") LocalDate dateFrom,
@@ -30,6 +33,9 @@ public interface AdminLogRepository extends JpaRepository<AdminLog, Long> {
             @Param("ipAddress") String ipAddress,
             @Param("logLevel") AdminLog.LogLevel logLevel,
             @Param("requestMethod") String requestMethod,
+            @Param("statusExact") Integer statusExact,
+            @Param("statusMin") Integer statusMin,
+            @Param("statusMax") Integer statusMax,
             Pageable pageable
     );
 
