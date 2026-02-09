@@ -141,4 +141,30 @@ public class WebReportController {
 
         return ResponseEntity.ok(Map.of("message", "Терміновий збір завершено"));
     }
+
+    /**
+     * GET /api/web/reports/{groupId}/all
+     * Отримати всі звіти групи (для статистики)
+     * Використовує session token замість JWT
+     */
+    @GetMapping("/reports/{groupId}/all")
+    public ResponseEntity<List<ReportResponse>> getAllGroupReports(
+            @PathVariable String groupId,
+            @RequestHeader("X-Session-Token") String sessionToken) {
+
+        // Перевірити та отримати авторизовану сесію
+        QrSession session = qrSessionService.getAuthorizedSession(sessionToken);
+
+        // Перевірити що сесія для цієї групи
+        if (!session.getGroupId().equals(groupId)) {
+            log.warn("Session token {} is for group {}, but requesting group {}",
+                     sessionToken, session.getGroupId(), groupId);
+            return ResponseEntity.status(403).build();
+        }
+
+        // Отримати всі звіти групи
+        List<ReportResponse> reports = reportService.getAllGroupReports(groupId, session.getUserId());
+
+        return ResponseEntity.ok(reports);
+    }
 }

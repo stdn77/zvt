@@ -418,6 +418,82 @@
             0%, 100% { opacity: 1; }
             50% { opacity: 0.6; }
         }
+
+        /* Statistics styles */
+        .stats-btn {
+            background: #FF9800;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            padding: 8px 16px;
+            font-size: 13px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+
+        .stats-btn:hover {
+            background: #F57C00;
+        }
+
+        #statisticsSection {
+            display: none;
+            background: #1a1a1a;
+            border-radius: 8px;
+            padding: 15px;
+            margin-bottom: 15px;
+            overflow-x: auto;
+        }
+
+        #statisticsSection h2 {
+            font-size: 16px;
+            margin-bottom: 12px;
+            color: #ffffff;
+        }
+
+        .stats-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 13px;
+        }
+
+        .stats-table th, .stats-table td {
+            padding: 8px 12px;
+            border-bottom: 1px solid #333;
+            white-space: nowrap;
+        }
+
+        .stats-table th {
+            background: #2a2a2a;
+            font-weight: 600;
+            color: #ffffff;
+            text-align: right;
+        }
+
+        .stats-table th:first-child {
+            text-align: left;
+        }
+
+        .stats-table td {
+            text-align: right;
+            color: #e0e0e0;
+        }
+
+        .stats-table td:first-child {
+            text-align: left;
+            font-weight: 500;
+            color: #ffffff;
+        }
+
+        .stats-table tr.sum-row {
+            background: #2a2a2a;
+            border-top: 2px solid #444;
+        }
+
+        .stats-table tr.sum-row td {
+            font-weight: 700;
+            color: #4CAF50;
+        }
     </style>
 </head>
 <body>
@@ -492,6 +568,18 @@
                 </select>
                 <input type="text" id="searchInput" placeholder="Пошук за ім'ям...">
                 <button onclick="loadReports()">🔄 Оновити</button>
+                <button class="stats-btn" onclick="toggleStatistics()">📊 Статистика</button>
+            </div>
+        </div>
+
+        <!-- Statistics section -->
+        <div id="statisticsSection">
+            <h2>📊 Статистика розширених звітів</h2>
+            <div id="statisticsContent">
+                <div class="loading">
+                    <div class="spinner"></div>
+                    <p>Завантаження...</p>
+                </div>
             </div>
         </div>
 
@@ -1048,6 +1136,144 @@
         // Приховати URL з токеном (безпека: не показувати токен в адресному рядку)
         if (window.history && window.history.replaceState) {
             window.history.replaceState({}, document.title, window.location.origin + '/');
+        }
+
+        // ======================== Statistics ========================
+
+        let statisticsLoaded = false;
+
+        async function toggleStatistics() {
+            const section = document.getElementById('statisticsSection');
+            if (section.style.display === 'block') {
+                section.style.display = 'none';
+                return;
+            }
+            section.style.display = 'block';
+
+            if (!statisticsLoaded) {
+                await loadStatistics();
+            }
+        }
+
+        async function loadStatistics() {
+            const content = document.getElementById('statisticsContent');
+            content.innerHTML = '<div class="loading"><div class="spinner"></div><p>Завантаження...</p></div>';
+
+            try {
+                const response = await fetch(`/api/web/reports/${groupId}/all`, {
+                    headers: {
+                        'X-Session-Token': sessionToken
+                    }
+                });
+                if (!response.ok) throw new Error('Помилка завантаження звітів');
+
+                const allReports = await response.json();
+
+                renderStatistics(allReports);
+                statisticsLoaded = true;
+            } catch (error) {
+                content.innerHTML = `<div class="error" style="color: #ef4444; text-align: center; padding: 20px;">❌ ${error.message}</div>`;
+            }
+        }
+
+        function splitFieldValue(value) {
+            if (!value || value.trim() === '') return [];
+            return value.trim().split(/[\/;]/).map(s => s.trim());
+        }
+
+        function parseStatNum(value) {
+            if (!value || value.trim() === '') return null;
+            const num = parseFloat(value.trim().replace(',', '.'));
+            return isNaN(num) ? null : num;
+        }
+
+        function formatStatNum(value) {
+            if (value === Math.floor(value) && isFinite(value)) return value.toString();
+            let f = value.toFixed(3).replace(/0+$/, '').replace(/\.$/, '');
+            return f.replace('.', ',');
+        }
+
+        function renderStatistics(allReports) {
+            const content = document.getElementById('statisticsContent');
+
+            const extReports = allReports.filter(r => r.reportType === 'EXTENDED');
+            if (extReports.length === 0) {
+                content.innerHTML = '<p style="color: #9ca3af; text-align: center; padding: 20px;">Немає розширених звітів</p>';
+                return;
+            }
+
+            // Latest per user
+            const latest = {};
+            extReports.forEach(r => {
+                const uid = r.userId;
+                if (!uid) return;
+                if (!latest[uid] || r.submittedAt > latest[uid].submittedAt) {
+                    latest[uid] = r;
+                }
+            });
+
+            const reports = Object.values(latest);
+            if (reports.length === 0) {
+                content.innerHTML = '<p style="color: #9ca3af; text-align: center; padding: 20px;">Немає розширених звітів</p>';
+                return;
+            }
+
+            const fields = ['field1Value', 'field2Value', 'field3Value', 'field4Value', 'field5Value'];
+            const maxSub = [0, 0, 0, 0, 0];
+            reports.forEach(r => {
+                fields.forEach((k, i) => {
+                    const p = splitFieldValue(r[k]);
+                    if (p.length > maxSub[i]) maxSub[i] = p.length;
+                });
+            });
+
+            const headers = ['Користувач'];
+            for (let i = 0; i < 5; i++) {
+                if (maxSub[i] === 0) continue;
+                if (maxSub[i] === 1) headers.push('T' + (i + 1));
+                else for (let j = 1; j <= maxSub[i]; j++) headers.push('T' + (i + 1) + '.' + j);
+            }
+
+            const rows = [];
+            reports.forEach(r => {
+                const row = [r.userName || '—'];
+                fields.forEach((k, i) => {
+                    if (maxSub[i] === 0) return;
+                    const parts = splitFieldValue(r[k]);
+                    for (let j = 0; j < maxSub[i]; j++) {
+                        row.push(j < parts.length ? parts[j] : '');
+                    }
+                });
+                rows.push(row);
+            });
+
+            const colCount = headers.length;
+            const sums = new Array(colCount).fill(0);
+            const hasVal = new Array(colCount).fill(false);
+            rows.forEach(row => {
+                for (let c = 1; c < colCount && c < row.length; c++) {
+                    const v = parseStatNum(row[c]);
+                    if (v !== null) { sums[c] += v; hasVal[c] = true; }
+                }
+            });
+
+            let html = '<table class="stats-table"><thead><tr>';
+            headers.forEach(h => { html += '<th>' + h + '</th>'; });
+            html += '</tr></thead><tbody>';
+
+            rows.forEach(row => {
+                html += '<tr>';
+                row.forEach(v => { html += '<td>' + (v || '') + '</td>'; });
+                html += '</tr>';
+            });
+
+            html += '<tr class="sum-row"><td>СУМА</td>';
+            for (let c = 1; c < colCount; c++) {
+                html += '<td>' + (hasVal[c] ? formatStatNum(sums[c]) : '') + '</td>';
+            }
+            html += '</tr></tbody></table>';
+
+            content.innerHTML = html;
         }
     </script>
 </body>
