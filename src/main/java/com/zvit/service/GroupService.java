@@ -390,7 +390,6 @@ public class GroupService {
         }
 
         if (fcmTokens.isEmpty()) {
-            log.debug("Settings update: No FCM tokens to send notifications");
             return;
         }
 
@@ -406,8 +405,7 @@ public class GroupService {
         data.put("groupId", group.getId());
         data.put("groupName", group.getExternalName());
 
-        int sentCount = firebaseService.sendPushNotificationToMultiple(fcmTokens, title, body, data);
-        log.info("Settings update notifications sent: {} of {}", sentCount, fcmTokens.size());
+        firebaseService.sendPushNotificationToMultiple(fcmTokens, title, body, data);
     }
 
     /**
@@ -550,7 +548,6 @@ public class GroupService {
                 hasActiveUrgentSession = true;
                 urgentExpiresAt = group.getUrgentExpiresAt();
                 urgentMessage = group.getUrgentMessage();
-                log.debug("[URGENT] Active session for group {}: expiresAt={}", group.getExternalName(), urgentExpiresAt);
             }
         }
 

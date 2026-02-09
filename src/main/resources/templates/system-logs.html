@@ -1,0 +1,794 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ZVIT - Системні логи</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: #0f172a;
+            color: #e2e8f0;
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #1e293b 0%, #334155 100%);
+            padding: 20px;
+            border-radius: 12px;
+            margin-bottom: 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 15px;
+        }
+
+        .header h1 {
+            font-size: 24px;
+            color: #22c55e;
+        }
+
+        .header-actions {
+            display: flex;
+            gap: 10px;
+        }
+
+        .btn {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 500;
+            transition: all 0.2s;
+        }
+
+        .btn-primary {
+            background: #22c55e;
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: #16a34a;
+        }
+
+        .btn-secondary {
+            background: #475569;
+            color: white;
+        }
+
+        .btn-secondary:hover {
+            background: #64748b;
+        }
+
+        .btn-danger {
+            background: #ef4444;
+            color: white;
+        }
+
+        .btn-danger:hover {
+            background: #dc2626;
+        }
+
+        .filters {
+            background: #1e293b;
+            padding: 20px;
+            border-radius: 12px;
+            margin-bottom: 20px;
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+            gap: 15px;
+        }
+
+        .filter-group {
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
+        }
+
+        .filter-group label {
+            font-size: 12px;
+            color: #94a3b8;
+            font-weight: 500;
+        }
+
+        .filter-group input,
+        .filter-group select {
+            padding: 10px 12px;
+            border: 1px solid #334155;
+            border-radius: 8px;
+            background: #0f172a;
+            color: #e2e8f0;
+            font-size: 14px;
+        }
+
+        .filter-group input:focus,
+        .filter-group select:focus {
+            outline: none;
+            border-color: #22c55e;
+        }
+
+        .logs-container {
+            background: #1e293b;
+            border-radius: 12px;
+            overflow: hidden;
+        }
+
+        .logs-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 13px;
+        }
+
+        .logs-table th {
+            background: #334155;
+            padding: 12px 15px;
+            text-align: left;
+            font-weight: 600;
+            color: #94a3b8;
+            position: sticky;
+            top: 0;
+        }
+
+        .logs-table td {
+            padding: 10px 15px;
+            border-bottom: 1px solid #334155;
+            vertical-align: top;
+        }
+
+        .logs-table tr:hover {
+            background: #334155;
+        }
+
+        .level-INFO {
+            color: #22c55e;
+        }
+
+        .level-WARN {
+            color: #eab308;
+        }
+
+        .level-ERROR {
+            color: #ef4444;
+        }
+
+        .method {
+            font-weight: 600;
+            padding: 2px 8px;
+            border-radius: 4px;
+            font-size: 11px;
+        }
+
+        .method-GET {
+            background: #22c55e22;
+            color: #22c55e;
+        }
+
+        .method-POST {
+            background: #3b82f622;
+            color: #3b82f6;
+        }
+
+        .method-DELETE {
+            background: #ef444422;
+            color: #ef4444;
+        }
+
+        .method-PUT, .method-PATCH {
+            background: #f59e0b22;
+            color: #f59e0b;
+        }
+
+        .uri {
+            max-width: 300px;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+            font-family: monospace;
+            font-size: 12px;
+        }
+
+        .body-preview {
+            max-width: 200px;
+            max-height: 50px;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            font-family: monospace;
+            font-size: 11px;
+            color: #94a3b8;
+            cursor: pointer;
+        }
+
+        .body-preview:hover {
+            color: #e2e8f0;
+        }
+
+        .pagination {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 10px;
+            padding: 20px;
+            background: #1e293b;
+            border-radius: 0 0 12px 12px;
+        }
+
+        .pagination button {
+            padding: 8px 16px;
+            background: #334155;
+            border: none;
+            border-radius: 6px;
+            color: #e2e8f0;
+            cursor: pointer;
+        }
+
+        .pagination button:hover:not(:disabled) {
+            background: #475569;
+        }
+
+        .pagination button:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .pagination span {
+            color: #94a3b8;
+        }
+
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.7);
+            z-index: 1000;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .modal-content {
+            background: #1e293b;
+            border-radius: 12px;
+            padding: 25px;
+            max-width: 800px;
+            width: 90%;
+            max-height: 80vh;
+            overflow-y: auto;
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .modal-header h2 {
+            color: #22c55e;
+        }
+
+        .close-btn {
+            background: none;
+            border: none;
+            font-size: 28px;
+            color: #94a3b8;
+            cursor: pointer;
+        }
+
+        .close-btn:hover {
+            color: #ef4444;
+        }
+
+        .body-content {
+            background: #0f172a;
+            padding: 15px;
+            border-radius: 8px;
+            font-family: monospace;
+            font-size: 13px;
+            white-space: pre-wrap;
+            word-break: break-all;
+            max-height: 400px;
+            overflow-y: auto;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 40px;
+            color: #94a3b8;
+        }
+
+        .spinner {
+            display: inline-block;
+            width: 40px;
+            height: 40px;
+            border: 4px solid #334155;
+            border-top-color: #22c55e;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        .status {
+            padding: 2px 8px;
+            border-radius: 4px;
+            font-size: 12px;
+            font-weight: 500;
+        }
+
+        .status-2xx {
+            background: #22c55e22;
+            color: #22c55e;
+        }
+
+        .status-4xx {
+            background: #eab30822;
+            color: #eab308;
+        }
+
+        .status-5xx {
+            background: #ef444422;
+            color: #ef4444;
+        }
+
+        .admins-list {
+            margin-top: 15px;
+        }
+
+        .admin-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 10px 15px;
+            background: #0f172a;
+            border-radius: 8px;
+            margin-bottom: 10px;
+        }
+
+        .admin-info {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .admin-phone {
+            font-weight: 600;
+        }
+
+        .admin-meta {
+            font-size: 12px;
+            color: #94a3b8;
+        }
+
+        .add-admin-form {
+            display: flex;
+            gap: 10px;
+            margin-top: 15px;
+        }
+
+        .add-admin-form input {
+            flex: 1;
+            padding: 10px 15px;
+            border: 1px solid #334155;
+            border-radius: 8px;
+            background: #0f172a;
+            color: #e2e8f0;
+        }
+
+        @media (max-width: 768px) {
+            .header {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+
+            .filters {
+                grid-template-columns: 1fr;
+            }
+
+            .logs-table {
+                font-size: 11px;
+            }
+
+            .logs-table th, .logs-table td {
+                padding: 8px 10px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>🔒 Системні логи</h1>
+        <div class="header-actions">
+            <button class="btn btn-secondary" onclick="showAdminsModal()">👥 Адміністратори</button>
+            <button class="btn btn-primary" onclick="loadLogs()">🔄 Оновити</button>
+        </div>
+    </div>
+
+    <div class="filters">
+        <div class="filter-group">
+            <label>Дата від</label>
+            <input type="date" id="dateFrom">
+        </div>
+        <div class="filter-group">
+            <label>Дата до</label>
+            <input type="date" id="dateTo">
+        </div>
+        <div class="filter-group">
+            <label>Ім'я користувача</label>
+            <input type="text" id="userName" placeholder="Пошук...">
+        </div>
+        <div class="filter-group">
+            <label>Номер телефону</label>
+            <input type="text" id="phoneNumber" placeholder="+380...">
+        </div>
+        <div class="filter-group">
+            <label>IP адреса</label>
+            <input type="text" id="ipAddress" placeholder="192.168...">
+        </div>
+        <div class="filter-group">
+            <label>Рівень</label>
+            <select id="logLevel">
+                <option value="">Всі</option>
+                <option value="INFO">INFO</option>
+                <option value="WARN">WARN</option>
+                <option value="ERROR">ERROR</option>
+            </select>
+        </div>
+        <div class="filter-group">
+            <label>Метод</label>
+            <select id="requestMethod">
+                <option value="">Всі</option>
+                <option value="GET">GET</option>
+                <option value="POST">POST</option>
+                <option value="PUT">PUT</option>
+                <option value="DELETE">DELETE</option>
+                <option value="PATCH">PATCH</option>
+            </select>
+        </div>
+        <div class="filter-group" style="justify-content: flex-end;">
+            <button class="btn btn-primary" onclick="applyFilters()">Застосувати</button>
+        </div>
+    </div>
+
+    <div class="logs-container">
+        <div id="logsContent">
+            <div class="loading">
+                <div class="spinner"></div>
+                <p>Завантаження...</p>
+            </div>
+        </div>
+        <div class="pagination" id="pagination" style="display: none;">
+            <button id="prevBtn" onclick="prevPage()">← Попередня</button>
+            <span id="pageInfo">Сторінка 1</span>
+            <button id="nextBtn" onclick="nextPage()">Наступна →</button>
+        </div>
+    </div>
+
+    <!-- Body Modal -->
+    <div class="modal" id="bodyModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>Тіло запиту</h2>
+                <button class="close-btn" onclick="closeBodyModal()">×</button>
+            </div>
+            <div class="body-content" id="bodyContent"></div>
+        </div>
+    </div>
+
+    <!-- Admins Modal -->
+    <div class="modal" id="adminsModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>👥 Системні адміністратори</h2>
+                <button class="close-btn" onclick="closeAdminsModal()">×</button>
+            </div>
+            <div class="admins-list" id="adminsList">
+                <div class="loading">
+                    <div class="spinner"></div>
+                </div>
+            </div>
+            <div class="add-admin-form">
+                <input type="text" id="newAdminPhone" placeholder="+380XXXXXXXXX">
+                <button class="btn btn-primary" onclick="addAdmin()">Додати</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const urlParams = new URLSearchParams(window.location.search);
+        const token = urlParams.get('token');
+        let currentPage = 0;
+        let totalPages = 0;
+
+        if (!token) {
+            document.body.innerHTML = '<div class="loading" style="color: #ef4444;">❌ Токен не знайдено</div>';
+        } else {
+            // Set default dates
+            const today = new Date();
+            const weekAgo = new Date(today.getTime() - 7 * 24 * 60 * 60 * 1000);
+            document.getElementById('dateFrom').value = weekAgo.toISOString().split('T')[0];
+            document.getElementById('dateTo').value = today.toISOString().split('T')[0];
+
+            loadLogs();
+        }
+
+        function applyFilters() {
+            currentPage = 0;
+            loadLogs();
+        }
+
+        async function loadLogs() {
+            const content = document.getElementById('logsContent');
+            content.innerHTML = '<div class="loading"><div class="spinner"></div><p>Завантаження...</p></div>';
+
+            const params = new URLSearchParams();
+            params.append('page', currentPage);
+            params.append('size', 50);
+
+            const dateFrom = document.getElementById('dateFrom').value;
+            const dateTo = document.getElementById('dateTo').value;
+            const userName = document.getElementById('userName').value;
+            const phoneNumber = document.getElementById('phoneNumber').value;
+            const ipAddress = document.getElementById('ipAddress').value;
+            const logLevel = document.getElementById('logLevel').value;
+            const requestMethod = document.getElementById('requestMethod').value;
+
+            if (dateFrom) params.append('dateFrom', dateFrom);
+            if (dateTo) params.append('dateTo', dateTo);
+            if (userName) params.append('userName', userName);
+            if (phoneNumber) params.append('phoneNumber', phoneNumber);
+            if (ipAddress) params.append('ipAddress', ipAddress);
+            if (logLevel) params.append('level', logLevel);
+            if (requestMethod) params.append('method', requestMethod);
+
+            try {
+                const response = await fetch(`/api/system/logs?${params.toString()}`, {
+                    headers: {
+                        'Authorization': `Bearer ${token}`
+                    }
+                });
+
+                if (!response.ok) {
+                    throw new Error('Помилка завантаження');
+                }
+
+                const result = await response.json();
+                if (!result.success) {
+                    throw new Error(result.message);
+                }
+
+                renderLogs(result.data);
+            } catch (error) {
+                content.innerHTML = `<div class="loading" style="color: #ef4444;">❌ ${error.message}</div>`;
+            }
+        }
+
+        function renderLogs(pageData) {
+            const content = document.getElementById('logsContent');
+            const logs = pageData.content;
+            totalPages = pageData.totalPages;
+
+            if (logs.length === 0) {
+                content.innerHTML = '<div class="loading">Немає логів за вказаними фільтрами</div>';
+                document.getElementById('pagination').style.display = 'none';
+                return;
+            }
+
+            let html = `
+                <table class="logs-table">
+                    <thead>
+                        <tr>
+                            <th>Дата / Час</th>
+                            <th>Користувач</th>
+                            <th>Телефон</th>
+                            <th>IP</th>
+                            <th>Рівень</th>
+                            <th>Метод</th>
+                            <th>URI</th>
+                            <th>Статус</th>
+                            <th>Тіло</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+            `;
+
+            logs.forEach(log => {
+                const statusClass = log.responseStatus >= 200 && log.responseStatus < 300 ? 'status-2xx' :
+                                   log.responseStatus >= 400 && log.responseStatus < 500 ? 'status-4xx' :
+                                   log.responseStatus >= 500 ? 'status-5xx' : '';
+
+                const bodyPreview = log.requestBody ?
+                    (log.requestBody.length > 50 ? log.requestBody.substring(0, 50) + '...' : log.requestBody) :
+                    '-';
+
+                html += `
+                    <tr>
+                        <td>${log.logDate}<br><small>${log.logTime ? log.logTime.substring(0, 8) : ''}</small></td>
+                        <td>${escapeHtml(log.userName || '-')}</td>
+                        <td>${escapeHtml(log.phoneNumber || '-')}</td>
+                        <td>${escapeHtml(log.ipAddress || '-')}</td>
+                        <td class="level-${log.logLevel}">${log.logLevel}</td>
+                        <td><span class="method method-${log.requestMethod}">${log.requestMethod}</span></td>
+                        <td class="uri" title="${escapeHtml(log.requestUri || '')}">${escapeHtml(log.requestUri || '-')}</td>
+                        <td><span class="status ${statusClass}">${log.responseStatus || '-'}</span></td>
+                        <td class="body-preview" onclick="showBody('${escapeHtml(log.requestBody || '')}')">${escapeHtml(bodyPreview)}</td>
+                    </tr>
+                `;
+            });
+
+            html += '</tbody></table>';
+            content.innerHTML = html;
+
+            // Update pagination
+            document.getElementById('pagination').style.display = 'flex';
+            document.getElementById('pageInfo').textContent = `Сторінка ${currentPage + 1} з ${totalPages}`;
+            document.getElementById('prevBtn').disabled = currentPage === 0;
+            document.getElementById('nextBtn').disabled = currentPage >= totalPages - 1;
+        }
+
+        function prevPage() {
+            if (currentPage > 0) {
+                currentPage--;
+                loadLogs();
+            }
+        }
+
+        function nextPage() {
+            if (currentPage < totalPages - 1) {
+                currentPage++;
+                loadLogs();
+            }
+        }
+
+        function showBody(body) {
+            if (!body || body === '-') return;
+            try {
+                // Try to format as JSON
+                const parsed = JSON.parse(body);
+                document.getElementById('bodyContent').textContent = JSON.stringify(parsed, null, 2);
+            } catch (e) {
+                document.getElementById('bodyContent').textContent = body;
+            }
+            document.getElementById('bodyModal').style.display = 'flex';
+        }
+
+        function closeBodyModal() {
+            document.getElementById('bodyModal').style.display = 'none';
+        }
+
+        async function showAdminsModal() {
+            document.getElementById('adminsModal').style.display = 'flex';
+            loadAdmins();
+        }
+
+        function closeAdminsModal() {
+            document.getElementById('adminsModal').style.display = 'none';
+        }
+
+        async function loadAdmins() {
+            const list = document.getElementById('adminsList');
+            list.innerHTML = '<div class="loading"><div class="spinner"></div></div>';
+
+            try {
+                const response = await fetch('/api/system/admins', {
+                    headers: {
+                        'Authorization': `Bearer ${token}`
+                    }
+                });
+
+                const result = await response.json();
+                if (!result.success) {
+                    throw new Error(result.message);
+                }
+
+                renderAdmins(result.data);
+            } catch (error) {
+                list.innerHTML = `<div style="color: #ef4444;">❌ ${error.message}</div>`;
+            }
+        }
+
+        function renderAdmins(admins) {
+            const list = document.getElementById('adminsList');
+
+            if (admins.length === 0) {
+                list.innerHTML = '<div style="color: #94a3b8;">Немає адміністраторів</div>';
+                return;
+            }
+
+            let html = '';
+            admins.forEach(admin => {
+                const isMaster = admin.phoneNumber === '+380673355870';
+                html += `
+                    <div class="admin-item">
+                        <div class="admin-info">
+                            <span class="admin-phone">${escapeHtml(admin.phoneNumber)} ${isMaster ? '👑' : ''}</span>
+                            <span class="admin-meta">Додано: ${admin.addedBy || 'SYSTEM'} | ${admin.createdAt ? admin.createdAt.split('T')[0] : ''}</span>
+                        </div>
+                        ${!isMaster ? `<button class="btn btn-danger" onclick="removeAdmin('${escapeHtml(admin.phoneNumber)}')">Видалити</button>` : ''}
+                    </div>
+                `;
+            });
+
+            list.innerHTML = html;
+        }
+
+        async function addAdmin() {
+            const phone = document.getElementById('newAdminPhone').value.trim();
+            if (!phone) {
+                alert('Введіть номер телефону');
+                return;
+            }
+
+            try {
+                const response = await fetch('/api/system/admins', {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': `Bearer ${token}`,
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ phoneNumber: phone })
+                });
+
+                const result = await response.json();
+                if (!result.success) {
+                    throw new Error(result.message);
+                }
+
+                document.getElementById('newAdminPhone').value = '';
+                loadAdmins();
+            } catch (error) {
+                alert('Помилка: ' + error.message);
+            }
+        }
+
+        async function removeAdmin(phone) {
+            if (!confirm(`Видалити адміністратора ${phone}?`)) {
+                return;
+            }
+
+            try {
+                const response = await fetch(`/api/system/admins/${encodeURIComponent(phone)}`, {
+                    method: 'DELETE',
+                    headers: {
+                        'Authorization': `Bearer ${token}`
+                    }
+                });
+
+                const result = await response.json();
+                if (!result.success) {
+                    throw new Error(result.message);
+                }
+
+                loadAdmins();
+            } catch (error) {
+                alert('Помилка: ' + error.message);
+            }
+        }
+
+        function escapeHtml(text) {
+            if (!text) return '';
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+
+        // Close modals on outside click
+        window.onclick = function(event) {
+            if (event.target.classList.contains('modal')) {
+                event.target.style.display = 'none';
+            }
+        }
+    </script>
+</body>
+</html>

@@ -275,54 +275,31 @@ public class ReportService {
         group.setUrgentMessage(message);
         groupRepository.save(group);
 
-        log.info("[URGENT] Session created: sessionId={}, group={}, expiresAt={}, deadlineMinutes={}",
-                sessionId, group.getExternalName(), group.getUrgentExpiresAt(), deadlineMinutes);
-
         // Отримуємо всіх учасників групи (крім адміна, який надіслав)
         List<GroupMember> members = groupMemberRepository.findByGroupId(request.getGroupId());
 
-        log.info("[URGENT] Group {} has {} members total", group.getExternalName(), members.size());
-
         List<String> fcmTokens = new java.util.ArrayList<>();
-        List<String> androidTokens = new java.util.ArrayList<>();
-        List<String> webTokens = new java.util.ArrayList<>();
 
         for (GroupMember member : members) {
             if (member.getStatus() != GroupMember.MemberStatus.ACCEPTED) continue;
-            if (member.getUser().getId().equals(userId)) {
-                log.debug("[URGENT] Skipping admin {} (creator of urgent request)", member.getUser().getName());
-                continue;
-            }
+            if (member.getUser().getId().equals(userId)) continue;
 
             // Перевіряємо чи сповіщення увімкнені
-            if (!member.getUser().isNotificationsEnabled()) {
-                log.debug("[URGENT] User {} has notifications disabled", member.getUser().getName());
-                continue;
-            }
+            if (!member.getUser().isNotificationsEnabled()) continue;
 
-            // Логуємо токени користувача
             String androidToken = member.getUser().getFcmToken();
             String webToken = member.getUser().getFcmTokenWeb();
-            log.debug("[URGENT] User {} tokens: Android={}, Web={}",
-                    member.getUser().getName(),
-                    androidToken != null ? "yes" : "no",
-                    webToken != null ? "yes" : "no");
 
             // Додаємо Android токен
             if (androidToken != null && !androidToken.isEmpty()) {
                 fcmTokens.add(androidToken);
-                androidTokens.add(androidToken);
             }
 
             // Додаємо Web токен (для PWA)
             if (webToken != null && !webToken.isEmpty()) {
                 fcmTokens.add(webToken);
-                webTokens.add(webToken);
             }
         }
-
-        log.info("[URGENT] Tokens collected: {} total (Android: {}, Web/PWA: {})",
-                fcmTokens.size(), androidTokens.size(), webTokens.size());
 
         // Формуємо повідомлення
         String title = "Терміновий звіт: " + group.getExternalName();
@@ -341,10 +318,7 @@ public class ReportService {
         data.put("body", body);    // Для PWA service worker
 
         // Відправляємо Push-сповіщення
-        log.info("[URGENT] Sending push notifications via Firebase...");
         int sentCount = firebaseService.sendPushNotificationToMultiple(fcmTokens, title, body, data);
-
-        log.info("[URGENT] Push notifications result: {} sent of {} total", sentCount, fcmTokens.size());
 
         return sentCount;
     }
@@ -367,8 +341,6 @@ public class ReportService {
         if (group.getUrgentSessionId() == null) {
             throw new RuntimeException("Немає активного термінового збору");
         }
-
-        log.info("Ending urgent session {} for group {}", group.getUrgentSessionId(), group.getExternalName());
 
         // Очищаємо дані термінової сесії (але не видаляємо відповіді - для історії)
         group.setUrgentSessionId(null);
@@ -832,6 +804,5 @@ public class ReportService {
                 .build();
 
         urgentResponseRepository.save(response);
-        log.info("Urgent response recorded: user {} for session {}", userId, group.getUrgentSessionId());
     }
 }

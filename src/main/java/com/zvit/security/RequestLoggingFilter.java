@@ -1,10 +1,12 @@
 package com.zvit.security;
 
+import com.zvit.entity.AdminLog;
+import com.zvit.service.AdminLogService;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
-import lombok.extern.slf4j.Slf4j;
+import lombok.RequiredArgsConstructor;
 import org.springframework.core.Ordered;
 import org.springframework.core.annotation.Order;
 import org.springframework.stereotype.Component;
@@ -14,152 +16,127 @@ import org.springframework.web.util.ContentCachingResponseWrapper;
 
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
-import java.util.Collections;
-import java.util.stream.Collectors;
 
 /**
- * Фільтр для логування всіх HTTP запитів та відповідей.
- * УВАГА: Тільки для тестування! Видалити у production!
+ * Фільтр для логування всіх HTTP запитів у базу даних.
  */
-@Slf4j
 @Component
 @Order(Ordered.HIGHEST_PRECEDENCE)
+@RequiredArgsConstructor
 public class RequestLoggingFilter extends OncePerRequestFilter {
+
+    private final AdminLogService adminLogService;
+    private final JwtService jwtService;
 
     @Override
     protected void doFilterInternal(HttpServletRequest request,
                                     HttpServletResponse response,
                                     FilterChain filterChain) throws ServletException, IOException {
 
-        // Skip logging for health check endpoint
         String uri = request.getRequestURI();
-        if (uri.equals("/api/health") || uri.equals("/actuator/health")) {
+
+        // Пропускаємо статичні ресурси та health check
+        if (shouldSkip(uri)) {
             filterChain.doFilter(request, response);
             return;
         }
 
-        // Wrap request and response to cache content
         ContentCachingRequestWrapper wrappedRequest = new ContentCachingRequestWrapper(request);
         ContentCachingResponseWrapper wrappedResponse = new ContentCachingResponseWrapper(response);
 
-        long startTime = System.currentTimeMillis();
-
         try {
-            // Log request
-            logRequest(wrappedRequest);
-
-            // Process request
             filterChain.doFilter(wrappedRequest, wrappedResponse);
-
         } finally {
-            long duration = System.currentTimeMillis() - startTime;
-
-            // Log response
-            logResponse(wrappedRequest, wrappedResponse, duration);
-
-            // Copy content to actual response
+            saveLog(wrappedRequest, wrappedResponse);
             wrappedResponse.copyBodyToResponse();
         }
     }
 
-    private void logRequest(ContentCachingRequestWrapper request) {
-        String method = request.getMethod();
-        String uri = request.getRequestURI();
-        String queryString = request.getQueryString();
-        String fullUrl = queryString != null ? uri + "?" + queryString : uri;
-
-        // Headers
-        String headers = Collections.list(request.getHeaderNames()).stream()
-                .filter(name -> !name.equalsIgnoreCase("authorization")) // Не логуємо токен повністю
-                .map(name -> name + ": " + request.getHeader(name))
-                .collect(Collectors.joining("\n    "));
-
-        // Authorization header (masked)
-        String authHeader = request.getHeader("Authorization");
-        if (authHeader != null) {
-            if (authHeader.length() > 20) {
-                authHeader = authHeader.substring(0, 20) + "...";
-            }
-            headers += "\n    Authorization: " + authHeader;
-        }
-
-        log.info("\n" +
-                "╔══════════════════════════════════════════════════════════════════════\n" +
-                "║ ➡️  INCOMING REQUEST\n" +
-                "╠══════════════════════════════════════════════════════════════════════\n" +
-                "║ {} {}\n" +
-                "║ Client IP: {}\n" +
-                "╠══════════════════════════════════════════════════════════════════════\n" +
-                "║ Headers:\n" +
-                "    {}\n" +
-                "╚══════════════════════════════════════════════════════════════════════",
-                method, fullUrl,
-                getClientIp(request),
-                headers);
+    private boolean shouldSkip(String uri) {
+        return uri.equals("/api/health") ||
+               uri.equals("/actuator/health") ||
+               uri.startsWith("/static/") ||
+               uri.startsWith("/pwa/") ||
+               uri.startsWith("/css/") ||
+               uri.startsWith("/js/") ||
+               uri.startsWith("/images/") ||
+               uri.endsWith(".css") ||
+               uri.endsWith(".js") ||
+               uri.endsWith(".png") ||
+               uri.endsWith(".jpg") ||
+               uri.endsWith(".ico") ||
+               uri.endsWith(".svg") ||
+               uri.endsWith(".woff") ||
+               uri.endsWith(".woff2");
     }
 
-    private void logResponse(ContentCachingRequestWrapper request,
-                             ContentCachingResponseWrapper response,
-                             long duration) {
-        String method = request.getMethod();
-        String uri = request.getRequestURI();
-        int status = response.getStatus();
+    private void saveLog(ContentCachingRequestWrapper request, ContentCachingResponseWrapper response) {
+        try {
+            String method = request.getMethod();
+            String uri = request.getRequestURI();
+            String queryString = request.getQueryString();
+            String fullUri = queryString != null ? uri + "?" + queryString : uri;
+            String ipAddress = getClientIp(request);
+            int status = response.getStatus();
 
-        // Request body
-        String requestBody = getRequestBody(request);
+            // Отримуємо тіло запиту
+            String requestBody = getRequestBody(request);
 
-        // Response body
-        String responseBody = getResponseBody(response);
+            // Визначаємо userId з JWT токена
+            String userId = extractUserId(request);
 
-        // Truncate if too long
-        if (requestBody.length() > 2000) {
-            requestBody = requestBody.substring(0, 2000) + "\n... [TRUNCATED]";
+            // Визначаємо рівень логу
+            AdminLog.LogLevel level = AdminLog.LogLevel.INFO;
+            String message = null;
+
+            if (status >= 500) {
+                level = AdminLog.LogLevel.ERROR;
+                message = "Server Error";
+            } else if (status >= 400) {
+                level = AdminLog.LogLevel.WARN;
+                message = "Client Error";
+            }
+
+            // Зберігаємо лог асинхронно
+            adminLogService.logRequest(ipAddress, method, fullUri, requestBody,
+                    status, userId, level, message);
+
+        } catch (Exception e) {
+            // Не блокуємо запит якщо логування не вдалося
         }
-        if (responseBody.length() > 2000) {
-            responseBody = responseBody.substring(0, 2000) + "\n... [TRUNCATED]";
+    }
+
+    private String extractUserId(HttpServletRequest request) {
+        String authHeader = request.getHeader("Authorization");
+        if (authHeader != null && authHeader.startsWith("Bearer ")) {
+            try {
+                String token = authHeader.substring(7);
+                return jwtService.extractUserId(token);
+            } catch (Exception e) {
+                return null;
+            }
         }
-
-        String statusEmoji = status >= 200 && status < 300 ? "✅" :
-                            status >= 400 && status < 500 ? "⚠️" :
-                            status >= 500 ? "❌" : "ℹ️";
-
-        log.info("\n" +
-                "╔══════════════════════════════════════════════════════════════════════\n" +
-                "║ {} RESPONSE: {} {} - {} ({}ms)\n" +
-                "╠══════════════════════════════════════════════════════════════════════\n" +
-                "║ 📥 Request Body:\n" +
-                "{}\n" +
-                "╠══════════════════════════════════════════════════════════════════════\n" +
-                "║ 📤 Response Body:\n" +
-                "{}\n" +
-                "╚══════════════════════════════════════════════════════════════════════",
-                statusEmoji, method, uri, status, duration,
-                formatJson(requestBody),
-                formatJson(responseBody));
+        return null;
     }
 
     private String getRequestBody(ContentCachingRequestWrapper request) {
         byte[] content = request.getContentAsByteArray();
         if (content.length > 0) {
-            return new String(content, StandardCharsets.UTF_8);
+            String body = new String(content, StandardCharsets.UTF_8);
+            // Маскуємо паролі
+            body = maskSensitiveData(body);
+            return body;
         }
-        return "[empty]";
+        return null;
     }
 
-    private String getResponseBody(ContentCachingResponseWrapper response) {
-        byte[] content = response.getContentAsByteArray();
-        if (content.length > 0) {
-            return new String(content, StandardCharsets.UTF_8);
-        }
-        return "[empty]";
-    }
-
-    private String formatJson(String json) {
-        if (json == null || json.isEmpty() || json.equals("[empty]")) {
-            return "    [empty]";
-        }
-        // Simple indent for readability
-        return "    " + json.replace("\n", "\n    ");
+    private String maskSensitiveData(String body) {
+        if (body == null) return null;
+        // Маскуємо паролі в JSON
+        body = body.replaceAll("\"password\"\\s*:\\s*\"[^\"]*\"", "\"password\":\"***\"");
+        body = body.replaceAll("\"newPassword\"\\s*:\\s*\"[^\"]*\"", "\"newPassword\":\"***\"");
+        body = body.replaceAll("\"oldPassword\"\\s*:\\s*\"[^\"]*\"", "\"oldPassword\":\"***\"");
+        return body;
     }
 
     private String getClientIp(HttpServletRequest request) {

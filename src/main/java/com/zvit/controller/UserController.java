@@ -27,11 +27,7 @@ public class UserController {
             Authentication authentication
     ) {
         String userId = authentication.getName();
-        log.info("📝 UPDATE PROFILE request for user: {}", userId);
-
         userService.updateProfile(userId, request);
-
-        log.info("✅ Profile updated successfully");
         return ResponseEntity.ok(ApiResponse.success("Профіль оновлено", null));
     }
 
@@ -51,7 +47,6 @@ public class UserController {
                     .body(ApiResponse.error("Параметр 'enabled' є обов'язковим"));
         }
 
-        log.info("🔔 UPDATE NOTIFICATIONS request for user: {}, enabled: {}", userId, enabled);
         userService.updateNotificationsEnabled(userId, enabled);
 
         String message = enabled ? "Сповіщення увімкнено" : "Сповіщення вимкнено";

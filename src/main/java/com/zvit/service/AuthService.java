@@ -36,10 +36,6 @@ public class AuthService {
 
     @Transactional
     public RegisterResponse register(RegisterRequest request) {
-        log.info("🔓 AuthService.register - Starting RSA decryption...");
-        log.info("   Input phone length: {}, isEncrypted: {}",
-            request.getPhone().length(), rsaKeyService.isEncrypted(request.getPhone()));
-
         // Дешифруємо RSA-зашифровані дані (якщо вони зашифровані)
         String phone = rsaKeyService.decryptIfEncrypted(request.getPhone());
         String password = rsaKeyService.decryptIfEncrypted(request.getPassword());
@@ -47,11 +43,6 @@ public class AuthService {
         String email = request.getEmail() != null
                 ? rsaKeyService.decryptIfEncrypted(request.getEmail())
                 : null;
-
-        log.info("   ✅ Decrypted phone: {}", phone);
-        log.info("   ✅ Decrypted password length: {}", password.length());
-        log.info("   ✅ Decrypted name: {}", name);
-        log.info("   ✅ Decrypted email: {}", email != null ? email : "null");
 
         if (!isValidPhone(phone)) {
             throw new BusinessException("Невірний формат телефону");
@@ -104,36 +95,18 @@ public class AuthService {
 
     @Transactional
     public LoginResponse login(LoginRequest request) {
-        log.info("🔓 AuthService.login - Starting RSA decryption...");
-        log.info("   Input phone length: {}, isEncrypted: {}",
-            request.getPhone().length(), rsaKeyService.isEncrypted(request.getPhone()));
-        log.info("   Input password length: {}, isEncrypted: {}",
-            request.getPassword().length(), rsaKeyService.isEncrypted(request.getPassword()));
-
         // Дешифруємо RSA-зашифровані дані (якщо вони зашифровані)
         String phone = rsaKeyService.decryptIfEncrypted(request.getPhone());
         String password = rsaKeyService.decryptIfEncrypted(request.getPassword());
 
-        log.info("   ✅ Decrypted phone: {}", phone);
-        log.info("   ✅ Decrypted password length: {}", password.length());
-
         String phoneHash = hashPhone(phone);
-        log.info("   Phone hash: {}", phoneHash.substring(0, 16) + "...");
 
         User user = userRepository.findByPhoneHash(phoneHash)
-                .orElseThrow(() -> {
-                    log.error("   ❌ User not found for phone hash");
-                    return new BusinessException("Невірний телефон або пароль");
-                });
-
-        log.info("   ✅ User found: {}, name: {}", user.getId(), user.getName());
+                .orElseThrow(() -> new BusinessException("Невірний телефон або пароль"));
 
         if (!passwordEncoder.matches(password, user.getPasswordHash())) {
-            log.error("   ❌ Password mismatch!");
             throw new BusinessException("Невірний телефон або пароль");
         }
-
-        log.info("   ✅ Password verified successfully");
 
         if (!user.isActive()) {
             throw new BusinessException("Обліковий запис деактивовано");
@@ -173,14 +146,9 @@ public class AuthService {
      */
     @Transactional
     public void resetPassword(ResetPasswordRequest request) {
-        log.info("🔑 AuthService.resetPassword - Starting password reset...");
-
         // Дешифруємо RSA-зашифровані дані
         String phone = rsaKeyService.decryptIfEncrypted(request.getPhone());
         String newPassword = rsaKeyService.decryptIfEncrypted(request.getNewPassword());
-
-        log.info("   Phone: {}", phone);
-        log.info("   New password length: {}", newPassword.length());
 
         // Перевіряємо формат телефону
         if (!isValidPhone(phone)) {
@@ -195,32 +163,23 @@ public class AuthService {
         // Верифікуємо Firebase токен
         String verifiedPhone = firebaseService.verifyIdTokenAndGetPhone(request.getFirebaseIdToken());
         if (verifiedPhone == null) {
-            log.error("   ❌ Firebase token verification failed");
             throw new BusinessException("Не вдалося підтвердити номер телефону. Спробуйте ще раз.");
         }
 
         // Перевіряємо що телефон з токена співпадає з наданим
         if (!verifiedPhone.equals(phone)) {
-            log.error("   ❌ Phone mismatch: token={}, request={}", verifiedPhone, phone);
             throw new BusinessException("Номер телефону не співпадає з верифікованим");
         }
-
-        log.info("   ✅ Firebase verification successful for: {}", verifiedPhone);
 
         // Знаходимо користувача
         String phoneHash = hashPhone(phone);
         User user = userRepository.findByPhoneHash(phoneHash)
-                .orElseThrow(() -> {
-                    log.error("   ❌ User not found for phone: {}", phone);
-                    return new BusinessException("Користувача з таким номером не знайдено");
-                });
+                .orElseThrow(() -> new BusinessException("Користувача з таким номером не знайдено"));
 
         // Оновлюємо пароль
         user.setPasswordHash(passwordEncoder.encode(newPassword));
         user.setUpdatedAt(LocalDateTime.now(ZoneId.of("Europe/Kiev")));
         userRepository.save(user);
-
-        log.info("   ✅ Password reset successful for user: {}", user.getId());
     }
 
     private String hashPhone(String phone) {

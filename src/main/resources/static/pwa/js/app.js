@@ -9,7 +9,7 @@ const logError = console.error.bind(console); // Always log errors
 const logWarn = console.warn.bind(console);   // Always log warnings
 
 // App version (sync with service-worker cache version)
-const APP_VERSION = 'PWA 1.03.06';
+const APP_VERSION = 'PWA 1.03.12';
 
 // Constants
 const STORAGE_KEYS = {

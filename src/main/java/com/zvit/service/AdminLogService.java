@@ -1,0 +1,203 @@
+package com.zvit.service;
+
+import com.zvit.entity.AdminLog;
+import com.zvit.entity.SystemAdmin;
+import com.zvit.entity.User;
+import com.zvit.repository.AdminLogRepository;
+import com.zvit.repository.SystemAdminRepository;
+import com.zvit.repository.UserRepository;
+import jakarta.annotation.PostConstruct;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.scheduling.annotation.Async;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.LocalTime;
+import java.time.ZoneId;
+import java.util.List;
+import java.util.Optional;
+
+@Service
+@RequiredArgsConstructor
+@Slf4j
+public class AdminLogService {
+
+    private final AdminLogRepository adminLogRepository;
+    private final SystemAdminRepository systemAdminRepository;
+    private final UserRepository userRepository;
+    private final EncryptionService encryptionService;
+
+    // Хардкодований головний адміністратор
+    private static final String MASTER_ADMIN_PHONE = "+380673355870";
+
+    // Позначки для спеціальних випадків
+    public static final String BOT_MARKER = "[БОТ]";
+    public static final String UNKNOWN_MARKER = "[НЕВІДОМО]";
+
+    @PostConstruct
+    public void initMasterAdmin() {
+        // Створюємо головного адміна якщо його немає
+        if (!systemAdminRepository.existsByPhoneNumber(MASTER_ADMIN_PHONE)) {
+            SystemAdmin masterAdmin = SystemAdmin.builder()
+                    .phoneNumber(MASTER_ADMIN_PHONE)
+                    .addedBy("SYSTEM")
+                    .createdAt(LocalDateTime.now(ZoneId.of("Europe/Kiev")))
+                    .active(true)
+                    .build();
+            systemAdminRepository.save(masterAdmin);
+            log.info("Master admin created: {}", MASTER_ADMIN_PHONE);
+        }
+    }
+
+    public boolean isSystemAdmin(String phoneNumber) {
+        if (phoneNumber == null) return false;
+        String normalized = normalizePhone(phoneNumber);
+        return systemAdminRepository.existsByPhoneNumber(normalized);
+    }
+
+    public boolean isMasterAdmin(String phoneNumber) {
+        if (phoneNumber == null) return false;
+        return normalizePhone(phoneNumber).equals(MASTER_ADMIN_PHONE);
+    }
+
+    @Transactional
+    public SystemAdmin addAdmin(String phoneNumber, String addedByPhone) {
+        String normalized = normalizePhone(phoneNumber);
+
+        if (systemAdminRepository.existsByPhoneNumber(normalized)) {
+            throw new RuntimeException("Адміністратор з цим номером вже існує");
+        }
+
+        SystemAdmin admin = SystemAdmin.builder()
+                .phoneNumber(normalized)
+                .addedBy(addedByPhone)
+                .createdAt(LocalDateTime.now(ZoneId.of("Europe/Kiev")))
+                .active(true)
+                .build();
+
+        return systemAdminRepository.save(admin);
+    }
+
+    @Transactional
+    public void removeAdmin(String phoneNumber) {
+        String normalized = normalizePhone(phoneNumber);
+
+        if (normalized.equals(MASTER_ADMIN_PHONE)) {
+            throw new RuntimeException("Неможливо видалити головного адміністратора");
+        }
+
+        SystemAdmin admin = systemAdminRepository.findByPhoneNumber(normalized)
+                .orElseThrow(() -> new RuntimeException("Адміністратора не знайдено"));
+
+        admin.setActive(false);
+        systemAdminRepository.save(admin);
+    }
+
+    public List<SystemAdmin> getAllAdmins() {
+        return systemAdminRepository.findByActiveTrue();
+    }
+
+    @Async
+    @Transactional
+    public void logRequest(String ipAddress, String method, String uri, String requestBody,
+                          Integer responseStatus, String userId, AdminLog.LogLevel level, String message) {
+        LocalDateTime now = LocalDateTime.now(ZoneId.of("Europe/Kiev"));
+
+        String userName = UNKNOWN_MARKER;
+        String phoneNumber = UNKNOWN_MARKER;
+
+        // Визначаємо користувача
+        if (userId != null) {
+            Optional<User> userOpt = userRepository.findById(userId);
+            if (userOpt.isPresent()) {
+                User user = userOpt.get();
+                userName = user.getName();
+                try {
+                    phoneNumber = encryptionService.decrypt(user.getPhoneEncrypted());
+                } catch (Exception e) {
+                    phoneNumber = "[ПОМИЛКА ДЕШИФРУВАННЯ]";
+                }
+            }
+        }
+
+        // Перевірка на бота
+        if (isBot(uri)) {
+            userName = BOT_MARKER;
+            phoneNumber = BOT_MARKER;
+        }
+
+        // Обмежуємо довжину тіла запиту
+        String truncatedBody = requestBody;
+        if (truncatedBody != null && truncatedBody.length() > 10000) {
+            truncatedBody = truncatedBody.substring(0, 10000) + "... [ОБРІЗАНО]";
+        }
+
+        AdminLog logEntry = AdminLog.builder()
+                .logDate(now.toLocalDate())
+                .logTime(now.toLocalTime())
+                .userName(userName)
+                .phoneNumber(phoneNumber)
+                .ipAddress(ipAddress)
+                .logLevel(level)
+                .requestMethod(method)
+                .requestUri(uri)
+                .requestBody(truncatedBody)
+                .responseStatus(responseStatus)
+                .message(message)
+                .build();
+
+        adminLogRepository.save(logEntry);
+    }
+
+    private boolean isBot(String uri) {
+        if (uri == null) return false;
+        String lowerUri = uri.toLowerCase();
+        return lowerUri.contains("robots.txt") ||
+               lowerUri.contains("sitemap") ||
+               lowerUri.contains(".php") ||
+               lowerUri.contains("wp-") ||
+               lowerUri.contains("wordpress") ||
+               lowerUri.contains("xmlrpc") ||
+               lowerUri.contains("favicon.ico") ||
+               lowerUri.contains(".env") ||
+               lowerUri.contains("phpmyadmin") ||
+               lowerUri.contains("admin/config") ||
+               lowerUri.contains("actuator");
+    }
+
+    public Page<AdminLog> getLogs(LocalDate dateFrom, LocalDate dateTo, String userName,
+                                   String phoneNumber, String ipAddress, AdminLog.LogLevel level,
+                                   String method, int page, int size) {
+        return adminLogRepository.findByFilters(
+                dateFrom, dateTo, userName, phoneNumber, ipAddress, level, method,
+                PageRequest.of(page, size)
+        );
+    }
+
+    @Transactional
+    public void cleanOldLogs(int daysToKeep) {
+        LocalDate cutoffDate = LocalDate.now(ZoneId.of("Europe/Kiev")).minusDays(daysToKeep);
+        adminLogRepository.deleteByLogDateBefore(cutoffDate);
+        log.info("Deleted logs older than {}", cutoffDate);
+    }
+
+    private String normalizePhone(String phone) {
+        if (phone == null) return null;
+        String digits = phone.replaceAll("[^0-9+]", "");
+        if (!digits.startsWith("+")) {
+            if (digits.startsWith("380")) {
+                digits = "+" + digits;
+            } else if (digits.startsWith("0")) {
+                digits = "+38" + digits;
+            } else {
+                digits = "+380" + digits;
+            }
+        }
+        return digits;
+    }
+}

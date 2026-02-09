@@ -114,7 +114,6 @@ public class WebViewController {
             long timeSinceLastAccess = now - lastAccess;
             if (timeSinceLastAccess < RATE_LIMIT_MS) {
                 long remainingSeconds = (RATE_LIMIT_MS - timeSinceLastAccess) / 1000;
-                log.info("QR Access rate limited for IP: {}, remaining: {}s", clientIp, remainingSeconds);
                 model.addAttribute("rateLimited", true);
                 model.addAttribute("remainingSeconds", remainingSeconds);
                 return "rate-limited";
@@ -129,7 +128,6 @@ public class WebViewController {
 
         // Створюємо QR сесію
         QrSessionResponse session = qrSessionService.createSession();
-        log.info("Created new QR session for IP: {}, token: {}", clientIp, session.getSessionToken());
         model.addAttribute("sessionToken", session.getSessionToken());
         model.addAttribute("qrUrl", session.getQrUrl());
         model.addAttribute("expiresIn", session.getExpiresIn());

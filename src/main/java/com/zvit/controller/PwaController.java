@@ -51,10 +51,7 @@ public class PwaController {
      */
     @PostMapping("/login")
     public ResponseEntity<ApiResponse<LoginResponse>> login(@Valid @RequestBody LoginRequest request) {
-        log.info("PWA LOGIN: {}", request.getPhone().length() > 6 ?
-            request.getPhone().substring(0, 6) + "***" : "***");
         LoginResponse loginData = authService.login(request);
-        log.info("PWA LOGIN successful, userId: {}", loginData.getUserId());
         return ResponseEntity.ok(ApiResponse.success("Вхід успішний", loginData));
     }
 
@@ -63,9 +60,7 @@ public class PwaController {
      */
     @PostMapping("/register")
     public ResponseEntity<ApiResponse<RegisterResponse>> register(@Valid @RequestBody RegisterRequest request) {
-        log.info("PWA REGISTER: {}", request.getName());
         RegisterResponse response = authService.register(request);
-        log.info("PWA REGISTER successful, userId: {}", response.getUserId());
         return ResponseEntity
                 .status(HttpStatus.CREATED)
                 .body(ApiResponse.success("Користувача зареєстровано", response));
@@ -79,7 +74,6 @@ public class PwaController {
             Authentication authentication
     ) {
         String userId = authentication.getName();
-        log.info("PWA: Getting groups for user: {}", userId);
         List<GroupResponse> groups = groupService.getUserGroups(userId);
         return ResponseEntity.ok(ApiResponse.success("Групи отримано", groups));
     }
@@ -106,7 +100,6 @@ public class PwaController {
             Authentication authentication
     ) {
         String userId = authentication.getName();
-        log.info("PWA: Creating group: {} by user: {}", request.getExternalName(), userId);
         GroupResponse response = groupService.createGroup(request, userId);
         return ResponseEntity
                 .status(HttpStatus.CREATED)
@@ -122,7 +115,6 @@ public class PwaController {
             Authentication authentication
     ) {
         String userId = authentication.getName();
-        log.info("PWA: Joining group with code: {} by user: {}", request.getAccessCode(), userId);
         GroupResponse response = groupService.joinGroupByAccessCode(request, userId);
         return ResponseEntity.ok(ApiResponse.success("Заявку надіслано", response));
     }
@@ -139,7 +131,6 @@ public class PwaController {
         String userId = authentication.getName();
         // Ensure groupId from path matches request
         request.setGroupId(groupId);
-        log.info("PWA: Submitting simple report to group: {} by user: {}", groupId, userId);
         ReportResponse response = reportService.createSimpleReport(request, userId);
         return ResponseEntity
                 .status(HttpStatus.CREATED)
@@ -158,7 +149,6 @@ public class PwaController {
         String userId = authentication.getName();
         // Ensure groupId from path matches request
         request.setGroupId(groupId);
-        log.info("PWA: Submitting extended report to group: {} by user: {}", groupId, userId);
         ReportResponse response = reportService.createExtendedReport(request, userId);
         return ResponseEntity
                 .status(HttpStatus.CREATED)
@@ -209,7 +199,6 @@ public class PwaController {
             Authentication authentication
     ) {
         String userId = authentication.getName();
-        log.info("PWA: User {} leaving group: {}", userId, groupId);
         groupService.leaveGroup(groupId, userId);
         return ResponseEntity.ok(ApiResponse.success("Ви вийшли з групи", null));
     }
@@ -223,7 +212,6 @@ public class PwaController {
             Authentication authentication
     ) {
         String userId = authentication.getName();
-        log.info("PWA: Updating profile for user: {}", userId);
         userService.updateProfile(userId, request);
         return ResponseEntity.ok(ApiResponse.success("Профіль оновлено", null));
     }
@@ -240,7 +228,6 @@ public class PwaController {
             Authentication authentication
     ) {
         String userId = authentication.getName();
-        log.info("PWA: Updating group settings: {} by user: {}", groupId, userId);
         groupService.updateGroupSettings(groupId, request, userId);
         return ResponseEntity.ok(ApiResponse.success("Налаштування групи оновлено", null));
     }
@@ -254,7 +241,6 @@ public class PwaController {
             Authentication authentication
     ) {
         String userId = authentication.getName();
-        log.info("PWA: Deleting group: {} by user: {}", groupId, userId);
         groupService.deleteGroup(groupId, userId);
         return ResponseEntity.ok(ApiResponse.success("Групу видалено", null));
     }
@@ -268,7 +254,6 @@ public class PwaController {
             Authentication authentication
     ) {
         String userId = authentication.getName();
-        log.info("PWA: Regenerating access code for group: {} by user: {}", groupId, userId);
         String newCode = groupService.regenerateAccessCode(groupId, userId);
         return ResponseEntity.ok(ApiResponse.success("Код доступу змінено", newCode));
     }
@@ -296,7 +281,6 @@ public class PwaController {
             Authentication authentication
     ) {
         String userId = authentication.getName();
-        log.info("PWA: Removing member {} from group {} by user: {}", memberId, groupId, userId);
         groupService.removeMemberFromGroup(groupId, memberId, userId);
         return ResponseEntity.ok(ApiResponse.success("Учасника видалено", null));
     }
@@ -311,7 +295,6 @@ public class PwaController {
             Authentication authentication
     ) {
         String userId = authentication.getName();
-        log.info("PWA: Approving member {} in group {} by user: {}", memberId, groupId, userId);
         groupService.approveMember(groupId, memberId, userId);
         return ResponseEntity.ok(ApiResponse.success("Учасника схвалено", null));
     }
@@ -326,7 +309,6 @@ public class PwaController {
             Authentication authentication
     ) {
         String userId = authentication.getName();
-        log.info("PWA: Rejecting member {} in group {} by user: {}", memberId, groupId, userId);
         groupService.rejectMember(groupId, memberId, userId);
         return ResponseEntity.ok(ApiResponse.success("Заявку відхилено", null));
     }
@@ -340,7 +322,6 @@ public class PwaController {
             Authentication authentication
     ) {
         String userId = authentication.getName();
-        log.info("PWA: Getting group statuses for group: {} by user: {}", groupId, userId);
         GroupStatusesResponse statuses = reportService.getGroupStatuses(groupId, userId);
         return ResponseEntity.ok(ApiResponse.success("Статуси отримано", statuses));
     }
@@ -354,7 +335,6 @@ public class PwaController {
             Authentication authentication
     ) {
         String userId = authentication.getName();
-        log.info("PWA: Creating urgent request for group: {} by user: {}", request.getGroupId(), userId);
         int sentCount = reportService.createUrgentRequest(request, userId);
         return ResponseEntity.ok(ApiResponse.success("Терміновий запит створено. Сповіщень відправлено: " + sentCount, sentCount));
     }
@@ -368,7 +348,6 @@ public class PwaController {
             Authentication authentication
     ) {
         String userId = authentication.getName();
-        log.info("PWA: Ending urgent session for group: {} by user: {}", groupId, userId);
         reportService.endUrgentSession(groupId, userId);
         return ResponseEntity.ok(ApiResponse.success("Терміновий збір завершено", null));
     }
@@ -383,7 +362,6 @@ public class PwaController {
             Authentication authentication
     ) {
         String userId = authentication.getName();
-        log.info("PWA: Getting user reports in group: {} for user: {} by: {}", groupId, targetUserId, userId);
         List<ReportResponse> reports = reportService.getUserReportsInGroup(groupId, targetUserId, userId);
         return ResponseEntity.ok(ApiResponse.success("Звіти отримано", reports));
     }
@@ -400,12 +378,8 @@ public class PwaController {
         String token = request.getFcmToken() != null ? request.getFcmToken() : request.getToken();
         String deviceType = request.getDeviceType() != null ? request.getDeviceType() : "WEB";
 
-        String tokenPreview = token != null && token.length() > 20 ? token.substring(0, 20) + "..." : token;
-        log.info("[FCM] Saving token for user: {}, deviceType: {}, token: {}", userId, deviceType, tokenPreview);
-
         userService.updateFcmToken(userId, token, deviceType);
 
-        log.info("[FCM] Token saved successfully for user: {}", userId);
         return ResponseEntity.ok(ApiResponse.success("FCM токен збережено", null));
     }
 }

@@ -64,8 +64,6 @@ public class QrSessionService {
 
         qrSessionRepository.save(session);
 
-        log.info("Created new QR session: {}", sessionToken);
-
         // Створити URL для QR коду
         String qrUrl = baseUrl + "/web/auth?token=" + sessionToken;
 
@@ -84,9 +82,6 @@ public class QrSessionService {
      */
     @Transactional
     public void authorizeSession(AuthorizeQrRequest request, String userId) {
-        log.info("authorizeSession called: sessionToken={}, groupId={}, userId={}",
-                 request.getSessionToken(), request.getGroupId(), userId);
-
         // Знайти користувача
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Користувача не знайдено"));
@@ -126,9 +121,6 @@ public class QrSessionService {
         session.setLastActivityAt(now);
 
         qrSessionRepository.save(session);
-
-        log.info("QR session {} authorized by user {} for group {}",
-                 session.getSessionToken(), userId, group.getExternalName());
     }
 
     /**
@@ -201,6 +193,5 @@ public class QrSessionService {
     public void cleanupExpiredSessions() {
         LocalDateTime now = LocalDateTime.now(KYIV_ZONE);
         qrSessionRepository.deleteExpiredSessions(now);
-        log.info("Cleaned up expired QR sessions");
     }
 }

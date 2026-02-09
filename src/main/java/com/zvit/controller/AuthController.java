@@ -34,15 +34,7 @@ public class AuthController {
 
     @PostMapping("/register")
     public ResponseEntity<ApiResponse<RegisterResponse>> register(@Valid @RequestBody RegisterRequest request) {
-        log.info("📝 REGISTER request received");
-        log.info("   Phone (encrypted?): {} (length: {})",
-            request.getPhone().length() > 50 ? request.getPhone().substring(0, 50) + "..." : request.getPhone(),
-            request.getPhone().length());
-        log.info("   Name: {}", request.getName());
-        log.info("   Email: {}", request.getEmail() != null ? "provided" : "null");
-
         RegisterResponse response = authService.register(request);
-        log.info("✅ REGISTER successful, userId: {}", response.getUserId());
         return ResponseEntity
                 .status(HttpStatus.CREATED)
                 .body(ApiResponse.success("Користувача зареєстровано", response));
@@ -50,15 +42,7 @@ public class AuthController {
 
     @PostMapping("/login")
     public ResponseEntity<ApiResponse<EncryptedData>> login(@Valid @RequestBody LoginRequest request) {
-        log.info("🔐 LOGIN request received");
-        log.info("   Phone (encrypted?): {} (length: {})",
-            request.getPhone().length() > 50 ? request.getPhone().substring(0, 50) + "..." : request.getPhone(),
-            request.getPhone().length());
-        log.info("   Password length: {}", request.getPassword().length());
-        log.info("   E2E enabled: {}", request.getClientPublicKey() != null);
-
         LoginResponse loginData = authService.login(request);
-        log.info("✅ LOGIN successful, userId: {}", loginData.getUserId());
 
         // Шифруємо відповідь AES
         String encryptedPayload = encryptionService.encryptObject(loginData);
@@ -67,10 +51,8 @@ public class AuthController {
         String encryptionKey;
         if (request.getClientPublicKey() != null && !request.getClientPublicKey().isEmpty()) {
             encryptionKey = encryptionService.getEncryptionKeyEncrypted(request.getClientPublicKey());
-            log.info("   AES key encrypted with client RSA (E2E)");
         } else {
             encryptionKey = encryptionService.getEncryptionKeyBase64();
-            log.warn("   AES key sent without E2E encryption (no client public key)");
         }
 
         EncryptedData response = EncryptedData.ofWithKey(encryptedPayload, encryptionKey);
@@ -101,13 +83,7 @@ public class AuthController {
      */
     @PostMapping("/reset-password")
     public ResponseEntity<ApiResponse<Void>> resetPassword(@Valid @RequestBody ResetPasswordRequest request) {
-        log.info("🔑 RESET PASSWORD request received");
-        log.info("   Phone (encrypted?): {} (length: {})",
-            request.getPhone().length() > 50 ? request.getPhone().substring(0, 50) + "..." : request.getPhone(),
-            request.getPhone().length());
-
         authService.resetPassword(request);
-        log.info("✅ RESET PASSWORD successful");
         return ResponseEntity.ok(ApiResponse.success("Пароль успішно змінено", null));
     }
 
