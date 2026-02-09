@@ -306,7 +306,7 @@ public class AdminLogService {
 
     @Transactional
     public int deleteLogs(LocalDate dateFrom, LocalDate dateTo, String userName,
-                          AdminLog.LogLevel level, String status) {
+                          String ipAddress, AdminLog.LogLevel level, String status) {
         // Парсимо статус
         Integer statusExact = null;
         Integer statusMin = null;
@@ -332,7 +332,7 @@ public class AdminLogService {
         }
 
         return adminLogRepository.deleteByFilters(
-                dateFrom, dateTo, userName, level,
+                dateFrom, dateTo, userName, ipAddress, level,
                 statusExact, statusMin, statusMax
         );
     }

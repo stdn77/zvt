@@ -45,6 +45,7 @@ public interface AdminLogRepository extends JpaRepository<AdminLog, Long> {
            "(:dateFrom IS NULL OR a.logDate >= :dateFrom) AND " +
            "(:dateTo IS NULL OR a.logDate <= :dateTo) AND " +
            "(:userName IS NULL OR LOWER(a.userName) LIKE LOWER(CONCAT('%', :userName, '%'))) AND " +
+           "(:ipAddress IS NULL OR a.ipAddress LIKE CONCAT('%', :ipAddress, '%')) AND " +
            "(:logLevel IS NULL OR a.logLevel = :logLevel) AND " +
            "(:statusExact IS NULL OR a.responseStatus = :statusExact) AND " +
            "(:statusMin IS NULL OR a.responseStatus >= :statusMin) AND " +
@@ -53,6 +54,7 @@ public interface AdminLogRepository extends JpaRepository<AdminLog, Long> {
             @Param("dateFrom") LocalDate dateFrom,
             @Param("dateTo") LocalDate dateTo,
             @Param("userName") String userName,
+            @Param("ipAddress") String ipAddress,
             @Param("logLevel") AdminLog.LogLevel logLevel,
             @Param("statusExact") Integer statusExact,
             @Param("statusMin") Integer statusMin,

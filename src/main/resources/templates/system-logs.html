@@ -712,9 +712,10 @@
             const dateFrom = document.getElementById('dateFrom').value;
             const dateTo = document.getElementById('dateTo').value;
             const userName = document.getElementById('userName').value;
+            const ipAddress = document.getElementById('ipAddress').value;
             const logLevel = document.getElementById('logLevel').value;
             const responseStatus = document.getElementById('responseStatus').value;
-            if (!dateFrom && !dateTo && !userName && !logLevel && !responseStatus) {
+            if (!dateFrom && !dateTo && !userName && !ipAddress && !logLevel && !responseStatus) {
                 alert('Застосуйте фільтр'); return;
             }
             if (!confirm('Видалити за фільтром?')) return;
@@ -722,6 +723,7 @@
             if (dateFrom) params.append('dateFrom', dateFrom);
             if (dateTo) params.append('dateTo', dateTo);
             if (userName) params.append('userName', userName);
+            if (ipAddress) params.append('ipAddress', ipAddress);
             if (logLevel) params.append('level', logLevel);
             if (responseStatus) params.append('status', responseStatus);
             deleteLogs(params);

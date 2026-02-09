@@ -174,6 +174,7 @@ public class SystemLogController {
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate dateFrom,
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate dateTo,
             @RequestParam(required = false) String userName,
+            @RequestParam(required = false) String ipAddress,
             @RequestParam(required = false) AdminLog.LogLevel level,
             @RequestParam(required = false) String status,
             @RequestParam(defaultValue = "false") boolean deleteAll) {
@@ -187,7 +188,7 @@ public class SystemLogController {
         if (deleteAll) {
             deleted = adminLogService.deleteAllLogs();
         } else {
-            deleted = adminLogService.deleteLogs(dateFrom, dateTo, userName, level, status);
+            deleted = adminLogService.deleteLogs(dateFrom, dateTo, userName, ipAddress, level, status);
         }
 
         return ResponseEntity.ok(ApiResponse.success("Логи видалено", Map.of("deleted", deleted)));
