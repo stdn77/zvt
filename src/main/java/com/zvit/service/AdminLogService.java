@@ -211,6 +211,44 @@ public class AdminLogService {
         log.info("Deleted logs older than {}", cutoffDate);
     }
 
+    @Transactional
+    public int deleteLogs(LocalDate dateFrom, LocalDate dateTo, String userName,
+                          AdminLog.LogLevel level, String status) {
+        // Парсимо статус
+        Integer statusExact = null;
+        Integer statusMin = null;
+        Integer statusMax = null;
+
+        if (status != null && !status.isEmpty()) {
+            if (status.equals("2xx")) {
+                statusMin = 200;
+                statusMax = 299;
+            } else if (status.equals("4xx")) {
+                statusMin = 400;
+                statusMax = 499;
+            } else if (status.equals("5xx")) {
+                statusMin = 500;
+                statusMax = 599;
+            } else {
+                try {
+                    statusExact = Integer.parseInt(status);
+                } catch (NumberFormatException e) {
+                    // Ігноруємо невалідний статус
+                }
+            }
+        }
+
+        return adminLogRepository.deleteByFilters(
+                dateFrom, dateTo, userName, level,
+                statusExact, statusMin, statusMax
+        );
+    }
+
+    @Transactional
+    public int deleteAllLogs() {
+        return adminLogRepository.deleteAllLogs();
+    }
+
     private String normalizePhone(String phone) {
         if (phone == null) return null;
         String digits = phone.replaceAll("[^0-9+]", "");

@@ -165,6 +165,35 @@ public class SystemLogController {
     }
 
     /**
+     * API: Видалити логи за фільтром
+     */
+    @DeleteMapping("/api/system/logs")
+    @ResponseBody
+    public ResponseEntity<ApiResponse<Map<String, Object>>> deleteLogs(
+            @RequestParam String token,
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate dateFrom,
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate dateTo,
+            @RequestParam(required = false) String userName,
+            @RequestParam(required = false) AdminLog.LogLevel level,
+            @RequestParam(required = false) String status,
+            @RequestParam(defaultValue = "false") boolean deleteAll) {
+
+        String adminPhone = getPhoneByQrToken(token);
+        if (adminPhone == null || !adminLogService.isMasterAdmin(adminPhone)) {
+            return ResponseEntity.status(403).body(ApiResponse.error("Тільки головний адміністратор може видаляти логи"));
+        }
+
+        int deleted;
+        if (deleteAll) {
+            deleted = adminLogService.deleteAllLogs();
+        } else {
+            deleted = adminLogService.deleteLogs(dateFrom, dateTo, userName, level, status);
+        }
+
+        return ResponseEntity.ok(ApiResponse.success("Логи видалено", Map.of("deleted", deleted)));
+    }
+
+    /**
      * Перевірка чи користувач QR сесії є системним адміном
      */
     private boolean isSystemAdminByQrToken(String token) {

@@ -472,6 +472,9 @@
         <div class="filter-group" style="justify-content: flex-end;">
             <button class="btn btn-primary" onclick="applyFilters()">Застосувати</button>
         </div>
+        <div class="filter-group" style="justify-content: flex-end;">
+            <button class="btn btn-danger" onclick="showDeleteModal()">🗑️ Очистити</button>
+        </div>
     </div>
 
     <div class="logs-container">
@@ -514,6 +517,42 @@
             <div class="add-admin-form">
                 <input type="text" id="newAdminPhone" placeholder="+380XXXXXXXXX">
                 <button class="btn btn-primary" onclick="addAdmin()">Додати</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Delete Logs Modal -->
+    <div class="modal" id="deleteModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>🗑️ Очистити логи</h2>
+                <button class="close-btn" onclick="closeDeleteModal()">×</button>
+            </div>
+            <div style="margin-bottom: 20px; color: #94a3b8;">
+                <p>Виберіть що видалити:</p>
+            </div>
+            <div style="display: flex; flex-direction: column; gap: 10px;">
+                <button class="btn btn-secondary" onclick="deleteByCurrentFilter()">
+                    Видалити за поточним фільтром
+                </button>
+                <button class="btn btn-secondary" onclick="deleteUnknown()">
+                    Видалити всі [НЕВІДОМО]
+                </button>
+                <button class="btn btn-secondary" onclick="deleteByLevel('INFO')">
+                    Видалити всі INFO
+                </button>
+                <button class="btn btn-secondary" onclick="deleteByLevel('WARN')">
+                    Видалити всі WARN
+                </button>
+                <button class="btn btn-secondary" onclick="deleteByStatus('403')">
+                    Видалити всі 403
+                </button>
+                <button class="btn btn-secondary" onclick="deleteByStatus('404')">
+                    Видалити всі 404
+                </button>
+                <button class="btn btn-danger" onclick="deleteAll()">
+                    ⚠️ Видалити ВСІ логи
+                </button>
             </div>
         </div>
     </div>
@@ -789,6 +828,88 @@
 
         function goBack() {
             window.location.href = `/web/reports?token=${token}`;
+        }
+
+        // Delete functions
+        function showDeleteModal() {
+            document.getElementById('deleteModal').style.display = 'flex';
+        }
+
+        function closeDeleteModal() {
+            document.getElementById('deleteModal').style.display = 'none';
+        }
+
+        async function deleteLogs(params) {
+            try {
+                params.append('token', token);
+                const response = await fetch(`/api/system/logs?${params.toString()}`, {
+                    method: 'DELETE'
+                });
+
+                const result = await response.json();
+                if (!result.success) {
+                    throw new Error(result.message);
+                }
+
+                alert(`Видалено ${result.data.deleted} записів`);
+                closeDeleteModal();
+                loadLogs();
+            } catch (error) {
+                alert('Помилка: ' + error.message);
+            }
+        }
+
+        function deleteByCurrentFilter() {
+            const dateFrom = document.getElementById('dateFrom').value;
+            const dateTo = document.getElementById('dateTo').value;
+            const userName = document.getElementById('userName').value;
+            const logLevel = document.getElementById('logLevel').value;
+            const responseStatus = document.getElementById('responseStatus').value;
+
+            if (!dateFrom && !dateTo && !userName && !logLevel && !responseStatus) {
+                alert('Спочатку застосуйте фільтр');
+                return;
+            }
+
+            if (!confirm('Видалити всі логи за поточним фільтром?')) return;
+
+            const params = new URLSearchParams();
+            if (dateFrom) params.append('dateFrom', dateFrom);
+            if (dateTo) params.append('dateTo', dateTo);
+            if (userName) params.append('userName', userName);
+            if (logLevel) params.append('level', logLevel);
+            if (responseStatus) params.append('status', responseStatus);
+
+            deleteLogs(params);
+        }
+
+        function deleteUnknown() {
+            if (!confirm('Видалити всі записи з [НЕВІДОМО]?')) return;
+            const params = new URLSearchParams();
+            params.append('userName', '[НЕВІДОМО]');
+            deleteLogs(params);
+        }
+
+        function deleteByLevel(level) {
+            if (!confirm(`Видалити всі записи з рівнем ${level}?`)) return;
+            const params = new URLSearchParams();
+            params.append('level', level);
+            deleteLogs(params);
+        }
+
+        function deleteByStatus(status) {
+            if (!confirm(`Видалити всі записи зі статусом ${status}?`)) return;
+            const params = new URLSearchParams();
+            params.append('status', status);
+            deleteLogs(params);
+        }
+
+        function deleteAll() {
+            if (!confirm('⚠️ УВАГА! Видалити ВСІ логи? Цю дію неможливо скасувати!')) return;
+            if (!confirm('Ви впевнені? Всі логи будуть видалені назавжди!')) return;
+            const params = new URLSearchParams();
+            params.append('deleteAll', 'true');
+            deleteLogs(params);
         }
 
         // Close modals on outside click
