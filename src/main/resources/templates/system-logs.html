@@ -16,39 +16,56 @@
             background: #0f172a;
             color: #e2e8f0;
             min-height: 100vh;
-            padding: 20px;
+            padding: 12px;
         }
 
         .header {
             background: linear-gradient(135deg, #1e293b 0%, #334155 100%);
-            padding: 20px;
-            border-radius: 12px;
-            margin-bottom: 20px;
+            padding: 12px 16px;
+            border-radius: 8px;
+            margin-bottom: 12px;
             display: flex;
-            justify-content: space-between;
             align-items: center;
-            flex-wrap: wrap;
-            gap: 15px;
+            gap: 12px;
+        }
+
+        .back-btn {
+            background: none;
+            border: none;
+            color: #94a3b8;
+            font-size: 20px;
+            cursor: pointer;
+            padding: 4px 8px;
+        }
+
+        .back-btn:hover {
+            color: #e2e8f0;
         }
 
         .header h1 {
-            font-size: 24px;
+            font-size: 18px;
             color: #22c55e;
+            flex: 1;
         }
 
         .header-actions {
             display: flex;
-            gap: 10px;
+            gap: 8px;
         }
 
         .btn {
-            padding: 10px 20px;
+            padding: 6px 12px;
             border: none;
-            border-radius: 8px;
+            border-radius: 6px;
             cursor: pointer;
-            font-size: 14px;
+            font-size: 12px;
             font-weight: 500;
             transition: all 0.2s;
+        }
+
+        .btn-sm {
+            padding: 4px 8px;
+            font-size: 11px;
         }
 
         .btn-primary {
@@ -80,34 +97,35 @@
 
         .filters {
             background: #1e293b;
-            padding: 20px;
-            border-radius: 12px;
-            margin-bottom: 20px;
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
-            gap: 15px;
+            padding: 10px 12px;
+            border-radius: 8px;
+            margin-bottom: 12px;
+            display: flex;
+            flex-wrap: wrap;
+            align-items: flex-end;
+            gap: 8px;
         }
 
         .filter-group {
             display: flex;
             flex-direction: column;
-            gap: 5px;
+            gap: 2px;
         }
 
         .filter-group label {
-            font-size: 12px;
+            font-size: 10px;
             color: #94a3b8;
             font-weight: 500;
         }
 
         .filter-group input,
         .filter-group select {
-            padding: 10px 12px;
+            padding: 5px 6px;
             border: 1px solid #334155;
-            border-radius: 8px;
+            border-radius: 4px;
             background: #0f172a;
             color: #e2e8f0;
-            font-size: 14px;
+            font-size: 12px;
         }
 
         .filter-group input:focus,
@@ -116,30 +134,40 @@
             border-color: #22c55e;
         }
 
+        .filter-group input[type="date"] { width: 110px; }
+        .filter-group input[type="time"] { width: 75px; }
+        .filter-group input[type="text"].w-user { width: 100px; }
+        .filter-group input[type="text"].w-phone { width: 115px; }
+        .filter-group input[type="text"].w-ip { width: 100px; }
+        .filter-group select.w-level { width: 70px; }
+        .filter-group select.w-method { width: 75px; }
+        .filter-group select.w-status { width: 90px; }
+
         .logs-container {
             background: #1e293b;
-            border-radius: 12px;
+            border-radius: 8px;
             overflow: hidden;
         }
 
         .logs-table {
             width: 100%;
             border-collapse: collapse;
-            font-size: 13px;
+            font-size: 11px;
         }
 
         .logs-table th {
             background: #334155;
-            padding: 12px 15px;
+            padding: 6px 8px;
             text-align: left;
             font-weight: 600;
             color: #94a3b8;
             position: sticky;
             top: 0;
+            white-space: nowrap;
         }
 
         .logs-table td {
-            padding: 10px 15px;
+            padding: 4px 8px;
             border-bottom: 1px solid #334155;
             vertical-align: top;
         }
@@ -148,100 +176,67 @@
             background: #334155;
         }
 
-        .level-INFO {
-            color: #22c55e;
-        }
+        .td-date { width: 75px; white-space: nowrap; font-size: 10px; color: #94a3b8; }
+        .td-time { width: 55px; white-space: nowrap; font-size: 10px; }
+        .td-user { max-width: 100px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+        .td-phone { max-width: 110px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 10px; }
+        .td-ip { width: 95px; font-size: 10px; font-family: monospace; }
+        .td-level { width: 45px; }
+        .td-method { width: 55px; }
+        .td-uri { max-width: 250px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-family: monospace; font-size: 10px; }
+        .td-status { width: 40px; text-align: center; }
+        .td-body { min-width: 150px; max-width: 350px; font-family: monospace; font-size: 10px; color: #94a3b8; cursor: pointer; word-break: break-all; }
+        .td-body:hover { color: #e2e8f0; }
 
-        .level-WARN {
-            color: #eab308;
-        }
-
-        .level-ERROR {
-            color: #ef4444;
-        }
+        .level-INFO { color: #22c55e; }
+        .level-WARN { color: #eab308; }
+        .level-ERROR { color: #ef4444; }
 
         .method {
             font-weight: 600;
-            padding: 2px 8px;
-            border-radius: 4px;
-            font-size: 11px;
+            padding: 1px 4px;
+            border-radius: 3px;
+            font-size: 9px;
         }
 
-        .method-GET {
-            background: #22c55e22;
-            color: #22c55e;
+        .method-GET { background: #22c55e22; color: #22c55e; }
+        .method-POST { background: #3b82f622; color: #3b82f6; }
+        .method-DELETE { background: #ef444422; color: #ef4444; }
+        .method-PUT, .method-PATCH { background: #f59e0b22; color: #f59e0b; }
+
+        .status {
+            padding: 1px 4px;
+            border-radius: 3px;
+            font-size: 10px;
+            font-weight: 500;
         }
 
-        .method-POST {
-            background: #3b82f622;
-            color: #3b82f6;
-        }
-
-        .method-DELETE {
-            background: #ef444422;
-            color: #ef4444;
-        }
-
-        .method-PUT, .method-PATCH {
-            background: #f59e0b22;
-            color: #f59e0b;
-        }
-
-        .uri {
-            max-width: 300px;
-            overflow: hidden;
-            text-overflow: ellipsis;
-            white-space: nowrap;
-            font-family: monospace;
-            font-size: 12px;
-        }
-
-        .body-preview {
-            max-width: 200px;
-            max-height: 50px;
-            overflow: hidden;
-            text-overflow: ellipsis;
-            font-family: monospace;
-            font-size: 11px;
-            color: #94a3b8;
-            cursor: pointer;
-        }
-
-        .body-preview:hover {
-            color: #e2e8f0;
-        }
+        .status-2xx { background: #22c55e22; color: #22c55e; }
+        .status-4xx { background: #eab30822; color: #eab308; }
+        .status-5xx { background: #ef444422; color: #ef4444; }
 
         .pagination {
             display: flex;
             justify-content: center;
             align-items: center;
             gap: 10px;
-            padding: 20px;
+            padding: 12px;
             background: #1e293b;
-            border-radius: 0 0 12px 12px;
         }
 
         .pagination button {
-            padding: 8px 16px;
+            padding: 6px 12px;
             background: #334155;
             border: none;
-            border-radius: 6px;
+            border-radius: 4px;
             color: #e2e8f0;
             cursor: pointer;
+            font-size: 12px;
         }
 
-        .pagination button:hover:not(:disabled) {
-            background: #475569;
-        }
-
-        .pagination button:disabled {
-            opacity: 0.5;
-            cursor: not-allowed;
-        }
-
-        .pagination span {
-            color: #94a3b8;
-        }
+        .pagination button:hover:not(:disabled) { background: #475569; }
+        .pagination button:disabled { opacity: 0.5; cursor: not-allowed; }
+        .pagination span { color: #94a3b8; font-size: 12px; }
 
         .modal {
             display: none;
@@ -258,9 +253,9 @@
 
         .modal-content {
             background: #1e293b;
-            border-radius: 12px;
-            padding: 25px;
-            max-width: 800px;
+            border-radius: 10px;
+            padding: 20px;
+            max-width: 700px;
             width: 90%;
             max-height: 80vh;
             overflow-y: auto;
@@ -270,31 +265,30 @@
             display: flex;
             justify-content: space-between;
             align-items: center;
-            margin-bottom: 20px;
+            margin-bottom: 15px;
         }
 
         .modal-header h2 {
             color: #22c55e;
+            font-size: 16px;
         }
 
         .close-btn {
             background: none;
             border: none;
-            font-size: 28px;
+            font-size: 24px;
             color: #94a3b8;
             cursor: pointer;
         }
 
-        .close-btn:hover {
-            color: #ef4444;
-        }
+        .close-btn:hover { color: #ef4444; }
 
         .body-content {
             background: #0f172a;
-            padding: 15px;
-            border-radius: 8px;
+            padding: 12px;
+            border-radius: 6px;
             font-family: monospace;
-            font-size: 13px;
+            font-size: 12px;
             white-space: pre-wrap;
             word-break: break-all;
             max-height: 400px;
@@ -303,116 +297,75 @@
 
         .loading {
             text-align: center;
-            padding: 40px;
+            padding: 30px;
             color: #94a3b8;
         }
 
         .spinner {
             display: inline-block;
-            width: 40px;
-            height: 40px;
-            border: 4px solid #334155;
+            width: 30px;
+            height: 30px;
+            border: 3px solid #334155;
             border-top-color: #22c55e;
             border-radius: 50%;
             animation: spin 1s linear infinite;
         }
 
-        @keyframes spin {
-            to { transform: rotate(360deg); }
-        }
+        @keyframes spin { to { transform: rotate(360deg); } }
 
-        .status {
-            padding: 2px 8px;
-            border-radius: 4px;
-            font-size: 12px;
-            font-weight: 500;
-        }
-
-        .status-2xx {
-            background: #22c55e22;
-            color: #22c55e;
-        }
-
-        .status-4xx {
-            background: #eab30822;
-            color: #eab308;
-        }
-
-        .status-5xx {
-            background: #ef444422;
-            color: #ef4444;
-        }
-
-        .admins-list {
-            margin-top: 15px;
-        }
+        .admins-list { margin-top: 12px; }
 
         .admin-item {
             display: flex;
             justify-content: space-between;
             align-items: center;
-            padding: 10px 15px;
+            padding: 8px 12px;
             background: #0f172a;
-            border-radius: 8px;
-            margin-bottom: 10px;
+            border-radius: 6px;
+            margin-bottom: 8px;
         }
 
-        .admin-info {
-            display: flex;
-            flex-direction: column;
-        }
-
-        .admin-phone {
-            font-weight: 600;
-        }
-
-        .admin-meta {
-            font-size: 12px;
-            color: #94a3b8;
-        }
+        .admin-info { display: flex; flex-direction: column; }
+        .admin-phone { font-weight: 600; font-size: 13px; }
+        .admin-meta { font-size: 11px; color: #94a3b8; }
 
         .add-admin-form {
             display: flex;
-            gap: 10px;
-            margin-top: 15px;
+            gap: 8px;
+            margin-top: 12px;
         }
 
         .add-admin-form input {
             flex: 1;
-            padding: 10px 15px;
+            padding: 8px 12px;
             border: 1px solid #334155;
-            border-radius: 8px;
+            border-radius: 6px;
             background: #0f172a;
             color: #e2e8f0;
+            font-size: 13px;
         }
 
-        @media (max-width: 768px) {
-            .header {
-                flex-direction: column;
-                align-items: flex-start;
-            }
+        .delete-options {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
 
-            .filters {
-                grid-template-columns: 1fr;
-            }
-
-            .logs-table {
-                font-size: 11px;
-            }
-
-            .logs-table th, .logs-table td {
-                padding: 8px 10px;
-            }
+        @media (max-width: 1200px) {
+            .filters { flex-wrap: wrap; }
+            .td-uri { max-width: 150px; }
+            .td-body { max-width: 200px; }
         }
     </style>
 </head>
 <body>
     <div class="header">
-        <h1>🔒 Системні логи</h1>
+        <button class="back-btn" onclick="goBack()">←</button>
+        <h1>Системні логи</h1>
         <div class="header-actions">
-            <button class="btn btn-secondary" onclick="goBack()">← Назад</button>
-            <button class="btn btn-secondary" onclick="showAdminsModal()">👥 Адміністратори</button>
-            <button class="btn btn-primary" onclick="loadLogs()">🔄 Оновити</button>
+            <button class="btn btn-secondary" onclick="showAdminsModal()">👥</button>
+            <button class="btn btn-danger" onclick="showDeleteModal()">🗑️</button>
+            <button class="btn btn-primary" onclick="loadLogs()">🔄</button>
         </div>
     </div>
 
@@ -422,58 +375,63 @@
             <input type="date" id="dateFrom">
         </div>
         <div class="filter-group">
+            <label>Час</label>
+            <input type="time" id="timeFrom" value="00:00">
+        </div>
+        <div class="filter-group">
             <label>Дата до</label>
             <input type="date" id="dateTo">
         </div>
         <div class="filter-group">
-            <label>Ім'я користувача</label>
-            <input type="text" id="userName" placeholder="Пошук...">
+            <label>Час</label>
+            <input type="time" id="timeTo" value="23:59">
         </div>
         <div class="filter-group">
-            <label>Номер телефону</label>
-            <input type="text" id="phoneNumber" placeholder="+380...">
+            <label>Користувач</label>
+            <input type="text" id="userName" placeholder="Ім'я" class="w-user">
         </div>
         <div class="filter-group">
-            <label>IP адреса</label>
-            <input type="text" id="ipAddress" placeholder="192.168...">
+            <label>Телефон</label>
+            <input type="text" id="phoneNumber" placeholder="+380..." class="w-phone">
+        </div>
+        <div class="filter-group">
+            <label>IP</label>
+            <input type="text" id="ipAddress" placeholder="IP" class="w-ip">
         </div>
         <div class="filter-group">
             <label>Рівень</label>
-            <select id="logLevel">
+            <select id="logLevel" class="w-level">
                 <option value="">Всі</option>
                 <option value="INFO">INFO</option>
                 <option value="WARN">WARN</option>
-                <option value="ERROR">ERROR</option>
+                <option value="ERROR">ERR</option>
             </select>
         </div>
         <div class="filter-group">
             <label>Метод</label>
-            <select id="requestMethod">
+            <select id="requestMethod" class="w-method">
                 <option value="">Всі</option>
                 <option value="GET">GET</option>
                 <option value="POST">POST</option>
                 <option value="PUT">PUT</option>
-                <option value="DELETE">DELETE</option>
-                <option value="PATCH">PATCH</option>
+                <option value="DELETE">DEL</option>
             </select>
         </div>
         <div class="filter-group">
             <label>Статус</label>
-            <select id="responseStatus">
+            <select id="responseStatus" class="w-status">
                 <option value="">Всі</option>
-                <option value="2xx">2xx (Успіх)</option>
-                <option value="4xx">4xx (Клієнт)</option>
-                <option value="5xx">5xx (Сервер)</option>
-                <option value="403">403 Forbidden</option>
-                <option value="404">404 Not Found</option>
-                <option value="500">500 Server Error</option>
+                <option value="2xx">2xx</option>
+                <option value="4xx">4xx</option>
+                <option value="5xx">5xx</option>
+                <option value="403">403</option>
+                <option value="404">404</option>
+                <option value="500">500</option>
             </select>
         </div>
-        <div class="filter-group" style="justify-content: flex-end;">
-            <button class="btn btn-primary" onclick="applyFilters()">Застосувати</button>
-        </div>
-        <div class="filter-group" style="justify-content: flex-end;">
-            <button class="btn btn-danger" onclick="showDeleteModal()">🗑️ Очистити</button>
+        <div class="filter-group">
+            <label>&nbsp;</label>
+            <button class="btn btn-primary" onclick="applyFilters()">OK</button>
         </div>
     </div>
 
@@ -485,9 +443,9 @@
             </div>
         </div>
         <div class="pagination" id="pagination" style="display: none;">
-            <button id="prevBtn" onclick="prevPage()">← Попередня</button>
-            <span id="pageInfo">Сторінка 1</span>
-            <button id="nextBtn" onclick="nextPage()">Наступна →</button>
+            <button id="prevBtn" onclick="prevPage()">←</button>
+            <span id="pageInfo">1 / 1</span>
+            <button id="nextBtn" onclick="nextPage()">→</button>
         </div>
     </div>
 
@@ -506,13 +464,11 @@
     <div class="modal" id="adminsModal">
         <div class="modal-content">
             <div class="modal-header">
-                <h2>👥 Системні адміністратори</h2>
+                <h2>👥 Адміністратори</h2>
                 <button class="close-btn" onclick="closeAdminsModal()">×</button>
             </div>
             <div class="admins-list" id="adminsList">
-                <div class="loading">
-                    <div class="spinner"></div>
-                </div>
+                <div class="loading"><div class="spinner"></div></div>
             </div>
             <div class="add-admin-form">
                 <input type="text" id="newAdminPhone" placeholder="+380XXXXXXXXX">
@@ -528,31 +484,14 @@
                 <h2>🗑️ Очистити логи</h2>
                 <button class="close-btn" onclick="closeDeleteModal()">×</button>
             </div>
-            <div style="margin-bottom: 20px; color: #94a3b8;">
-                <p>Виберіть що видалити:</p>
-            </div>
-            <div style="display: flex; flex-direction: column; gap: 10px;">
-                <button class="btn btn-secondary" onclick="deleteByCurrentFilter()">
-                    Видалити за поточним фільтром
-                </button>
-                <button class="btn btn-secondary" onclick="deleteUnknown()">
-                    Видалити всі [НЕВІДОМО]
-                </button>
-                <button class="btn btn-secondary" onclick="deleteByLevel('INFO')">
-                    Видалити всі INFO
-                </button>
-                <button class="btn btn-secondary" onclick="deleteByLevel('WARN')">
-                    Видалити всі WARN
-                </button>
-                <button class="btn btn-secondary" onclick="deleteByStatus('403')">
-                    Видалити всі 403
-                </button>
-                <button class="btn btn-secondary" onclick="deleteByStatus('404')">
-                    Видалити всі 404
-                </button>
-                <button class="btn btn-danger" onclick="deleteAll()">
-                    ⚠️ Видалити ВСІ логи
-                </button>
+            <div class="delete-options">
+                <button class="btn btn-secondary" onclick="deleteByCurrentFilter()">За поточним фільтром</button>
+                <button class="btn btn-secondary" onclick="deleteUnknown()">Всі [НЕВІДОМО]</button>
+                <button class="btn btn-secondary" onclick="deleteByLevel('INFO')">Всі INFO</button>
+                <button class="btn btn-secondary" onclick="deleteByLevel('WARN')">Всі WARN</button>
+                <button class="btn btn-secondary" onclick="deleteByStatus('403')">Всі 403</button>
+                <button class="btn btn-secondary" onclick="deleteByStatus('404')">Всі 404</button>
+                <button class="btn btn-danger" onclick="deleteAll()">⚠️ ВСІ логи</button>
             </div>
         </div>
     </div>
@@ -566,12 +505,10 @@
         if (!token) {
             document.body.innerHTML = '<div class="loading" style="color: #ef4444;">❌ Токен не знайдено</div>';
         } else {
-            // Set default dates
             const today = new Date();
             const weekAgo = new Date(today.getTime() - 7 * 24 * 60 * 60 * 1000);
             document.getElementById('dateFrom').value = weekAgo.toISOString().split('T')[0];
             document.getElementById('dateTo').value = today.toISOString().split('T')[0];
-
             loadLogs();
         }
 
@@ -582,11 +519,11 @@
 
         async function loadLogs() {
             const content = document.getElementById('logsContent');
-            content.innerHTML = '<div class="loading"><div class="spinner"></div><p>Завантаження...</p></div>';
+            content.innerHTML = '<div class="loading"><div class="spinner"></div></div>';
 
             const params = new URLSearchParams();
             params.append('page', currentPage);
-            params.append('size', 50);
+            params.append('size', 100);
 
             const dateFrom = document.getElementById('dateFrom').value;
             const dateTo = document.getElementById('dateTo').value;
@@ -609,16 +546,9 @@
             try {
                 params.append('token', token);
                 const response = await fetch(`/api/system/logs?${params.toString()}`);
-
-                if (!response.ok) {
-                    throw new Error('Помилка завантаження');
-                }
-
+                if (!response.ok) throw new Error('Помилка');
                 const result = await response.json();
-                if (!result.success) {
-                    throw new Error(result.message);
-                }
-
+                if (!result.success) throw new Error(result.message);
                 renderLogs(result.data);
             } catch (error) {
                 content.innerHTML = `<div class="loading" style="color: #ef4444;">❌ ${error.message}</div>`;
@@ -631,28 +561,15 @@
             totalPages = pageData.totalPages;
 
             if (logs.length === 0) {
-                content.innerHTML = '<div class="loading">Немає логів за вказаними фільтрами</div>';
+                content.innerHTML = '<div class="loading">Немає логів</div>';
                 document.getElementById('pagination').style.display = 'none';
                 return;
             }
 
-            let html = `
-                <table class="logs-table">
-                    <thead>
-                        <tr>
-                            <th>Дата / Час</th>
-                            <th>Користувач</th>
-                            <th>Телефон</th>
-                            <th>IP</th>
-                            <th>Рівень</th>
-                            <th>Метод</th>
-                            <th>URI</th>
-                            <th>Статус</th>
-                            <th>Тіло</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-            `;
+            let html = `<table class="logs-table"><thead><tr>
+                <th>Дата</th><th>Час</th><th>Користувач</th><th>Телефон</th><th>IP</th>
+                <th>Рів</th><th>Метод</th><th>URI</th><th>Ст</th><th>Тіло</th>
+            </tr></thead><tbody>`;
 
             logs.forEach(log => {
                 const statusClass = log.responseStatus >= 200 && log.responseStatus < 300 ? 'status-2xx' :
@@ -660,52 +577,37 @@
                                    log.responseStatus >= 500 ? 'status-5xx' : '';
 
                 const bodyPreview = log.requestBody ?
-                    (log.requestBody.length > 50 ? log.requestBody.substring(0, 50) + '...' : log.requestBody) :
-                    '-';
+                    (log.requestBody.length > 80 ? log.requestBody.substring(0, 80) + '...' : log.requestBody) : '-';
 
-                html += `
-                    <tr>
-                        <td>${log.logDate}<br><small>${log.logTime ? log.logTime.substring(0, 8) : ''}</small></td>
-                        <td>${escapeHtml(log.userName || '-')}</td>
-                        <td>${escapeHtml(log.phoneNumber || '-')}</td>
-                        <td>${escapeHtml(log.ipAddress || '-')}</td>
-                        <td class="level-${log.logLevel}">${log.logLevel}</td>
-                        <td><span class="method method-${log.requestMethod}">${log.requestMethod}</span></td>
-                        <td class="uri" title="${escapeHtml(log.requestUri || '')}">${escapeHtml(log.requestUri || '-')}</td>
-                        <td><span class="status ${statusClass}">${log.responseStatus || '-'}</span></td>
-                        <td class="body-preview" onclick="showBody('${escapeHtml(log.requestBody || '')}')">${escapeHtml(bodyPreview)}</td>
-                    </tr>
-                `;
+                html += `<tr>
+                    <td class="td-date">${log.logDate || '-'}</td>
+                    <td class="td-time">${log.logTime ? log.logTime.substring(0, 8) : '-'}</td>
+                    <td class="td-user" title="${escapeHtml(log.userName || '')}">${escapeHtml(log.userName || '-')}</td>
+                    <td class="td-phone" title="${escapeHtml(log.phoneNumber || '')}">${escapeHtml(log.phoneNumber || '-')}</td>
+                    <td class="td-ip">${escapeHtml(log.ipAddress || '-')}</td>
+                    <td class="td-level level-${log.logLevel}">${log.logLevel}</td>
+                    <td class="td-method"><span class="method method-${log.requestMethod}">${log.requestMethod}</span></td>
+                    <td class="td-uri" title="${escapeHtml(log.requestUri || '')}">${escapeHtml(log.requestUri || '-')}</td>
+                    <td class="td-status"><span class="status ${statusClass}">${log.responseStatus || '-'}</span></td>
+                    <td class="td-body" onclick="showBody(\`${escapeHtml(log.requestBody || '').replace(/`/g, '\\`')}\`)">${escapeHtml(bodyPreview)}</td>
+                </tr>`;
             });
 
             html += '</tbody></table>';
             content.innerHTML = html;
 
-            // Update pagination
             document.getElementById('pagination').style.display = 'flex';
-            document.getElementById('pageInfo').textContent = `Сторінка ${currentPage + 1} з ${totalPages}`;
+            document.getElementById('pageInfo').textContent = `${currentPage + 1} / ${totalPages}`;
             document.getElementById('prevBtn').disabled = currentPage === 0;
             document.getElementById('nextBtn').disabled = currentPage >= totalPages - 1;
         }
 
-        function prevPage() {
-            if (currentPage > 0) {
-                currentPage--;
-                loadLogs();
-            }
-        }
-
-        function nextPage() {
-            if (currentPage < totalPages - 1) {
-                currentPage++;
-                loadLogs();
-            }
-        }
+        function prevPage() { if (currentPage > 0) { currentPage--; loadLogs(); } }
+        function nextPage() { if (currentPage < totalPages - 1) { currentPage++; loadLogs(); } }
 
         function showBody(body) {
             if (!body || body === '-') return;
             try {
-                // Try to format as JSON
                 const parsed = JSON.parse(body);
                 document.getElementById('bodyContent').textContent = JSON.stringify(parsed, null, 2);
             } catch (e) {
@@ -714,31 +616,22 @@
             document.getElementById('bodyModal').style.display = 'flex';
         }
 
-        function closeBodyModal() {
-            document.getElementById('bodyModal').style.display = 'none';
-        }
+        function closeBodyModal() { document.getElementById('bodyModal').style.display = 'none'; }
 
         async function showAdminsModal() {
             document.getElementById('adminsModal').style.display = 'flex';
             loadAdmins();
         }
 
-        function closeAdminsModal() {
-            document.getElementById('adminsModal').style.display = 'none';
-        }
+        function closeAdminsModal() { document.getElementById('adminsModal').style.display = 'none'; }
 
         async function loadAdmins() {
             const list = document.getElementById('adminsList');
             list.innerHTML = '<div class="loading"><div class="spinner"></div></div>';
-
             try {
                 const response = await fetch(`/api/system/admins?token=${token}`);
-
                 const result = await response.json();
-                if (!result.success) {
-                    throw new Error(result.message);
-                }
-
+                if (!result.success) throw new Error(result.message);
                 renderAdmins(result.data);
             } catch (error) {
                 list.innerHTML = `<div style="color: #ef4444;">❌ ${error.message}</div>`;
@@ -747,76 +640,48 @@
 
         function renderAdmins(admins) {
             const list = document.getElementById('adminsList');
-
             if (admins.length === 0) {
-                list.innerHTML = '<div style="color: #94a3b8;">Немає адміністраторів</div>';
+                list.innerHTML = '<div style="color: #94a3b8;">Немає</div>';
                 return;
             }
-
             let html = '';
             admins.forEach(admin => {
                 const isMaster = admin.phoneNumber === '+380673355870';
-                html += `
-                    <div class="admin-item">
-                        <div class="admin-info">
-                            <span class="admin-phone">${escapeHtml(admin.phoneNumber)} ${isMaster ? '👑' : ''}</span>
-                            <span class="admin-meta">Додано: ${admin.addedBy || 'SYSTEM'} | ${admin.createdAt ? admin.createdAt.split('T')[0] : ''}</span>
-                        </div>
-                        ${!isMaster ? `<button class="btn btn-danger" onclick="removeAdmin('${escapeHtml(admin.phoneNumber)}')">Видалити</button>` : ''}
+                html += `<div class="admin-item">
+                    <div class="admin-info">
+                        <span class="admin-phone">${escapeHtml(admin.phoneNumber)} ${isMaster ? '👑' : ''}</span>
+                        <span class="admin-meta">${admin.addedBy || 'SYSTEM'} | ${admin.createdAt ? admin.createdAt.split('T')[0] : ''}</span>
                     </div>
-                `;
+                    ${!isMaster ? `<button class="btn btn-danger btn-sm" onclick="removeAdmin('${escapeHtml(admin.phoneNumber)}')">×</button>` : ''}
+                </div>`;
             });
-
             list.innerHTML = html;
         }
 
         async function addAdmin() {
             const phone = document.getElementById('newAdminPhone').value.trim();
-            if (!phone) {
-                alert('Введіть номер телефону');
-                return;
-            }
-
+            if (!phone) { alert('Введіть номер'); return; }
             try {
                 const response = await fetch(`/api/system/admins?token=${token}`, {
                     method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    },
+                    headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ phoneNumber: phone })
                 });
-
                 const result = await response.json();
-                if (!result.success) {
-                    throw new Error(result.message);
-                }
-
+                if (!result.success) throw new Error(result.message);
                 document.getElementById('newAdminPhone').value = '';
                 loadAdmins();
-            } catch (error) {
-                alert('Помилка: ' + error.message);
-            }
+            } catch (error) { alert('Помилка: ' + error.message); }
         }
 
         async function removeAdmin(phone) {
-            if (!confirm(`Видалити адміністратора ${phone}?`)) {
-                return;
-            }
-
+            if (!confirm(`Видалити ${phone}?`)) return;
             try {
-                const response = await fetch(`/api/system/admins/${encodeURIComponent(phone)}?token=${token}`, {
-                    method: 'DELETE'
-                });
-
+                const response = await fetch(`/api/system/admins/${encodeURIComponent(phone)}?token=${token}`, { method: 'DELETE' });
                 const result = await response.json();
-                if (!result.success) {
-                    throw new Error(result.message);
-                }
-
+                if (!result.success) throw new Error(result.message);
                 loadAdmins();
-            } catch (error) {
-                alert('Помилка: ' + error.message);
-            }
+            } catch (error) { alert('Помилка: ' + error.message); }
         }
 
         function escapeHtml(text) {
@@ -826,37 +691,21 @@
             return div.innerHTML;
         }
 
-        function goBack() {
-            window.location.href = `/web/reports?token=${token}`;
-        }
+        function goBack() { window.location.href = `/web/reports?token=${token}`; }
 
-        // Delete functions
-        function showDeleteModal() {
-            document.getElementById('deleteModal').style.display = 'flex';
-        }
-
-        function closeDeleteModal() {
-            document.getElementById('deleteModal').style.display = 'none';
-        }
+        function showDeleteModal() { document.getElementById('deleteModal').style.display = 'flex'; }
+        function closeDeleteModal() { document.getElementById('deleteModal').style.display = 'none'; }
 
         async function deleteLogs(params) {
             try {
                 params.append('token', token);
-                const response = await fetch(`/api/system/logs?${params.toString()}`, {
-                    method: 'DELETE'
-                });
-
+                const response = await fetch(`/api/system/logs?${params.toString()}`, { method: 'DELETE' });
                 const result = await response.json();
-                if (!result.success) {
-                    throw new Error(result.message);
-                }
-
-                alert(`Видалено ${result.data.deleted} записів`);
+                if (!result.success) throw new Error(result.message);
+                alert(`Видалено: ${result.data.deleted}`);
                 closeDeleteModal();
                 loadLogs();
-            } catch (error) {
-                alert('Помилка: ' + error.message);
-            }
+            } catch (error) { alert('Помилка: ' + error.message); }
         }
 
         function deleteByCurrentFilter() {
@@ -865,54 +714,48 @@
             const userName = document.getElementById('userName').value;
             const logLevel = document.getElementById('logLevel').value;
             const responseStatus = document.getElementById('responseStatus').value;
-
             if (!dateFrom && !dateTo && !userName && !logLevel && !responseStatus) {
-                alert('Спочатку застосуйте фільтр');
-                return;
+                alert('Застосуйте фільтр'); return;
             }
-
-            if (!confirm('Видалити всі логи за поточним фільтром?')) return;
-
+            if (!confirm('Видалити за фільтром?')) return;
             const params = new URLSearchParams();
             if (dateFrom) params.append('dateFrom', dateFrom);
             if (dateTo) params.append('dateTo', dateTo);
             if (userName) params.append('userName', userName);
             if (logLevel) params.append('level', logLevel);
             if (responseStatus) params.append('status', responseStatus);
-
             deleteLogs(params);
         }
 
         function deleteUnknown() {
-            if (!confirm('Видалити всі записи з [НЕВІДОМО]?')) return;
+            if (!confirm('Видалити [НЕВІДОМО]?')) return;
             const params = new URLSearchParams();
             params.append('userName', '[НЕВІДОМО]');
             deleteLogs(params);
         }
 
         function deleteByLevel(level) {
-            if (!confirm(`Видалити всі записи з рівнем ${level}?`)) return;
+            if (!confirm(`Видалити ${level}?`)) return;
             const params = new URLSearchParams();
             params.append('level', level);
             deleteLogs(params);
         }
 
         function deleteByStatus(status) {
-            if (!confirm(`Видалити всі записи зі статусом ${status}?`)) return;
+            if (!confirm(`Видалити ${status}?`)) return;
             const params = new URLSearchParams();
             params.append('status', status);
             deleteLogs(params);
         }
 
         function deleteAll() {
-            if (!confirm('⚠️ УВАГА! Видалити ВСІ логи? Цю дію неможливо скасувати!')) return;
-            if (!confirm('Ви впевнені? Всі логи будуть видалені назавжди!')) return;
+            if (!confirm('⚠️ Видалити ВСІ?')) return;
+            if (!confirm('Точно ВСІ?')) return;
             const params = new URLSearchParams();
             params.append('deleteAll', 'true');
             deleteLogs(params);
         }
 
-        // Close modals on outside click
         window.onclick = function(event) {
             if (event.target.classList.contains('modal')) {
                 event.target.style.display = 'none';
