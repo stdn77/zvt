@@ -67,7 +67,7 @@ logging:
 # ============================================
 app:
   timezone: Europe/Kiev
-  version: "1.03.12"
+  version: "1.03.13"
   base-url: https://zvit.online
 
 # Rate Limiting
