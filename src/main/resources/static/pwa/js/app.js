@@ -3120,6 +3120,7 @@ async function openMyReportsInGroup(groupId, groupName) {
 
 // Глобальна змінна для таймера термінового збору
 let urgentTimerInterval = null;
+let urgentTimerExpired = false;
 
 // Завантажити статуси учасників групи
 async function loadGroupStatuses(groupId) {
@@ -3173,15 +3174,42 @@ function handleUrgentSession(urgentSession) {
 
     if (urgentSession && urgentSession.active) {
         // Показати банер термінового збору
+        urgentTimerExpired = false;
         showUrgentBanner(urgentSession);
         // Сховати кнопку створення термінового запиту
         if (urgentBtn) urgentBtn.style.display = 'none';
+    } else if (urgentTimerExpired) {
+        // Таймер вийшов, але адмін ще не натиснув "Завершити збір"
+        // Залишаємо банер видимим, тільки оновлюємо статистику
+        if (urgentSession) {
+            updateUrgentStats(urgentSession);
+        }
+        if (urgentBtn) urgentBtn.style.display = 'none';
     } else {
         // Сховати банер
+        urgentTimerExpired = false;
         hideUrgentBanner();
         // Показати кнопку створення термінового запиту
         if (urgentBtn) urgentBtn.style.display = 'flex';
     }
+}
+
+// Оновити статистику в банері (без перезавантаження)
+function updateUrgentStats(session) {
+    const infoEl = DOM.urgentSessionInfo;
+    if (!infoEl) return;
+
+    let infoText = '';
+    if (session.requestedByUserName) {
+        infoText = `Запит від: ${session.requestedByUserName}`;
+    }
+    if (session.message) {
+        infoText += ` 💬 "${session.message}"`;
+    }
+    if (session.totalMembers !== undefined && session.respondedCount !== undefined) {
+        infoText += ` | Відповіли: ${session.respondedCount} / ${session.totalMembers}`;
+    }
+    infoEl.textContent = infoText;
 }
 
 // Показати банер термінового збору
@@ -3231,6 +3259,7 @@ function hideUrgentBanner() {
         clearInterval(urgentTimerInterval);
         urgentTimerInterval = null;
     }
+    urgentTimerExpired = false;
 }
 
 // Запустити таймер зворотного відліку
@@ -3245,7 +3274,8 @@ function startUrgentTimer(remainingSeconds) {
 
     // Якщо remainingSeconds не передано або <= 0
     if (!remainingSeconds || remainingSeconds <= 0) {
-        timerEl.textContent = '00:00';
+        urgentTimerExpired = true;
+        timerEl.textContent = 'час вийшов';
         return;
     }
 
@@ -3253,12 +3283,10 @@ function startUrgentTimer(remainingSeconds) {
 
     const updateTimer = () => {
         if (secondsLeft <= 0) {
-            timerEl.textContent = '00:00';
+            urgentTimerExpired = true;
+            timerEl.textContent = 'час вийшов';
             clearInterval(urgentTimerInterval);
-            // Оновити статуси після закінчення часу
-            if (currentGroup && currentGroup.id) {
-                loadGroupStatuses(currentGroup.id);
-            }
+            // Не закриваємо банер — адмін закриває тільки кнопкою "Завершити збір"
             return;
         }
 
