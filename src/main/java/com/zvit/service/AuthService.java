@@ -36,7 +36,14 @@ public class AuthService {
 
     @Transactional
     public RegisterResponse register(RegisterRequest request) {
+        log.info("[REGISTER] === Початок реєстрації нового користувача ===");
+        log.info("[REGISTER] Отримані дані - phone: {}, name: {}, email: {}",
+                maskPhone(request.getPhone()),
+                request.getName() != null ? request.getName().substring(0, Math.min(3, request.getName().length())) + "***" : "null",
+                request.getEmail() != null ? "present" : "null");
+
         // Дешифруємо RSA-зашифровані дані (якщо вони зашифровані)
+        log.info("[REGISTER] Спроба дешифрування RSA даних...");
         String phone = rsaKeyService.decryptIfEncrypted(request.getPhone());
         String password = rsaKeyService.decryptIfEncrypted(request.getPassword());
         String name = rsaKeyService.decryptIfEncrypted(request.getName());
@@ -44,31 +51,53 @@ public class AuthService {
                 ? rsaKeyService.decryptIfEncrypted(request.getEmail())
                 : null;
 
+        log.info("[REGISTER] Після дешифрування - phone: {}, name length: {}",
+                maskPhone(phone), name != null ? name.length() : 0);
+
         if (!isValidPhone(phone)) {
+            log.warn("[REGISTER] ПОМИЛКА: Невірний формат телефону: {}", maskPhone(phone));
             throw new BusinessException("Невірний формат телефону");
         }
+        log.info("[REGISTER] Телефон валідний");
 
         if (!isValidName(name)) {
+            log.warn("[REGISTER] ПОМИЛКА: Невірне ім'я (length={})", name != null ? name.length() : 0);
             throw new BusinessException("Ім'я має бути від 2 до 100 символів");
         }
+        log.info("[REGISTER] Ім'я валідне");
 
         if (email != null && !isValidEmail(email)) {
+            log.warn("[REGISTER] ПОМИЛКА: Невірний формат email");
             throw new BusinessException("Невірний формат email");
         }
+        if (email != null) {
+            log.info("[REGISTER] Email валідний");
+        }
 
+        log.info("[REGISTER] Хешування та шифрування даних...");
         String phoneHash = hashPhone(phone);
         String phoneEncrypted = encryptionService.encrypt(phone);
         String emailHash = email != null ? hashEmail(email) : null;
         String emailEncrypted = email != null ? encryptionService.encrypt(email) : null;
+        log.info("[REGISTER] Дані захешовано та зашифровано");
 
+        log.info("[REGISTER] Перевірка унікальності телефону...");
         if (userRepository.existsByPhoneHash(phoneHash)) {
+            log.warn("[REGISTER] ПОМИЛКА: Користувач з таким телефоном вже існує: {}", maskPhone(phone));
             throw new BusinessException("Користувач з таким телефоном вже існує");
         }
+        log.info("[REGISTER] Телефон унікальний");
 
-        if (emailHash != null && userRepository.existsByEmailHash(emailHash)) {
-            throw new BusinessException("Користувач з таким email вже існує");
+        if (emailHash != null) {
+            log.info("[REGISTER] Перевірка унікальності email...");
+            if (userRepository.existsByEmailHash(emailHash)) {
+                log.warn("[REGISTER] ПОМИЛКА: Користувач з таким email вже існує");
+                throw new BusinessException("Користувач з таким email вже існує");
+            }
+            log.info("[REGISTER] Email унікальний");
         }
 
+        log.info("[REGISTER] Створення нового користувача в БД...");
         User user = User.builder()
                 .id(UUID.randomUUID().toString())
                 .phoneHash(phoneHash)
@@ -85,6 +114,7 @@ public class AuthService {
                 .build();
 
         userRepository.save(user);
+        log.info("[REGISTER] УСПІХ: Користувача створено з ID: {}", user.getId());
 
         return RegisterResponse.builder()
                 .userId(user.getId())
@@ -93,29 +123,58 @@ public class AuthService {
                 .build();
     }
 
+    /**
+     * Маскує номер телефону для логування (показує перші 4 та останні 2 символи)
+     */
+    private String maskPhone(String phone) {
+        if (phone == null) return "null";
+        if (phone.length() <= 6) return "***";
+        return phone.substring(0, 4) + "***" + phone.substring(phone.length() - 2);
+    }
+
     @Transactional
     public LoginResponse login(LoginRequest request) {
+        log.info("[LOGIN] === Початок входу користувача ===");
+        log.info("[LOGIN] Отримані дані - phone: {}, hasPassword: {}, hasClientPublicKey: {}",
+                maskPhone(request.getPhone()),
+                request.getPassword() != null && !request.getPassword().isEmpty(),
+                request.getClientPublicKey() != null && !request.getClientPublicKey().isEmpty());
+
         // Дешифруємо RSA-зашифровані дані (якщо вони зашифровані)
+        log.info("[LOGIN] Спроба дешифрування RSA даних...");
         String phone = rsaKeyService.decryptIfEncrypted(request.getPhone());
         String password = rsaKeyService.decryptIfEncrypted(request.getPassword());
+        log.info("[LOGIN] Після дешифрування - phone: {}", maskPhone(phone));
 
         String phoneHash = hashPhone(phone);
+        log.info("[LOGIN] Пошук користувача за хешем телефону...");
 
         User user = userRepository.findByPhoneHash(phoneHash)
-                .orElseThrow(() -> new BusinessException("Невірний телефон або пароль"));
+                .orElseThrow(() -> {
+                    log.warn("[LOGIN] ПОМИЛКА: Користувача не знайдено за телефоном: {}", maskPhone(phone));
+                    return new BusinessException("Невірний телефон або пароль");
+                });
+        log.info("[LOGIN] Користувача знайдено: ID={}, name={}", user.getId(), user.getName());
 
+        log.info("[LOGIN] Перевірка пароля...");
         if (!passwordEncoder.matches(password, user.getPasswordHash())) {
+            log.warn("[LOGIN] ПОМИЛКА: Невірний пароль для користувача: {}", user.getId());
             throw new BusinessException("Невірний телефон або пароль");
         }
+        log.info("[LOGIN] Пароль вірний");
 
         if (!user.isActive()) {
+            log.warn("[LOGIN] ПОМИЛКА: Обліковий запис деактивовано: {}", user.getId());
             throw new BusinessException("Обліковий запис деактивовано");
         }
+        log.info("[LOGIN] Обліковий запис активний");
 
         user.setLastLoginAt(LocalDateTime.now(ZoneId.of("Europe/Kiev")));
         userRepository.save(user);
+        log.info("[LOGIN] Оновлено час останнього входу");
 
         String jwtToken = jwtService.generateToken(user.getId(), phone);
+        log.info("[LOGIN] JWT токен згенеровано");
 
         // Дешифрувати телефон для відповіді
         String decryptedPhone = encryptionService.decrypt(user.getPhoneEncrypted());
@@ -124,6 +183,8 @@ public class AuthService {
         String decryptedEmail = user.getEmailEncrypted() != null
                 ? encryptionService.decrypt(user.getEmailEncrypted())
                 : null;
+
+        log.info("[LOGIN] УСПІХ: Вхід виконано для користувача ID={}, phone={}", user.getId(), maskPhone(decryptedPhone));
 
         return LoginResponse.builder()
                 .userId(user.getId())

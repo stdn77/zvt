@@ -182,14 +182,49 @@ public class RSAKeyService {
      * Якщо дешифрування не вдається (наприклад, ключі не співпадають) - повертає оригінальне значення.
      */
     public String decryptIfEncrypted(String value) {
-        if (isEncrypted(value)) {
+        if (value == null) {
+            log.debug("[RSA] Значення null - пропускаємо");
+            return null;
+        }
+
+        boolean encrypted = isEncrypted(value);
+        log.debug("[RSA] Перевірка значення: length={}, isBase64Valid={}, isEncrypted={}",
+                value.length(),
+                isValidBase64(value),
+                encrypted);
+
+        if (encrypted) {
             try {
-                return decrypt(value);
+                String decrypted = decrypt(value);
+                log.debug("[RSA] Успішно дешифровано: {} -> {}", maskValue(value), maskValue(decrypted));
+                return decrypted;
             } catch (Exception e) {
-                log.warn("Failed to decrypt value, returning as-is. Client may need to refresh public key.");
+                log.warn("[RSA] Не вдалося дешифрувати, повертаємо як є. Помилка: {}", e.getMessage());
                 return value;
             }
         }
+        log.debug("[RSA] Значення не зашифроване, повертаємо як є: {}", maskValue(value));
         return value;
+    }
+
+    /**
+     * Перевіряє чи рядок є валідним Base64
+     */
+    private boolean isValidBase64(String value) {
+        try {
+            Base64.getDecoder().decode(value);
+            return true;
+        } catch (IllegalArgumentException e) {
+            return false;
+        }
+    }
+
+    /**
+     * Маскує значення для логування
+     */
+    private String maskValue(String value) {
+        if (value == null) return "null";
+        if (value.length() <= 6) return "***";
+        return value.substring(0, 4) + "..." + value.substring(value.length() - 2);
     }
 }

@@ -51,8 +51,18 @@ public class PwaController {
      */
     @PostMapping("/login")
     public ResponseEntity<ApiResponse<LoginResponse>> login(@Valid @RequestBody LoginRequest request) {
-        LoginResponse loginData = authService.login(request);
-        return ResponseEntity.ok(ApiResponse.success("Вхід успішний", loginData));
+        log.info("[PWA-LOGIN] === Запит на вхід через PWA ===");
+        log.info("[PWA-LOGIN] Phone: {}, hasPassword: {}",
+                maskPhone(request.getPhone()),
+                request.getPassword() != null && !request.getPassword().isEmpty());
+        try {
+            LoginResponse loginData = authService.login(request);
+            log.info("[PWA-LOGIN] УСПІХ: userId={}", loginData.getUserId());
+            return ResponseEntity.ok(ApiResponse.success("Вхід успішний", loginData));
+        } catch (Exception e) {
+            log.error("[PWA-LOGIN] ПОМИЛКА: {}", e.getMessage());
+            throw e;
+        }
     }
 
     /**
@@ -60,10 +70,31 @@ public class PwaController {
      */
     @PostMapping("/register")
     public ResponseEntity<ApiResponse<RegisterResponse>> register(@Valid @RequestBody RegisterRequest request) {
-        RegisterResponse response = authService.register(request);
-        return ResponseEntity
-                .status(HttpStatus.CREATED)
-                .body(ApiResponse.success("Користувача зареєстровано", response));
+        log.info("[PWA-REGISTER] === Запит на реєстрацію через PWA ===");
+        log.info("[PWA-REGISTER] Phone: {}, Name: {}, hasPassword: {}, hasEmail: {}",
+                maskPhone(request.getPhone()),
+                request.getName() != null ? request.getName().substring(0, Math.min(3, request.getName().length())) + "***" : "null",
+                request.getPassword() != null && !request.getPassword().isEmpty(),
+                request.getEmail() != null && !request.getEmail().isEmpty());
+        try {
+            RegisterResponse response = authService.register(request);
+            log.info("[PWA-REGISTER] УСПІХ: userId={}", response.getUserId());
+            return ResponseEntity
+                    .status(HttpStatus.CREATED)
+                    .body(ApiResponse.success("Користувача зареєстровано", response));
+        } catch (Exception e) {
+            log.error("[PWA-REGISTER] ПОМИЛКА: {}", e.getMessage());
+            throw e;
+        }
+    }
+
+    /**
+     * Маскує номер телефону для логування
+     */
+    private String maskPhone(String phone) {
+        if (phone == null) return "null";
+        if (phone.length() <= 6) return "***";
+        return phone.substring(0, 4) + "***" + phone.substring(phone.length() - 2);
     }
 
     /**

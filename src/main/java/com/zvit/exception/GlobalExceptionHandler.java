@@ -17,7 +17,7 @@ public class GlobalExceptionHandler {
 
     @ExceptionHandler(BusinessException.class)
     public ResponseEntity<ApiResponse<Void>> handleBusinessException(BusinessException ex) {
-        log.warn("Business exception: {}", ex.getMessage());
+        log.warn("[EXCEPTION] BusinessException: status={}, message='{}'", ex.getStatus(), ex.getMessage());
         return ResponseEntity
                 .status(ex.getStatus())
                 .body(ApiResponse.error(ex.getMessage()));
@@ -25,7 +25,8 @@ public class GlobalExceptionHandler {
 
     @ExceptionHandler(RuntimeException.class)
     public ResponseEntity<ApiResponse<Void>> handleRuntimeException(RuntimeException ex) {
-        log.error("Runtime exception: {}", ex.getMessage());
+        log.error("[EXCEPTION] RuntimeException: type={}, message='{}'", ex.getClass().getSimpleName(), ex.getMessage());
+        log.error("[EXCEPTION] Stack trace:", ex);
         return ResponseEntity
                 .status(HttpStatus.BAD_REQUEST)
                 .body(ApiResponse.error(ex.getMessage()));
@@ -36,7 +37,15 @@ public class GlobalExceptionHandler {
         String errors = ex.getBindingResult().getFieldErrors().stream()
                 .map(FieldError::getDefaultMessage)
                 .collect(Collectors.joining(", "));
-        log.warn("Validation exception: {}", errors);
+
+        // Детальне логування кожного поля з помилкою
+        log.warn("[EXCEPTION] ValidationException: {} помилок валідації", ex.getBindingResult().getFieldErrors().size());
+        ex.getBindingResult().getFieldErrors().forEach(fieldError ->
+                log.warn("[EXCEPTION] Поле '{}': rejected value='{}', message='{}'",
+                        fieldError.getField(),
+                        fieldError.getRejectedValue(),
+                        fieldError.getDefaultMessage()));
+
         return ResponseEntity
                 .status(HttpStatus.BAD_REQUEST)
                 .body(ApiResponse.error(errors));
@@ -44,7 +53,8 @@ public class GlobalExceptionHandler {
 
     @ExceptionHandler(Exception.class)
     public ResponseEntity<ApiResponse<Void>> handleGenericException(Exception ex) {
-        log.error("Unexpected exception: ", ex);
+        log.error("[EXCEPTION] Unexpected: type={}, message='{}'", ex.getClass().getName(), ex.getMessage());
+        log.error("[EXCEPTION] Full stack trace:", ex);
         return ResponseEntity
                 .status(HttpStatus.INTERNAL_SERVER_ERROR)
                 .body(ApiResponse.error("Внутрішня помилка сервера"));
