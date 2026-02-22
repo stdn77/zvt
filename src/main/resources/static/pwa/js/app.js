@@ -3121,6 +3121,8 @@ async function openMyReportsInGroup(groupId, groupName) {
 // Глобальна змінна для таймера термінового збору
 let urgentTimerInterval = null;
 let urgentTimerExpired = false;
+// Збережений знімок станів користувачів на момент закінчення таймера
+let savedUrgentUsers = null;
 
 // Завантажити статуси учасників групи
 async function loadGroupStatuses(groupId) {
@@ -3134,10 +3136,19 @@ async function loadGroupStatuses(groupId) {
 
         if (response.success && response.data) {
             // Обробка термінового збору
-            handleUrgentSession(response.data.urgentSession);
+            const urgentSession = response.data.urgentSession;
+            handleUrgentSession(urgentSession);
+
+            // Зберігаємо знімок станів під час активного термінового збору
+            if (urgentSession && urgentSession.active && response.data.users) {
+                savedUrgentUsers = JSON.parse(JSON.stringify(response.data.users));
+            }
 
             // Відображення плиток користувачів
-            if (response.data.users) {
+            if (urgentTimerExpired && savedUrgentUsers) {
+                // Таймер вийшов — показуємо збережені стани (кольори карток)
+                renderUserTiles(savedUrgentUsers);
+            } else if (response.data.users) {
                 renderUserTiles(response.data.users);
             } else {
                 container.innerHTML = `
@@ -3260,6 +3271,7 @@ function hideUrgentBanner() {
         urgentTimerInterval = null;
     }
     urgentTimerExpired = false;
+    savedUrgentUsers = null;
 }
 
 // Запустити таймер зворотного відліку
